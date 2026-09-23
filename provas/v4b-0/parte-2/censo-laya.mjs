@@ -87,7 +87,12 @@ const dumbLado = (s) => {
 
 // ------------------------------------------------------------------------ censo
 const t0 = Date.now();
-const laya = await Laya.load({ executionProviders: ["cpu"], sessionOptions: { intraOpNumThreads: 4 } });
+const laya = await Laya.load({
+  // 2b: apontar para o bundle exportado (typed-decisions) sem tocar no resto da sonda.
+  ...(process.env.LAYA_MODEL_DIR ? { modelDir: process.env.LAYA_MODEL_DIR } : {}),
+  executionProviders: ["cpu"],
+  sessionOptions: { intraOpNumThreads: 4 },
+});
 const carga_ms = Date.now() - t0;
 
 const porEstado = [];

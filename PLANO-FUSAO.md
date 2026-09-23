@@ -670,3 +670,8 @@ foram **38 s**. O gargalo é o downloader, não a rede: **8,6 MB/s por stream** 
 **O que falta (2b):** o checkpoint `typed-decisions`, que **não está publicado em ONNX** e exige export
 próprio (`export/export_onnx.py`, `uv` + torch + onnxscript). Linha separada, sem misturar checkpoints.
 Nada de wiring até lá.
+
+**Regras da 2b, fixadas antes do `uv`** (decisão do dono): censo no **mesmo snapshot** de 3144 decisões;
+reportar `act`/`conf`/`noul`/par A/B/lados/p95 **à parte** e **sem baixar o θ** (se `conf` ficar < 0,80, a
+coluna §9.4 continua zero); e **recusa escrita** se o export falhar ou o p95 ficar ≥ 2 s — nesse caso **não
+nasce `laya.ts`** e a Laya fica hipótese de paper. Detalhe em `provas/v4b-0/parte-2/PLANO.md`.

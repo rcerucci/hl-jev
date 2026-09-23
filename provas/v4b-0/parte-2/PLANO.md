@@ -55,7 +55,31 @@ recebe a 2b — *"checkpoint do replay = o que for ao vivo"* (§3 do doc).
   lados contra os 6 do `dumb`; se o #156 persiste; tempo de carga; P95 por estado.
 - Se a carga passar de uns minutos ou o P95 > 800 ms, isso **entra no relatório** — não aborta o censo.
 
-## Limites declarados à cabeça
+## 2b — `typed-decisions`: as três regras, fixadas **antes** do `uv`
+
+Decididas pelo dono (23 set 2026) e escritas antes de correr o export:
+
+1. **Mesmo snapshot.** O censo da 2b usa o **mesmo conjunto de 3144 decisões** da 2a (a regra determinística
+   "as primeiras N decisões válidas do ledger"), não o ledger que continua a crescer. Os dois censos ficam
+   comparáveis linha a linha; o JSON da 2a não se toca.
+2. **Reportar à parte, e sem baixar o θ.** `act`, `conf`, `noul`, noul vs o par A/B, lados contra os 6 do
+   `dumb`, p95. Se `conf` continuar < 0,80, a coluna §9.4 continua **zero** — e **não** se baixa o θ para a
+   encher. O `typed-decisions` é linha isolada na tabela, não substituto de nada.
+3. **Recusa escrita.** Se o export falhar, ou se o p95 ficar ≥ 2 s, a 2b **declara recusa** e **não nasce
+   `laya.ts`**. A Laya fica hipótese de paper, não caminho do motor.
+
+E o que a 2b decide mesmo que corra bem: se o `typed-decisions` **também** pinar o `noul` e comprar `dumping`
+como o inglês, deixa de existir "era o checkpoint errado" — passa a existir *"este encoder + estas 7 palavras
+não são oráculo neste livro"*. Aí a alavanca volta aos **buckets** (`tape` = `flat` em 95,6 %), não a mais um
+modelo.
+
+## Custo aceite
+
+`uv venv -p 3.12` + `torch transformers safetensors onnx onnxscript onnxruntime huggingface_hub` (torch do
+índice **CPU**, para não puxar CUDA), o checkpoint `laya-typed-decisions` (846 MB) e o export
+(`export/export_onnx.py` do repo `receptron/laya`). Tudo numa pasta de trabalho **fora** do repositório.
+
+## Limites declarados
 
 - A 2a **não** é o checkpoint do vivo: números provisórios, em linha separada.
 - O export da 2b pode falhar (o repo `laya-typed-decisions` não traz os `.py` de referência). Se falhar, fica
