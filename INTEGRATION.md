@@ -104,6 +104,26 @@ bun test test/integration-map.test.ts
 FUSAO_REPO=/copia/corrompida bun test test/integration-map.test.ts   # tem de REPROVAR
 ```
 
+## Prova do venue (T018 / spec 9.3) — medida em 23 set 2026
+
+Sonda `src/tools/prova-venue.ts`: fala com a testnet **a sério**, com a chave do clone, recusa correr
+fora de testnet e cancela o que deixa na book. O intent é scriptado de propósito — o que está em prova
+é o **executor**, não a política; nenhum limiar do RISK foi tocado.
+
+| Modo | Comando | Resultado medido |
+|---|---|---|
+| leitura | `bun run src/tools/prova-venue.ts estado` | wallet `0xF871…5621`, accountValue `0`, withdrawable `0`, **0 ordens abertas** |
+| hold | `bun run src/tools/prova-venue.ts hold` | ordens abertas: antes 0 → depois **0** — `hold` não mexe na book |
+| buy | `bun run src/tools/prova-venue.ts buy` | `QUOTE: buy 0.00046 @ 85560 status=placed taker=false oid=60855824109` → **ALO resting no venue** (cancelada na limpeza) |
+
+`taker=false` é a prova de que o caminho de submissão continua **post-only**: nada caiu para market.
+O `oid` é da exchange, não do log.
+
+Nota de saldo: uma ALO **descansa** sem margem, mas um *fill* exige-a. Com `withdrawable $0.00` a
+carteira ainda não pode encher — o faucet da testnet só paga quem já depositou na mainnet ("Users who
+have deposited on mainnet may receive 1000 mock USDC for testnet use"). Da §9.3 fica por exercitar
+apenas a recuperação de queda de WS (não se induz uma queda de rede sem mexer no host).
+
 ## Caminho da fusao (implementado depois deste mapa)
 
 Ligado por `POLICY=jev|dumb`. Sem `POLICY`, o tick e o de sempre e o `MODEL` decide — o caminho legado
