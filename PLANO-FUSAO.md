@@ -599,16 +599,69 @@ Três leituras que isto dá de graça:
 
 **`dir_after` por hora** (pedido do dono; worker de outcome relançado):
 
-| hora | n | `dir_after` | movimento mediana |
-|---|---|---|---|
-| 15Z | 224 | `down` 224 | -26,2 bps |
-| 16Z | 73 | `down` 66 · **`up` 7** | -6,2 bps |
+| hora | n | `dir_after` | movimento mediana | janela |
+|---|---|---|---|---|
+| 15Z | 224 | `down` 224 | -26,2 bps | 23,6 min → **2 janelas independentes** |
+| 16Z | 230 | `down` 96 · **`up` 104** · **`flat` 30** | **-0,4 bps** | 8,3 min → 1 |
+| global | 454 | `down` 320 · `up` 104 · `flat` 30 | — | — |
 
-**Não é o cálculo preso:** há 7 janelas `up` na hora seguinte. O que há é uma janela de queda (o corpus
-cobre ~2,7 h de uma sessão), e 224 observações continuam a não ser 224 confirmações. O worker parou por
-**429 (rate limit)** da API pública de testnet aos 297 outcomes — é idempotente, uma passagem posterior
-completa o resto (as horas 17Z/18Z ficam por graduar).
+**Não é o cálculo preso — agora com prova melhor.** Na amostra de 16Z há **104 `up` e 30 `flat`** em 230
+outcomes, com o movimento mediano a **-0,4 bps**: é uma janela quase parada, onde o `dir_after` vira com o
+ruído — que é exactamente o que deve acontecer. O que existe é a **queda** da 15Z (mediana -26,2 bps),
+amostrada 224 vezes em 23,6 min, ou seja duas janelas independentes. O worker de outcome correu outra
+passagem (297 → **454** outcomes) e parou de novo em **429**; é idempotente, outra passagem completa (17Z/18Z
+por graduar). Do lado da Laya isto não bloqueia: o replay usa o **estado**, não o `dir_after`.
 
 **O que falta para o V4b-0 fechar:** a coluna **Laya** (parte 2), que precisa dos pesos locais e do caminho
 de execução. Sem ela, a pergunta do replay — *alguém escolhe lado onde o Jev recusa?* — tem hoje uma
 resposta parcial: **o adjectivo escolhe (6×), o modelo não escolhe (0× em 3144, a qualquer `noul`)**.
+
+## 15. V4b-0 (parte 2a) — a Laya nos mesmos estados (23 set 2026)
+
+**Pré-ensaio noutro checkpoint, declarado.** O bundle ONNX publicado (`receptron/laya-onnx`, 1689 MB) é o
+**inglês**, não o `laya-typed-decisions` que o doc manda para o vivo — o bundle diz "English checkpoint,
+421M parameters" e o repo não tem subpastas. Plano fixado **antes** de baixar pesos em
+`provas/v4b-0/parte-2/PLANO.md`. Caminho: ONNX in-process (`@receptron/laya` 0.1.2), nunca `laya-serve`,
+nada de `src/`, nada do manifesto do repo (instalação em pasta de trabalho fora do repositório).
+
+Censo: as **mesmas 3144 decisões** do §14 (regra determinística "as primeiras N"), 44 estados distintos
+ponderados pela frequência, com as **mesmas perguntas** do `policy/jev_questions.json` e a tradução
+`noul`→`choice` **no cliente**.
+
+| medida | valor |
+|---|---|
+| carga do modelo | **4,6 s** |
+| latência por estado (3 perguntas) | p50 **1943 ms** · p95 **2119 ms** · máx 2210 ms |
+| `act` (por ciclo) | **`buy` 2530** (80 %) · `hold` 614 |
+| `act` (por estado) | `buy` **37/44** · `hold` 7/44 |
+| confiança do acto escolhido | 0,381 – **0,501** |
+| `noul` | **0,816 – 0,944 em 44/44** |
+| par neutro (a mesma pergunta como `choice` A/B) | **A (=sim) em 44/44**, P(A) 0,67 – 0,97 |
+| tokens por chamada | 372 – 387 |
+
+**Quatro leituras**
+
+1. **A Laya escolhe lado onde o Jev recusou** — `buy` em 80 % dos ciclos, contra `hold` em 3144/3144 do Jev.
+   É a primeira política da tabela a produzir lado neste livro.
+2. **Mas a confiança é 0,38 – 0,50 e o máximo da amostra é 0,501.** Com o θ = 0,80 da tabela,
+   **`n_lados(laya) = 0`** — o mesmo zero do Jev, por outro motivo. "O mesmo θ não compara a mesma coisa"
+   deixou de ser argumento e passou a número.
+3. **O `noul` está pinado no ALTO:** 0,82 – 0,94 em **44/44** estados. Não é o #156 na forma descrita (colado
+   ao *não*, P(true) = 0,0000) — é a mesma família, a primitiva presa num extremo. **E não é o par de
+   rótulos:** a mesma pergunta feita como `choice` de 2 opções com rótulos neutros deu **A (=sim) em 44/44**.
+   O travão de hostilidade da Laya dispararia em 100 % dos ciclos.
+4. **A latência mata o argumento de velocidade neste host:** p95 **2,1 s** por estado, contra a mediana de
+   324 ms do Jev. (P95 acima dos 800 ms: declarado, como combinado — o censo não abortou.)
+
+**O que a Laya mostra de sensibilidade (e o que não mostra).** Os 7 estados onde ela diz `hold` são
+exactamente os que têm `bot_war` ou `quiet` no `flow`, ou `thin` no `depth` (614 ciclos). Ela **lê** esses
+buckets. Não lê o `tape`: diz `buy` nos estados `dump` e `dumping` — onde a `dumb` diz `sell` — com confiança
+praticamente igual à dos outros. Isso não é leitura do livro, é um prior.
+
+**Nota operacional.** O downloader do próprio cliente fazia ~9 MB/min (2,5 h para os 1689 MB); com `curl` em
+4 fatias paralelas (`accept-ranges` aceite) foram **38 s**. O gargalo era o downloader, não a rede
+(8,6 MB/s por stream).
+
+**O que falta (2b):** o checkpoint `typed-decisions`, que **não está publicado em ONNX** e exige export
+próprio (`export/export_onnx.py`, `uv` + torch + onnxscript). Linha separada, sem misturar checkpoints.
+Nada de wiring até lá.
