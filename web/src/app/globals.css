@@ -2,7 +2,7 @@
   /*
    * Paleta de tinta electronica (e-ink): papel quente em vez de branco puro,
    * preto suave em vez de preto puro, acentos dessaturados. Os contrastes
-   * estao medidos em INTEGRATION/PLANO; nao inventar cores fora daqui.
+   * estao medidos no PLANO §12; nao inventar cores fora daqui.
    */
   --bg: #f4f1e7;
   --panel: #f4f1e7;
