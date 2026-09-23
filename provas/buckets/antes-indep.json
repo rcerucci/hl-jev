@@ -1,0 +1,85 @@
+{
+ "cru": {
+  "n_outcomes": 3,
+  "n_cruzados": 3,
+  "n_ge_10bps": 1,
+  "pct_ge_10bps": 33.3,
+  "ge_10bps_com_tape_flat": 1,
+  "pct_dos_grandes_com_tape_flat": 100.0,
+  "flat_n": 3,
+  "flat_mediana_bps": 4.4
+ },
+ "por_bucket": {
+  "tape": [
+   {
+    "palavra": "flat",
+    "n": 3,
+    "mediana_bps": 4.4,
+    "p90_bps": 4.4,
+    "pct_ge_10bps": 33.3
+   }
+  ],
+  "flow": [
+   {
+    "palavra": "two_way",
+    "n": 1,
+    "mediana_bps": 45.7,
+    "p90_bps": 45.7,
+    "pct_ge_10bps": 100.0
+   },
+   {
+    "palavra": "lift",
+    "n": 2,
+    "mediana_bps": 3.3,
+    "p90_bps": 2.2,
+    "pct_ge_10bps": 0.0
+   }
+  ],
+  "spread": [
+   {
+    "palavra": "tight",
+    "n": 3,
+    "mediana_bps": 4.4,
+    "p90_bps": 4.4,
+    "pct_ge_10bps": 33.3
+   }
+  ],
+  "depth": [
+   {
+    "palavra": "deep",
+    "n": 3,
+    "mediana_bps": 4.4,
+    "p90_bps": 4.4,
+    "pct_ge_10bps": 33.3
+   }
+  ],
+  "funding": [
+   {
+    "palavra": "extreme",
+    "n": 3,
+    "mediana_bps": 4.4,
+    "p90_bps": 4.4,
+    "pct_ge_10bps": 33.3
+   }
+  ],
+  "clock": [
+   {
+    "palavra": "mid",
+    "n": 3,
+    "mediana_bps": 4.4,
+    "p90_bps": 4.4,
+    "pct_ge_10bps": 33.3
+   }
+  ],
+  "inventory": [
+   {
+    "palavra": "flat",
+    "n": 3,
+    "mediana_bps": 4.4,
+    "p90_bps": 4.4,
+    "pct_ge_10bps": 33.3
+   }
+  ]
+ },
+ "ledger": "data/ledger"
+}

@@ -31,11 +31,22 @@ def linha(pos: int, state: str) -> str:
     return t[pos] if pos < len(t) else "?"
 
 
+def _ms(cid: str) -> int:
+    """cycle_id `YYYYMMDDTHHMMSSZ-BTC` -> ms desde a epoch."""
+    import datetime as _dt
+
+    d = cid.split("-")[0]
+    return int(_dt.datetime.strptime(d, "%Y%m%dT%H%M%SZ").replace(tzinfo=_dt.timezone.utc).timestamp() * 1000)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--ledger", default="data/ledger")
     ap.add_argument("--desde", default=None, help="cycle_id minimo (ex. 20260923T1830) — o 'depois' comeca aqui")
     ap.add_argument("--ate", default=None, help="cycle_id maximo")
+    ap.add_argument("--independentes", action="store_true",
+                    help="guarda so ciclos espacados >= 900 s entre si: as janelas de 15 min deixam de ser "
+                         "a MESMA observacao repetida (os primeiros 224 outcomes cabiam em 23,6 min = 2 janelas)")
     ap.add_argument("--json", default=None)
     args = ap.parse_args()
 
@@ -54,6 +65,19 @@ def main() -> int:
                 dec[cid] = r
             elif r.get("kind") == "outcome":
                 outs.append(r)
+
+    descartados_sobrepostos = 0
+    if args.independentes:
+        ordem = sorted(outs, key=lambda o: o["cycle_id"])
+        kept, ultimo = [], None
+        for o in ordem:
+            t = _ms(o["cycle_id"])
+            if ultimo is None or t - ultimo >= 900_000:
+                kept.append(o)
+                ultimo = t
+            else:
+                descartados_sobrepostos += 1
+        outs = kept
     if not outs:
         print("sem outcomes no ledger")
         return 1
