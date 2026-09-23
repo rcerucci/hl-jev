@@ -323,7 +323,7 @@ function typesafeClient(): TypeSafeClient {
 
 const JEV_DEADLINE_MS = 4000;
 
-function withDeadline<T>(p: Promise<T>, ms: number): Promise<T> {
+export function withDeadline<T>(p: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
     const t = setTimeout(() => reject(new Error(`jev timeout ${ms}ms`)), ms);
     p.then(
@@ -459,29 +459,75 @@ export function readChoiceAnswer(raw: unknown): { act: Act; conf: number; probs:
   const act = typeof a.choice === "string" ? a.choice.trim().toLowerCase() : "";
   if (!(ACTS as readonly string[]).includes(act)) return null;
   const p = a.probabilities ?? {};
-  const probs = ACTS.map((k) => Number(p[k] ?? 0));
-  if (probs.some((n) => !Number.isFinite(n) || n < 0)) return null;
+  // Estrito de proposito: `Number(null)` e `Number("")` sao 0, e um campo ausente
+  // lido como zero e fail-open. Sem numero real, a resposta nao vale.
+  const probs: number[] = [];
+  for (const k of ACTS) {
+    const v = p[k];
+    if (typeof v !== "number" || !Number.isFinite(v) || v < 0) return null;
+    probs.push(v);
+  }
   const sum = probs.reduce((x, y) => x + y, 0);
   // A API arredonda a 2 casas: a soma admite +-0.02 (spec 4.2).
   if (Math.abs(sum - 1) > 0.02) return null;
-  const conf = Number(a.confidence);
-  if (!Number.isFinite(conf) || conf < 0 || conf > 1) return null;
+  const conf = a.confidence;
+  if (typeof conf !== "number" || !Number.isFinite(conf) || conf < 0 || conf > 1) return null;
   return { act: act as Act, conf, probs: { buy: probs[0]!, sell: probs[1]!, hold: probs[2]! } };
 }
 
-/** Parse defensivo da resposta `noul`: P(sim) em [0,1] (spec 4.2). */
+/**
+ * Parse defensivo da resposta `noul`: P(sim) em [0,1] (spec 4.2).
+ * Tambem estrito: um `noul` nulo ou em texto tem de **congelar** o ciclo, nunca
+ * ser lido como "livro nao hostil" (decisao D3 e invariante 4).
+ */
 export function readNoulAnswer(raw: unknown): number | null {
   const a = raw as { type?: unknown; noul?: unknown } | undefined;
   if (!a || a.type !== "noul") return null;
-  const n = Number(a.noul);
-  return Number.isFinite(n) && n >= 0 && n <= 1 ? n : null;
+  const n = a.noul;
+  if (typeof n !== "number" || !Number.isFinite(n)) return null;
+  return n >= 0 && n <= 1 ? n : null;
 }
+
+/**
+ * A chamada ao Jev. O tipo existe para os testes poderem provar, sem rede, o
+ * mapa falha -> `raw_ok=false` (spec 4.2 e decisao D3) que os gates consomem.
+ */
+export type AskJev = (
+  state: string,
+  questions: Questions,
+) => Promise<{ answers: Record<string, unknown>; model: string; tokens: number }>;
+
+/** O cliente de sempre: TypeSafe `systemOne` ou o ramo Gateway. Uma por ciclo, sem retry. */
+const defaultAsk: AskJev = async (state, questions) => {
+  if (config.jevProvider === "gateway") {
+    const r = await evaluate({
+      model: config.jevModelId,
+      state: state as never,
+      questions: questions as never,
+      maxRetries: 0,
+    });
+    return {
+      answers: r.answers as unknown as Record<string, unknown>,
+      model: config.jevModelId,
+      tokens: r.usage?.inputTokens ?? 0,
+    };
+  }
+  const r = await typesafeClient().systemOne(
+    { model: config.jevModelId, state, questions },
+    { retry: { maxRetries: 0 } },
+  );
+  return {
+    answers: r.answers as unknown as Record<string, unknown>,
+    model: r.model,
+    tokens: r.usage.input_tokens ?? 0,
+  };
+};
 
 /** O Jev da fusao: uma request por sleeve por ciclo, sem retry no tick. */
 export class JevPolicy implements Policy {
   readonly name = "jev";
 
-  constructor(private policy: PolicyFile = policyOf()) {}
+  constructor(private policy: PolicyFile = policyOf(), private jev: AskJev = defaultAsk) {}
 
   async decide(state: string, cycleId: string): Promise<Verdict> {
     const t0 = performance.now();
@@ -490,7 +536,7 @@ export class JevPolicy implements Policy {
     const asset = cycleId.split("-").at(-1) ?? "?";
     const questions = askQuestions(this.policy, { asset, stance: stanceFromState(state) });
     try {
-      const r = await withDeadline(this.ask(state, questions), config.jevTimeoutMs);
+      const r = await withDeadline(this.jev(state, questions), config.jevTimeoutMs);
       const act = readChoiceAnswer(r.answers.act);
       const hostile = readNoulAnswer(r.answers.too_hostile);
       if (!act || hostile === null) return failedVerdict(cycleId, "parse");
@@ -509,31 +555,6 @@ export class JevPolicy implements Policy {
       const msg = e instanceof Error ? e.message : String(e);
       return failedVerdict(cycleId, /timeout/i.test(msg) ? "timeout" : "transport");
     }
-  }
-
-  private async ask(state: string, questions: Questions) {
-    if (config.jevProvider === "gateway") {
-      const r = await evaluate({
-        model: config.jevModelId,
-        state: state as never,
-        questions: questions as never,
-        maxRetries: 0,
-      });
-      return {
-        answers: r.answers as unknown as Record<string, unknown>,
-        model: config.jevModelId,
-        tokens: r.usage?.inputTokens ?? 0,
-      };
-    }
-    const r = await typesafeClient().systemOne(
-      { model: config.jevModelId, state, questions },
-      { retry: { maxRetries: 0 } },
-    );
-    return {
-      answers: r.answers as unknown as Record<string, unknown>,
-      model: r.model,
-      tokens: r.usage.input_tokens ?? 0,
-    };
   }
 }
 
