@@ -663,9 +663,9 @@ exactamente os que têm `bot_war` ou `quiet` no `flow`, ou `thin` no `depth` (61
 buckets. Não lê o `tape`: diz `buy` nos estados `dump` e `dumping` — onde a `dumb` diz `sell` — com confiança
 praticamente igual à dos outros. Isso não é leitura do livro, é um prior.
 
-**Nota operacional.** O downloader do próprio cliente fazia ~9 MB/min (2,5 h para os 1689 MB); com `curl` em
-4 fatias paralelas (`accept-ranges` aceite) foram **38 s**. O gargalo era o downloader, não a rede
-(8,6 MB/s por stream).
+**Nota operacional.** O downloader do próprio cliente fez **47 MB em 55 s (~0,85 MB/s)** antes de ser
+interrompido — aos 1689 MB seriam **~33 min**; com `curl` em 4 fatias paralelas (`accept-ranges` aceite)
+foram **38 s**. O gargalo é o downloader, não a rede: **8,6 MB/s por stream** cru, ~10× mais rápido.
 
 **O que falta (2b):** o checkpoint `typed-decisions`, que **não está publicado em ONNX** e exige export
 próprio (`export/export_onnx.py`, `uv` + torch + onnxscript). Linha separada, sem misturar checkpoints.

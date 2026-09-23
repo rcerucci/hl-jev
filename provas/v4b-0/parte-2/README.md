@@ -14,8 +14,8 @@ Resultados no `PLANO-FUSAO.md` §15.
 # 1. Pasta de trabalho FORA do repo — nada do manifesto do projecto é tocado.
 npm i @receptron/laya            # traz onnxruntime-node + tokenizer; ~552 MB
 
-# 2. Pesos: o downloader do próprio cliente faz ~9 MB/min (2,5 h para 1689 MB).
-#    Em 4 fatias paralelas (o servidor aceita accept-ranges) foram 38 s.
+# 2. Pesos: o downloader do próprio cliente faz ~0,85 MB/s (47 MB em 55 s ⇒ ~33 min para 1689 MB).
+#    Em 4 fatias paralelas (o servidor aceita accept-ranges) foram 38 s: ~10× mais rápido.
 #    Destino: ~/.cache/receptron-laya/receptron--laya-onnx/main/ (laya.onnx, laya.onnx.data,
 #    laya_config.json, tokenizer/*). O cliente confere o tamanho em bytes e salta o que já lá está.
 
