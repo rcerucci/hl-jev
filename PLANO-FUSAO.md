@@ -1110,3 +1110,36 @@ o modelo não inventa lado. **A leitura é literal e coerente com o enunciado.**
 venue. Modelo lê o vocabulário 1:1 (`dump`→sell 100 %, `lift`→buy 100 %). Critério 2 não avaliável (n=0 de
 violent/unfillable). `n_lados` saiu de zero — medido. Regra 4 e PnL continuam por medir: o ensaio tornou-os
 medíveis.*
+
+### 18.7 Graduação 15 min da sessão v2 — **medição, não ensaio novo** (especificação do dono, colada)
+
+> **Graduação 15 min da sessão v2 (desde `20260923T200827Z`). Medição, não ensaio novo.**
+>
+> `sell` / `buy` / `hold` são **etiquetas do JSON**, não o movimento. A graduação **não** pergunta se "`sell` é
+> sell". Pergunta: neste estado, o preço subiu ou desceu a seguir, e que etiqueta o Jev pôs.
+>
+> **Unidade.** Não é o ciclo. 400 ticks no mesmo estado = **1 caso**, não 400. (1) Agrupar pelas 7 palavras.
+> (2) Partir em episódios cuja janela de 15 min **não se sobrepõe**. (3) Um ponto = (estado × episódio): `act`,
+> `dir_after`, |mov|.
+>
+> **O que publicar.** Tabela por episódio:
+> `estado` · `n_ticks` · `act` · `conf` · `noul` · `dir_after` · `|mov|` · `etiqueta_vs_preço`.
+> `etiqueta_vs_preço` só descritivo, **três valores**: `alinhou` (`sell`+`down` ou `buy`+`up`) · `inverteu`
+> (`sell`+`up` ou `buy`+`down`) · `sem_relacao` (hold, |mov| < 10 bps, ou o mesmo estado com os dois sentidos).
+> **Não** chamar a isto acerto do modelo. É acerto da **convenção que nós escrevemos**. Se o mesmo estado umas
+> vezes sobe e outras desce: o mapa estado→palavra pode ser estável e o estado **não prever** o preço. Escrever
+> isso.
+>
+> **Separar.** `sidesAny` e `n_lados` em colunas distintas. `hold` não entra em alinhou/inverteu. Relatório:
+> quantos **episódios**, não quantos ciclos. Não promover winrate de 1803 `sell`.
+>
+> **Proibido.** Segundo JSON, θ, `dumb`, Laya, D, mainnet, chamar PnL a dry-run, concluir "o Jev acerta" a partir
+> de `alinhou`.
+>
+> **Leitura permitida no fecho.** Convenção alinhou nesta amostra · Convenção invertida (etiqueta estável,
+> sentido económico errado) · Estado sem poder preditivo. **Uma destas. Não duas.**
+
+Implementado em `provas/perguntas/graduar-episodios.py` (unidade = estado × episódio, episódios não sobrepostos
+de 900 s, `|mov|` pela fórmula do produto em `src/ledger/outcome.ts`). Os pontos por graduar são exactamente o
+**ciclo de início de cada episódio** — 93 na primeira contagem — e o graduador
+(`provas/buckets/graduar-desde.ts --ciclos <ficheiro>`) grava só esses, não os 4 481 ciclos da janela.

@@ -28,6 +28,14 @@ if (!desde) {
 const limite = Number(process.argv[3] ?? 400);
 const delayMs = Number(process.argv[4] ?? 1200);
 const soAncoras = process.argv.includes("--independentes");
+// `--ciclos <ficheiro>`: gradua SO os cycle_ids listados (episodios da graduacao estado x episodio).
+// A unidade dessa graduacao e o EPISODIO, nao o ciclo: graduar os 4455 ciclos da janela seriam 89 min
+// de pedidos para ~200 observacoes independentes. O ficheiro e um JSON com um array de cycle_ids.
+const iCiclos = process.argv.indexOf("--ciclos");
+const fCiclos = iCiclos >= 0 ? process.argv[iCiclos + 1] : null;
+const soCiclos: Set<string> | null = fCiclos
+  ? new Set(JSON.parse(await Bun.file(fCiclos).text()) as string[])
+  : null;
 
 const ledger = new Ledger(config.ledgerDir);
 const marks = new HlMarkSource().marks;
@@ -49,6 +57,7 @@ for (const { decision, outcome } of ledger.all()) {
 for (const { sleeve, decision, outcome } of ledger.all()) {
   if (outcome) continue;
   if (decision.cycle_id < desde) continue;
+  if (soCiclos && !soCiclos.has(decision.cycle_id)) continue;
   const due = decision.ts + config.outcomeHorizonSecs * 1000;
   if (agora < due) {
     pendentes++;
