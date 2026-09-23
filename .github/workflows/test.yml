@@ -1,8 +1,10 @@
 name: test
 
 on:
+  # Toda branch: o trabalho da fusao vive numa branch de trabalho, e o CI tem de a
+  # ver sem esperar por um PR. Custo aceite em troca: um PR do proprio repo gera
+  # dois runs, um pelo push e outro pelo pull_request.
   push:
-    branches: [main]
   pull_request:
 
 jobs:

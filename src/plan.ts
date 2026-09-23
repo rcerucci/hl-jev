@@ -1,4 +1,5 @@
 import type { Action, Bias, Intent, Side } from "./types";
+import type { RiskIntent } from "./risk/types";
 
 export type { Bias, Intent };
 
@@ -58,4 +59,27 @@ export function planQuote(opts: {
   if (opts.positionSz > 0) return { side: "sell", size: opts.positionSz, reduceOnly: true, taker: true };
   if (opts.positionSz < 0) return { side: "buy", size: -opts.positionSz, reduceOnly: true, taker: true };
   return null;
+}
+
+/**
+ * A ponte da fusao: `RiskIntent` -> `QuotePlan`. O `QuotePlan` continua a ser o
+ * contrato com o `market.send` e este ficheiro continua a ser o sitio que decide
+ * ALO vs IOC — o TIF e detalhe de **venue**, nunca resposta do Jev (spec, delta 3):
+ * entrada repousa post-only; saida reduce-only cruza como Ioc, que e a regra que
+ * ja existe no `planQuote` ("a resting exit only fills when the market moves your
+ * way, which caps winners at the spread and lets losers run").
+ *
+ * O lado de uma reducao sai da **posicao**, nao do intent: uma reduce-only que
+ * nao reduz seria recusada pelo venue. Se o intent apontar para o lado que nao
+ * reduz, nao ha ordem.
+ */
+export function planFromRisk(intent: RiskIntent, positionSz: number, quoteSz: number): QuotePlan | null {
+  if (intent.side === "hold") return null;
+  if (intent.reduce_only) {
+    const side: Side | null = positionSz > 0 ? "sell" : positionSz < 0 ? "buy" : null;
+    if (side === null || side !== intent.side) return null;
+    return { side, size: Math.abs(positionSz), reduceOnly: true, taker: true };
+  }
+  if (!(quoteSz > 0)) return null;
+  return { side: intent.side, size: quoteSz, reduceOnly: false, taker: false };
 }

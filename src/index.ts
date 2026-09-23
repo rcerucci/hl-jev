@@ -1,14 +1,20 @@
 import { config } from "./config";
 import { Feed } from "./feed";
+import { Ledger } from "./ledger/jsonl";
 import { Market } from "./market";
-import { createModel } from "./model";
+import { createModel, createPolicy } from "./model";
 import { loadSleeves } from "./sleeves";
 import { startServer, type SleeveView } from "./server";
-import { Trader } from "./trader";
+import { Trader, type Fusion } from "./trader";
 import type { BlockEvent, Fill, Meta, Quote, Timing } from "./types";
 
 const specs = loadSleeves();
 if (!specs.length) throw new Error("no sleeves");
+
+// Sem POLICY o repo corre como sempre correu. Com POLICY, o tick passa a ser
+// snapshot -> state -> POLICY -> RISK -> planFromRisk -> o mesmo submit.
+const policy = createPolicy();
+const fusion: Fusion | null = policy ? { policy, ledger: new Ledger(config.ledgerDir) } : null;
 
 const views: SleeveView[] = [];
 const first = specs[0]!;
@@ -52,6 +58,7 @@ for (const spec of specs) {
         onEvent(spec.coin),
         onFill(spec.coin),
         onQuote(spec.coin),
+        fusion,
       );
       trader.attachTradeFeed(feed.trades);
       market.onVenueFill = (p) => {
@@ -90,7 +97,7 @@ if (!views.length) throw new Error("no sleeves started");
 server = startServer(meta, views);
 for (const start of starters) start();
 
-console.log(`jev-trade ${meta.sleeves.map((s) => s.label).join(" ")} model=${meta.model}${config.model === "jev" ? ` ${config.jevProvider}` : ""} tick ${config.tickMs}ms price ${config.priceMs}ms quote $${config.quoteUsd} :${config.port}`);
+console.log(`jev-trade ${meta.sleeves.map((s) => s.label).join(" ")} model=${meta.model}${config.model === "jev" ? ` ${config.jevProvider}` : ""}${policy ? ` policy=${policy.name}` : ""} tick ${config.tickMs}ms price ${config.priceMs}ms quote $${config.quoteUsd} :${config.port}`);
 
 function onEvent(coin: string) {
   return (e: BlockEvent, t?: Timing) => {
@@ -100,7 +107,7 @@ function onEvent(coin: string) {
       const q = e.quote;
       // A hold applies neither bias nor leverage, and an exit skips the leverage write.
       const lev = d.intent === "open" && d.leverage != null ? ` ${d.leverage}x` : "";
-      const call = d.intent === "hold" ? "hold" : d.intent && d.bias ? `${d.intent} ${d.bias}${lev}` : d.action;
+      const call = d.act ?? (d.intent === "hold" ? "hold" : d.intent && d.bias ? `${d.intent} ${d.bias}${lev}` : d.action);
       const order = q && ` ${q.side.toUpperCase()} ${q.size} @ ${q.price}${q.taker ? " cross" : ""}${q.reduceOnly ? " reduce" : ""}${q.unchanged ? " unchanged" : q.status === "sim" ? " (sim)" : ` ${q.status}`}`;
       const quote = order || (d.intent === "hold" ? " NO ORDER" : "");
       console.log(`${coin} #${e.block} ${e.mid} ${call} ${d.latencyMs}ms${quote} pnl $${e.totals.pnlUsd}${t ? ` loop ${t.loopMs}ms` : ""}`);

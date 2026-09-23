@@ -93,6 +93,45 @@ bun test
 
 CI runs the same command on push and pull request.
 
+## Fused policy path (POLICY)
+
+`POLICY` turns on the policy/risk layer. Without it the bot runs exactly as before and `MODEL` decides.
+
+| Where you are | What decides | Live key OK? |
+| --- | --- | --- |
+| no `POLICY` | the legacy path (`MODEL`) | **no** — the fusion's gates do not exist on that path |
+| `POLICY=jev` | the fusion: typed policy + risk gates | yes, on testnet |
+| `POLICY=dumb` | the control (no API key, no network) | yes |
+
+`HL_TESTNET=true` is mandatory for the fusion. The attribution ensaio of 23 Sep 2026 (100 cycles per
+policy, same book, testnet) closed as **amostra insuficiente**: 100% `hold` on both sides and `n=0` at
+`conf >= 0.80`. Nothing there is evidence of edge — it is evidence that this book produces no experiment.
+
+```sh
+POLICY=dumb   # the control: a dumb heuristic over the same words the Jev sees. No API key, no network.
+POLICY=jev    # the live Jev: same client, but the state is a short line and the questions come from policy/jev_questions.json.
+```
+
+The tick becomes: snapshot (numbers, kept off the Jev) -> twelve-word state -> policy -> risk gates -> plan -> the same `market.send`. There is one submit path.
+
+Hold is an answer, and there are two kinds of hold:
+
+- the Jev answered hold, or the gates refused for low confidence, a hostile book or heavy inventory: the resting quote is pulled;
+- no valid answer at all (timeout, bad JSON, stale book): nothing is sent and nothing is cancelled.
+
+Thresholds are env: `JEV_CONF_ACT`, `NOUL_HOSTILE_TH`, `JEV_TIMEOUT_MS`, `BOOK_STALE_MS`. Leverage on this path comes from `LEVERAGE` (default 1) and never from the model. The Jev never sees a price, a size, a time in force or a leverage.
+
+Every cycle appends a `decision` line to `LEDGER_DIR` (`./data/ledger/<YYYYMMDD>-<COIN>.jsonl`), one file per sleeve per UTC day **of the decision**; the outcome line lands in the same file 15 minutes later, joined by `cycle_id`. A separate process writes the outcome from public marks (1m candles and funding history, no key), and the attribution table compares policies:
+
+```sh
+bun run src/ledger/outcome.ts       # +15 min outcome for every due cycle. Idempotent and re-runnable: nothing is invented when a candle is missing
+bun run src/ledger/attribution.ts   # confidence against hit, per policy, with the control column and the sample size
+```
+
+The table refuses to conclude below the declared sample size and says out loud when the control ties or wins. That is the spec gate before the night editor or mainnet.
+
+Do not point this path at mainnet. `HL_TESTNET=false` is mainnet, and the fused path has no live equity cap yet.
+
 ## Env
 
 See [`.env.example`](.env.example). The ones that change behavior:
@@ -101,13 +140,21 @@ See [`.env.example`](.env.example). The ones that change behavior:
 | --- | --- | --- |
 | `HL_COINS` | `BTC,ETH,SOL,DOGE,BNB` | Sleeves to run |
 | `HL_TESTNET` | `true` | `false` is mainnet |
-| `MODEL` | `mock` | `jev` needs a TypeSafe or Gateway key |
+| `MODEL` | `mock` | Legacy path. `jev` needs a TypeSafe or Gateway key |
+| `POLICY` | empty | Empty is the legacy path. `jev` or `dumb` turns on the fusion |
 | `JEV_PROVIDER` | `typesafe` | `typesafe` or `gateway` |
 | `TYPESAFE_API_KEY` | empty | Official TypeSafe key |
 | `AI_GATEWAY_API_KEY` | empty | Vercel AI Gateway key |
 | `PRIVATE_KEY` | empty | First coin. Empty is a dry run |
 | `DRY_RUN` | `false` | `true` simulates every sleeve |
 | `TICK_MS` | `2000` | Decision + requote cadence |
+| `JEV_TIMEOUT_MS` | `800` | Fused path only. A timeout is a frozen tick |
+| `JEV_CONF_ACT` | `0.80` | Below this the tick holds |
+| `NOUL_HOSTILE_TH` | `0.65` | Above this a non-reduce order is held |
+| `BOOK_STALE_MS` | `5000` | Older than this freezes the tick |
+| `LEVERAGE` | `1` | Fused path. The model never picks it |
+| `LEDGER_DIR` | `./data/ledger` | JSONL, one file per sleeve per decision day |
+| `POLICY_FILE` | `./policy/jev_questions.json` | Versioned questions |
 | `PRICE_MS` | `200` | Chart and mid prints. Does not call Jev |
 | `QUOTE_USD` | `40` | Quote notional per tick |
 | `CLOSE_SLIPPAGE_BPS` | `5` | How far an exit crosses the touch |

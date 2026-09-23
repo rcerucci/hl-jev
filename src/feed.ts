@@ -21,6 +21,8 @@ export class Feed {
   readonly chart = new VenueChart();
   assetCtx: AssetCtx | null = null;
   book: Book | null = null;
+  /** Instante do ultimo l2Book. O RISK recusa decidir sobre livro mais velho que `BOOK_STALE_MS`. */
+  bookAt: number | null = null;
   tick = 0;
   onGone: ((oid: number) => void) | null = null;
   onClearinghouse: ((state: ClearinghouseLike) => void) | null = null;
@@ -116,6 +118,7 @@ export class Feed {
       const next = bookFromLevels(this.tick, m.data.levels[0] ?? [], m.data.levels[1] ?? []);
       if (next) {
         this.book = next;
+        this.bookAt = Date.now();
         this.maybePrice();
         this.maybeTick();
       }
