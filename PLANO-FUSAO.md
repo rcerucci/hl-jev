@@ -670,3 +670,51 @@ foram **38 s**. O gargalo é o downloader, não a rede: **8,6 MB/s por stream** 
 **O que falta (2b):** o checkpoint `typed-decisions`, que **não está publicado em ONNX** e exige export
 próprio (`export/export_onnx.py`, `uv` + torch + onnxscript). Linha separada, sem misturar checkpoints.
 Nada de wiring até lá.
+
+**Regras da 2b, fixadas antes do `uv`** (decisão do dono): censo no **mesmo snapshot** de 3144 decisões;
+reportar `act`/`conf`/`noul`/par A/B/lados/p95 **à parte** e **sem baixar o θ** (se `conf` ficar < 0,80, a
+coluna §9.4 continua zero); e **recusa escrita** se o export falhar ou o p95 ficar ≥ 2 s — nesse caso **não
+nasce `laya.ts`** e a Laya fica hipótese de paper. Detalhe em `provas/v4b-0/parte-2/PLANO.md`.
+
+## 16. V4b-0 (parte 2b) — `typed-decisions`: export feito, **recusa declarada** (23 set 2026)
+
+As três regras foram fixadas **antes** do `uv` (`provas/v4b-0/parte-2/PLANO.md`, commit `663f758`). O export
+correu bem — o resultado é recusa, e é recusa **pelas regras**, não por opinião.
+
+**O export funcionou.** `export/export_onnx.py` do `receptron/laya` com `uv venv -p 3.12`, torch **CPU** 2.14,
+transformers 5.17, o checkpoint `convaiinnovations/laya-typed-decisions` (842 MB) e os `.py` de referência do
+repo base. Fidelidade declarada pelo próprio export contra a referência PyTorch: **`max |dlogits| = 1,16e-06`**,
+`max |dact| = 0,0`. Bundle de 1,6 GB produzido em **2 min 30 s**. Tudo fora do repositório.
+
+**Censo no mesmo snapshot de 3144 decisões (44 estados):**
+
+| | 2a — inglês publicado | **2b — `typed-decisions`** |
+|---|---|---|
+| `act` por ciclo | `buy` 2530 · `hold` 614 | **`buy` 3142 · `hold` 2** |
+| `act` por estado | 37/44 `buy` | **43/44 `buy`** |
+| `conf` min–max | 0,381 – 0,501 | **0,370 – 0,432** |
+| `noul` min–max | 0,816 – 0,944 | **0,349 – 0,645** |
+| `noul` ≥ 0,65 | **3144/3144** | **0/3144** |
+| par neutro A/B | A 3144 | **A 2970 · B 174** |
+| p95 por estado | 2119 ms | **2102 ms** |
+
+**Regra 1 cumprida:** mesmo conjunto (as primeiras 3144 decisões válidas), 44 estados; o JSON da 2a não foi
+tocado. **Regra 2 cumprida:** `conf` máximo **0,432** < 0,80 → a coluna da §9.4 continua **zero** e o θ **não**
+foi baixado. **Regra 3 accionada — RECUSA:** p95 **2102 ms ≥ 2 s** neste host → **não nasce `laya.ts`**; a Laya
+fica hipótese de paper, não caminho do motor.
+
+**O que a 2b acrescenta ao diagnóstico — mais forte do que "checkpoint errado":**
+
+- **O `noul` não lê o critério que lhe demos.** Medido por token do estado, nos **dois** checkpoints: o `noul`
+  médio é **mais baixo** nos estados com `bot_war` do que sem ele (2a: 0,861 vs 0,881; 2b: 0,467 vs 0,504). O
+  critério de `true` que escrevemos ("bot_war plus violent tape") não move a primitiva na direcção pedida —
+  mexe-a ao contrário.
+- **A saturação tem dois sentidos e nenhum serve:** a 2a prende no alto (travão dispararia em 100 %), a 2b
+  prende em baixo (`< 0,65` em 3144/3144, o travão nunca dispara) — e o **par neutro da mesma pergunta** dá
+  **94,5 % "A (=sim)"** na 2b, **contra** o próprio `noul`. As duas primitivas discordam entre si.
+- **O `act` é um prior, e na 2b é mais extremo:** `buy` em 99,9 % dos ciclos, `conf` 0,37–0,43, e um único
+  estado onde diz `hold` (`tight thin bot_war flat flat extreme mid`). Não lê o `tape` em checkpoint nenhum.
+
+**Consequência:** deixa de existir "era o checkpoint errado" — passa a existir *este encoder + estas 7 palavras
+não são oráculo neste livro*. **A alavanca volta aos buckets** (`tape` = `flat` em 95,6 %, com o livro a mexer
+dezenas de bps), não a mais um modelo. A coluna Laya da tabela §9.4 **não se abre**, e não há wiring.

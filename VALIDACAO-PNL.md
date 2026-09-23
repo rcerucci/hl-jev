@@ -96,6 +96,11 @@ Induzir drop, confirmar que não há ordem duplicada. PR próprio.
 
 ## 2. Laya local — fontes, medições e o que o fornecedor diz de si
 
+> **Fechado em 23 set 2026 — recusa.** O V4b-0 correu (partes 2a e 2b; `PLANO-FUSAO.md` §15/§16): nenhum dos
+> dois checkpoints produz lado graduável (`conf` máximo **0,432** < θ = 0,80) e o p95 é **2,1 s ≥ 2 s** neste
+> host. **A coluna Laya não entra na tabela e não nasce `laya.ts`.** O que fica abaixo é o registo do que foi
+> medido sobre a Laya, não um plano aberto.
+
 Laya **não** é a Layla do telemóvel. É o System One open-weight da Convai: encoder + cabeça de decisão, `choice` / `score` / `noul`, um forward pass, Apache 2.0.
 
 ### Repos (verificados: os quatro respondem 200)
@@ -128,6 +133,9 @@ Pesos ~1–2 GB em disco; o host tem folga (20 GiB de RAM livre, 399 GB de disco
 ---
 
 ## 3. Desenho `POLICY=laya`
+
+> **Não se aplica (recusa do V4b-0, 23 set 2026).** Este desenho fica como registo: não houve `laya.ts`, não
+> houve `TYPESAFE_BASE_URL` apontado a sidecar, não houve terceiro cliente. Ver `PLANO-FUSAO.md` §15/§16.
 
 Branch: `validacao/laya-local`, a partir de `8422dcc` ou do `HEAD` da `main` na hora.
 
@@ -316,7 +324,7 @@ thresholds or the dumb policy to invent sides.
 - [x] Decisão das marcas escrita: **mesmo livro**, `MARKS_VENUE=testnet` (23 set 2026)
 - [ ] V4b-0 corrido (jev / dumb / laya nos mesmos estados + distribuição do noul)
 - [ ] V3 corrido com `n_lados ≥ 20` por coluna, ou recusado por escrito
-- [ ] Laya, se existir, é **linha da tabela** e não substituto silencioso; linha declara "sem refit"
+- [x] Laya: **V4b-0 fechado com recusa** (p95 2102 ms ≥ 2 s e `conf` máx 0,432 < θ) — ver PLANO §15/§16. A coluna Laya **não entra** na tabela e não nasce `laya.ts`.
 - [ ] Nenhum commit com `HL_TESTNET=false`
 - [ ] Nenhum claim de PnL sem `n_lados` e sem filtro de `cycle_id` da sessão
 - [ ] Nenhuma ordem de livro misto em nenhum ensaio
