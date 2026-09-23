@@ -232,7 +232,10 @@ da bateria §9.1 entram porque o critério de aceite as exige: "existe `snapshot
 | A4 `DumbPolicy` | `src/policy/dumb.ts`, lê `state.split` e mais nada; `MockModel` intacto |
 | A9 TS/Bun | nada de Python: `src/**/*.ts` e `test/*.test.ts` |
 
-### Interpretações que eu tive de tomar (não estavam escritas; discorda se quiseres)
+### Interpretações que eu tive de tomar (não estavam escritas)
+
+**I1 e I4 confirmadas pelo dono em 23 set 2026** (o consultor validou as duas: `POLICY` ausente = legado, e o
+TIF da saída reduce-only continua no `plan.ts`). As restantes seguem como interpretação minha, reversíveis.
 
 | # | Assunto | O que fiz | Por quê |
 |---|---|---|---|
