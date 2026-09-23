@@ -22,6 +22,10 @@ export interface PolicyStats {
   policy: string;
   cycles: number;
   withOutcome: number;
+  /** Ciclos sem resposta valida do Jev: congelados, nao sao "hold" decidido. */
+  frozen: number;
+  /** Ciclos com veredicto valido (denominador das partilhas). */
+  decided: number;
   holds: number;
   highConf: number;
   highConfHits: number;
@@ -39,9 +43,23 @@ interface Sample {
   outcome: OutcomeLine | null;
 }
 
-function policyOf(line: DecisionLine): string {
+/**
+ * Familia da politica, nao o model id exacto. Uma falha do Jev sai com o
+ * `config.jevModelId` (ex. "jev-latest") no campo `model`, e isso nao e uma
+ * segunda politica de decisao: e o mesmo Jev sem resposta. Agrupar pelo id cru
+ * abria uma coluna falsa no meio da comparacao.
+ */
+export function policyOf(line: DecisionLine): string {
   const v = line.verdict as { model?: unknown } | null;
-  return v && typeof v.model === "string" && v.model ? v.model : "(sem modelo)";
+  const model = v && typeof v.model === "string" && v.model ? v.model : "";
+  if (/^dumb/i.test(model)) return "dumb";
+  if (/^jev|^typesafe/i.test(model)) return "jev";
+  return model || "(sem modelo)";
+}
+
+export function rawOk(line: DecisionLine): boolean {
+  const v = line.verdict as { raw_ok?: unknown } | null;
+  return v?.raw_ok !== false;
 }
 
 /** Le o par acao/confianca de uma linha de decisao. */
@@ -59,6 +77,8 @@ export function summarise(samples: Sample[], confAct = config.confAct): PolicySt
       policy,
       cycles: 0,
       withOutcome: 0,
+      frozen: 0,
+      decided: 0,
       holds: 0,
       highConf: 0,
       highConfHits: 0,
@@ -69,8 +89,11 @@ export function summarise(samples: Sample[], confAct = config.confAct): PolicySt
       fundingAvg: null,
     };
     stats.cycles++;
-    const verdict = readVerdictOf(decision);
+    const frozen = !rawOk(decision);
+    if (frozen) stats.frozen++;
+    const verdict = frozen ? null : readVerdictOf(decision);
     if (verdict) {
+      stats.decided++;
       if (verdict.act === "hold") stats.holds++;
       if (verdict.conf >= confAct) stats.highConf++;
     }
@@ -78,7 +101,7 @@ export function summarise(samples: Sample[], confAct = config.confAct): PolicySt
       stats.withOutcome++;
       const rated = outcome.directional_hit;
       const conf = outcome.conf_was ?? 0;
-      const high = conf >= confAct;
+      const high = !frozen && conf >= confAct;
       if (rated === null) stats.flats++;
       else if (high) rated ? stats.highConfHits++ : stats.highConfMisses++;
       else stats.lowConfGraded++;
@@ -106,6 +129,8 @@ export function formatTable(stats: PolicyStats[], confAct = config.confAct): str
     pad("politica", 12),
     pad("ciclos", 8),
     pad("c/outcome", 10),
+    pad("decididos", 10),
+    pad("falhas", 8),
     pad("%hold", 8),
     pad("%conf>=limiar", 15),
     pad("acuerto", 9),
@@ -114,13 +139,16 @@ export function formatTable(stats: PolicyStats[], confAct = config.confAct): str
     pad("hits_altaconf", 15),
     pad("funding", 10),
   ].join("");
+  const share = (part: number, whole: number) => (whole ? ((part / whole) * 100).toFixed(1) + "%" : "--");
   const rows = stats.map((s) =>
     [
       pad(s.policy, 12),
       pad(String(s.cycles), 8),
       pad(String(s.withOutcome), 10),
-      pad(s.cycles ? ((s.holds / s.cycles) * 100).toFixed(1) + "%" : "--", 8),
-      pad(s.cycles ? ((s.highConf / s.cycles) * 100).toFixed(1) + "%" : "--", 15),
+      pad(String(s.decided), 10),
+      pad(String(s.frozen), 8),
+      pad(share(s.holds, s.decided), 8),
+      pad(share(s.highConf, s.decided), 15),
       pad(pct(winrate(s)), 9),
       pad(String(s.highConfHits + s.highConfMisses), 5),
       pad(String(s.flats), 7),

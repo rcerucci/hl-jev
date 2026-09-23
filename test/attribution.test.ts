@@ -48,13 +48,28 @@ test("a tabela separa Jev e controle pelo modelo do veredicto", () => {
     ],
     CONF,
   );
-  const jev = stats.find((s) => s.policy === "jev-1.13.0")!;
+  const jev = stats.find((s) => s.policy === "jev")!;
   const dumb = stats.find((s) => s.policy === "dumb")!;
-  expect(jev).toMatchObject({ cycles: 3, withOutcome: 3, holds: 1, highConf: 2, highConfHits: 1, highConfMisses: 1, highConfMissFlags: 1 });
+  expect(jev).toMatchObject({ cycles: 3, withOutcome: 3, decided: 3, holds: 1, highConf: 2, highConfHits: 1, highConfMisses: 1, highConfMissFlags: 1 });
   expect(winrate(jev)).toBeCloseTo(0.5, 6);
   expect(dumb).toMatchObject({ cycles: 2, highConf: 2, highConfHits: 2, highConfMisses: 0 });
   expect(winrate(dumb)).toBe(1);
   expect(jev.fundingAvg).toBeCloseTo(0.00001, 10);
+});
+
+test("uma falha do Jev nao e uma segunda politica nem um hold decidido", () => {
+  // A falha sai com o model id de configuracao ("jev-latest") no `model`; tem de
+  // cair na familia jev e contar como falha, nao abrir coluna nem inflar %hold.
+  const falha = { ...decision("jev-latest", "hold", 0), verdict: { model: "jev-latest", act: "hold", act_conf: 0, raw_ok: false, note: "timeout" } };
+  const stats = summarise([{ decision: falha, outcome: null }, ciclo("jev-1.13.0", "hold", 0.4, null)], CONF);
+  expect(stats.length).toBe(1);
+  expect(stats[0]!).toMatchObject({ policy: "jev", cycles: 2, frozen: 1, decided: 1, holds: 1 });
+  const [limiar, header, row] = formatTable(stats);
+  expect(limiar).toContain("limiar");
+  expect(header).toContain("falhas");
+  expect(header).toContain("decididos");
+  // Uma falha nao entra no denominador das partilhas: o unico ciclo decidido e hold.
+  expect(row).toContain("100.0%");
 });
 
 test("hold e mercado parado ficam fora do denominador do acerto", () => {
