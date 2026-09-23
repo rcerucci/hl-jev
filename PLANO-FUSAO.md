@@ -1034,3 +1034,30 @@ mesmo encoder**. `n_lados ≥ 20` continua **fora** de meta; se aparecer, mede-s
 
 **FAIL:** 100 % `hold` **e** o `noul` continua a seguir `bot_war`/`funding`. Então o texto também não era a
 alavanca: **para-se**, sem abrir a Fase D e sem baixar θ.
+
+### 18.5 Leitura interina (23 set 2026, ~20:09Z) — **PASS 1**, e vê-se a incoerência do v1
+
+Fronteira `20260923T200827Z`, motor com o texto v2 em dry-run. Ao fim de ~30 ciclos:
+
+| | v1 (7 059 ciclos válidos) | **v2 (30 ciclos)** |
+|---|---|---|
+| `act` | `hold` **7059 / 7059** | **`sell` 29 · `hold` 1** |
+| `sidesAny` | 0 | **29** |
+| `act_probs` médios | — | `sell` **0,814** · `hold` 0,158 · `buy` 0,028 |
+| `act_conf` | mediana 0,420 | 0,73 – **0,80** |
+| `noul` | mediana 0,520 | **0,28 – 0,31** |
+| intents | `none` | `none` 28 · **`maker` 2** |
+| ordens no ledger | nenhuma | nenhuma (`fill: null` — dry-run) |
+
+**O estado destes ciclos é `tight deep dump flat flat extreme mid`** — contém **`flow=dump`**. É aqui que a
+incoerência do v1 fica à vista: o critério de `sell` no v1 dizia *"hit or reduce a long **without chasing a
+dump**"* — o texto **mandava não vender exactamente o adjectivo que o estado estava a mostrar**. O v2 diz o
+contrário (*"flow is dump … or tape is dumping"*) e o modelo passou a `sell` com convicção média 0,81.
+
+**PASS 1 cumprido** (`sidesAny > 0`). Efeito lateral medido e declarado: **`n_lados` deixou de ser zero** — dois
+ciclos com `conf ≥ 0,80` geraram intent **`maker`** e o gate deixou passar. Continua **fora** de meta, como
+combinado: mede-se, não se caça. Nada saiu para o venue — dry-run, sem signer, `fill: null` nos 30 ciclos.
+
+**O que falta para fechar:** a sessão das 2 h (≥ 8 janelas), para ver se o lado se mantém noutros estados e se o
+critério 2 se confirma. No v1, os grupos do `noul` eram: `tape=violent` **0,84** · `flow=bot_war` 0,79 · resto
+0,51 — o violento já subia mais, mas por pouco.
