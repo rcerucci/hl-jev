@@ -1,7 +1,8 @@
 # PLANO-FUSAO.md — Jev (política) × Hyperliquid (execução)
 
 Base: clone limpo de `aowang-ai/jev-trade`, `main` = `a3f2f834a1b97dd42fab1193814179ac2e96d7cd`.
-Branch: `fusao/policy-risk-venue`. Mapa verificado: `INTEGRATION.md`. Alarme: `test/integration-map.test.ts`.
+Branch: `fusao/policy-risk-venue`. Publicado em `rcerucci/hl-jev` (remoto `origin`); `aowang-ai` fica como
+`upstream`, com a tag `baseline-a3f2f83` a marcar a base exacta do PR. Mapa verificado: `INTEGRATION.md`. Alarme: `test/integration-map.test.ts`.
 Estado: **Fase A+B implementada** (T003-T017) na branch `fusao/policy-risk-venue`. Nenhuma ordem foi
 enviada, nenhum segredo foi lido, copiado ou registado. Decisoes D1-D8 fechadas pelo dono em 23 set 2026.
 

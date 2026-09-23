@@ -2,6 +2,7 @@
 
 Alvo: `https://github.com/aowang-ai/jev-trade`
 Baseline: `main` = `a3f2f834a1b97dd42fab1193814179ac2e96d7cd` (21 set 2026 22:19 +0800, "feat: Show closed lots as a position history on the desk.")
+Remotos deste clone: **`upstream`** = `aowang-ai/jev-trade` (canónico, fonte do baseline, marcado com a tag `baseline-a3f2f83`) e **`origin`** = `rcerucci/hl-jev` (destino do trabalho). `origin/main` publicado já é este baseline.
 Leitura: 23 set 2026, clone limpo (não o working tree local). Branch de trabalho: `fusao/policy-risk-venue`.
 Alarme do mapa: `test/integration-map.test.ts` (corre no `bun test`, logo no CI de `.github/workflows/test.yml`).
 
