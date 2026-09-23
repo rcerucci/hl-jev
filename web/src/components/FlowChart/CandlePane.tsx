@@ -42,13 +42,13 @@ function palette() {
   const cs = getComputedStyle(document.documentElement);
   const v = (nome: string, alt: string) => cs.getPropertyValue(nome).trim() || alt;
   return {
-    fundo: v("--bg", "#ffffff"),
-    tinta: v("--ink", "#000000"),
-    texto: v("--muted", "#666666"),
-    grelha: v("--grid", "#e5e5e5"),
-    borda: v("--border", "#000000"),
-    buy: v("--buy", "#00aa00"),
-    sell: v("--sell", "#cc0000"),
+    fundo: v("--bg", "#f4f1e7"),
+    tinta: v("--ink", "#2b2b27"),
+    texto: v("--muted", "#6d6c64"),
+    grelha: v("--grid", "#ded9cb"),
+    borda: v("--border", "#2f2f2b"),
+    buy: v("--buy", "#4d7150"),
+    sell: v("--sell", "#9a4a3e"),
   };
 }
 

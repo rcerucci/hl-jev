@@ -1,47 +1,53 @@
 :root {
-  --bg: #ffffff;
-  --panel: #ffffff;
-  --panel-2: #f8f9fa;
-  --border: #000000;
-  --border-2: #000000;
-  --track: #e8e8e8;
+  /*
+   * Paleta de tinta electronica (e-ink): papel quente em vez de branco puro,
+   * preto suave em vez de preto puro, acentos dessaturados. Os contrastes
+   * estao medidos em INTEGRATION/PLANO; nao inventar cores fora daqui.
+   */
+  --bg: #f4f1e7;
+  --panel: #f4f1e7;
+  --panel-2: #efebe0;
+  --border: #2f2f2b;
+  --border-2: #6b6a61;
+  --track: #ded9cb;
 
-  --ink: #000000;
-  --ink-2: #333333;
-  --muted: #666666;
-  --muted-2: #666666;
-  --link-muted: #333333;
+  --ink: #2b2b27;
+  --ink-2: #45443f;
+  --muted: #6a6961;
+  --muted-2: #6a6961;
+  --link-muted: #45443f;
 
-  --buy: #00aa00;
-  --buy-ink: #00aa00;
-  --buy-bar: #00aa00;
-  --buy-bar-dim: #c8e6c8;
-  --sell: #cc0000;
-  --sell-ink: #cc0000;
-  --sell-bar: #cc0000;
-  --sell-bar-dim: #f0c8c8;
+  --buy: #4d7150;
+  --buy-ink: #436645;
+  --buy-bar: #4d7150;
+  --buy-bar-dim: #c9d0c2;
+  --sell: #9a4a3e;
+  --sell-ink: #8a4237;
+  --sell-bar: #9a4a3e;
+  --sell-bar-dim: #ddcac3;
 
-  --late: #b8860b;
-  --late-ink: #b8860b;
-  --late-cell: #fff4d6;
-  --hold-cell: #f1f3f4;
-  --up-bar: #00aa00;
-  --down-bar: #cc0000;
-  --link: #0000aa;
+  --late: #8a6a24;
+  --late-ink: #7d5f1f;
+  --late-cell: #e6ddc4;
+  --hold-cell: #e4e0d3;
+  --up-bar: #4d7150;
+  --down-bar: #9a4a3e;
+  --link: #3f5273;
 
-  --badge-jev-bg: #000000;
-  --badge-jev-fg: #ffffff;
-  --badge-standin-bg: #000000;
-  --badge-standin-fg: #ffffff;
-  --live-dot: #00aa00;
-  --pnl-pos: #00aa00;
-  --pnl-neg: #cc0000;
-  --grid: #e5e5e5;
+  --badge-jev-bg: #2b2b27;
+  --badge-jev-fg: #f4f1e7;
+  --badge-standin-bg: #2b2b27;
+  --badge-standin-fg: #f4f1e7;
+  --live-dot: #4d7150;
+  --pnl-pos: #436645;
+  --pnl-neg: #8a4237;
+  --grid: #ded9cb;
+  --surface-hover: #eae5d9;
 
   --font-sans: var(--font-plex), "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-mono: var(--font-plex), "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --page-bg: #ffffff;
+  --page-bg: #f4f1e7;
   --card-radius: 0;
   --card-max: none;
 }
@@ -54,46 +60,48 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --bg: #0b0d10;
-  --panel: #0b0d10;
-  --panel-2: #12151a;
-  --border: #454b54;
-  --border-2: #2b3138;
-  --track: #1c2128;
+  /* Papel invertido: cinza-castanho opaco, nao azul-preto. */
+  --bg: #1b1a17;
+  --panel: #1b1a17;
+  --panel-2: #22211e;
+  --border: #4b4943;
+  --border-2: #34332f;
+  --track: #2a2925;
 
-  --ink: #e9ecf0;
-  --ink-2: #c3c9d1;
-  --muted: #8d949e;
-  --muted-2: #8d949e;
-  --link-muted: #c3c9d1;
+  --ink: #d9d5c9;
+  --ink-2: #b3afa3;
+  --muted: #8d8a81;
+  --muted-2: #8d8a81;
+  --link-muted: #b3afa3;
 
-  --buy: #3ddc84;
-  --buy-ink: #3ddc84;
-  --buy-bar: #3ddc84;
-  --buy-bar-dim: #1e4030;
-  --sell: #ff5f56;
-  --sell-ink: #ff5f56;
-  --sell-bar: #ff5f56;
-  --sell-bar-dim: #45211f;
+  --buy: #7f9a80;
+  --buy-ink: #8aa78b;
+  --buy-bar: #7f9a80;
+  --buy-bar-dim: #2f3830;
+  --sell: #bd7f72;
+  --sell-ink: #c98b7d;
+  --sell-bar: #bd7f72;
+  --sell-bar-dim: #3a2c28;
 
-  --late: #f0b429;
-  --late-ink: #f0b429;
-  --late-cell: #2e2712;
-  --hold-cell: #1b2027;
-  --up-bar: #3ddc84;
-  --down-bar: #ff5f56;
-  --link: #8ab4ff;
+  --late: #c1a463;
+  --late-ink: #c9ad6d;
+  --late-cell: #332f1f;
+  --hold-cell: #262521;
+  --up-bar: #7f9a80;
+  --down-bar: #bd7f72;
+  --link: #93a3c0;
 
-  --badge-jev-bg: #e9ecf0;
-  --badge-jev-fg: #0b0d10;
-  --badge-standin-bg: #e9ecf0;
-  --badge-standin-fg: #0b0d10;
-  --live-dot: #3ddc84;
-  --pnl-pos: #3ddc84;
-  --pnl-neg: #ff5f56;
-  --grid: #232931;
+  --badge-jev-bg: #d9d5c9;
+  --badge-jev-fg: #1b1a17;
+  --badge-standin-bg: #d9d5c9;
+  --badge-standin-fg: #1b1a17;
+  --live-dot: #7f9a80;
+  --pnl-pos: #8aa78b;
+  --pnl-neg: #c98b7d;
+  --grid: #2c2b27;
+  --surface-hover: #232220;
 
-  --page-bg: #0b0d10;
+  --page-bg: #1b1a17;
 }
 
 *,
