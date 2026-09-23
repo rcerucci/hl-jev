@@ -1,4 +1,6 @@
 const env = (key: string, fallback?: string) => process.env[key] ?? fallback;
+/** Env com default obrigatorio: o campo sai `string`, nunca `string | undefined`. */
+const envStr = (key: string, fallback: string) => env(key, fallback) ?? fallback;
 
 export type JevProvider = "typesafe" | "gateway";
 
@@ -19,6 +21,20 @@ export function resolveJevModelId(e: { JEV_MODEL_ID?: string }, provider: JevPro
   const set = e.JEV_MODEL_ID?.trim();
   if (set) return set;
   return provider === "gateway" ? "typesafe-ai/jev" : "jev-latest";
+}
+
+export type PolicyMode = "" | "jev" | "dumb";
+
+/**
+ * `POLICY` escolhe o caminho da fusao. Sem `POLICY`, o repo corre como sempre
+ * correu: quem decide e o `MODEL` (mock ou jev numerico). Nao ha segunda fonte
+ * de verdade para testnet/mainnet — `HL_TESTNET` continua a ser a unica.
+ */
+export function resolvePolicy(e: { POLICY?: string }): PolicyMode {
+  const v = e.POLICY?.trim().toLowerCase();
+  if (!v) return "";
+  if (v === "jev" || v === "dumb") return v;
+  throw new Error("POLICY must be jev or dumb");
 }
 
 export function assertJevCredentials(
@@ -60,6 +76,20 @@ export const config = {
   jevProvider,
   jevModelId,
   jevUsdPerMTok: 0.042,
+  /** "" = caminho legado (o MODEL decide). jev | dumb = caminho da fusao. */
+  policy: resolvePolicy(process.env as { POLICY?: string }),
+  policyFile: envStr("POLICY_FILE", "./policy/jev_questions.json"),
+  ledgerDir: envStr("LEDGER_DIR", "./data/ledger"),
+  /** Timeout curto do path quente da fusao (spec 4.1). */
+  jevTimeoutMs: Number(env("JEV_TIMEOUT_MS", "800")),
+  confAct: Number(env("JEV_CONF_ACT", "0.80")),
+  hostileTh: Number(env("NOUL_HOSTILE_TH", "0.65")),
+  stateMaxWords: Number(env("STATE_MAX_WORDS", "12")),
+  outcomeHorizonSecs: Number(env("OUTCOME_HORIZON_SECS", "900")),
+  /** Alavancagem do caminho da fusao: o modelo nao escolhe (spec, ganchos). */
+  leverage: Number(env("LEVERAGE", "1")),
+  /** Livro mais velho que isto congela o livro em vez de decidir (spec 3.6). */
+  bookStaleMs: Number(env("BOOK_STALE_MS", "5000")),
   port: Number(env("PORT", "3000")),
   historySize: 1000,
   bankrollUsd: Number(env("BANKROLL_USD", "200")),

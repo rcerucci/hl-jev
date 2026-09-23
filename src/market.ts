@@ -64,6 +64,11 @@ export class Market {
     return lot(config.quoteUsd / Math.max(mid, 1e-9), this.szDecimals);
   }
 
+  /** Instante do ultimo livro recebido. Null antes do primeiro l2Book. */
+  get bookAt(): number | null {
+    return this.feed.bookAt;
+  }
+
   async init() {
     const transport = new HttpTransport({ isTestnet: config.hlTestnet });
     const converter = await SymbolConverter.create({ transport });

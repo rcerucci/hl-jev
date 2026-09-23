@@ -84,6 +84,11 @@ export interface Decision {
   upIn10: number;
   latencyMs: number;
   late: boolean;
+  /** Caminho da fusao: as doze palavras que a POLICY viu, e o veredicto cru. */
+  state12?: string;
+  act?: Action;
+  act_conf?: number;
+  too_hostile?: number;
 }
 
 export interface Position {

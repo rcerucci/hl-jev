@@ -1,7 +1,12 @@
 import { experimental_evaluate as evaluate } from "ai";
 import { TypeSafeClient } from "@typesafe-ai/sdk";
+import type { Questions } from "@typesafe-ai/sdk";
 import { assertJevCredentials, config } from "./config";
 import { leverageRungs, liveIntent, parseLeverage, quoteAction, type Bias, type Intent } from "./plan";
+import { DumbPolicy } from "./policy/dumb";
+import { askQuestions, loadPolicyFile, type PolicyFile } from "./policy/load";
+import { stanceFromState } from "./risk/buckets";
+import type { Act, Policy, Verdict } from "./risk/types";
 import type { Action, Side } from "./types";
 
 /** What the model sees. Compact, relative, human-readable. */
@@ -75,6 +80,11 @@ export interface ModelDecision {
   upIn10: number;
   latencyMs: number;
   inputTokens: number;
+  /** Caminho da fusao: as doze palavras que a POLICY viu, e o veredicto cru. */
+  state12?: string;
+  act?: Action;
+  act_conf?: number;
+  too_hostile?: number;
 }
 
 export interface Model {
@@ -412,3 +422,131 @@ export const createModel = (): Model => {
   assertJevCredentials(config.model, config.jevProvider, process.env);
   return new JevModel();
 };
+
+/* ------------------------------------------------------------------ *
+ * Caminho da fusao: entra a linha curta, sai o veredicto tipado.
+ * O cliente e o mesmo (`systemOne` / ramo Gateway); o que muda e o
+ * `state` (<=12 palavras, zero digitos) e as perguntas do policy file.
+ * ------------------------------------------------------------------ */
+
+let policyCache: PolicyFile | undefined;
+
+function policyOf(path = config.policyFile): PolicyFile {
+  return (policyCache ??= loadPolicyFile(path));
+}
+
+const ACTS: readonly Act[] = ["buy", "sell", "hold"];
+
+/** Sem resposta valida nao ha lado: o RISK congela o livro (spec 2.2.4). */
+function failedVerdict(cycleId: string, note: string): Verdict {
+  return {
+    cycle_id: cycleId,
+    model: config.jevModelId,
+    latency_ms: 0,
+    act: "hold",
+    act_probs: { buy: 0, sell: 0, hold: 1 },
+    act_conf: 0,
+    too_hostile: 0,
+    raw_ok: false,
+    note,
+  };
+}
+
+/** Parse defensivo da resposta `choice` (spec 4.2). */
+export function readChoiceAnswer(raw: unknown): { act: Act; conf: number; probs: Record<Act, number> } | null {
+  const a = raw as { type?: unknown; choice?: unknown; confidence?: unknown; probabilities?: Record<string, unknown> } | undefined;
+  if (!a || a.type !== "choice") return null;
+  const act = typeof a.choice === "string" ? a.choice.trim().toLowerCase() : "";
+  if (!(ACTS as readonly string[]).includes(act)) return null;
+  const p = a.probabilities ?? {};
+  const probs = ACTS.map((k) => Number(p[k] ?? 0));
+  if (probs.some((n) => !Number.isFinite(n) || n < 0)) return null;
+  const sum = probs.reduce((x, y) => x + y, 0);
+  // A API arredonda a 2 casas: a soma admite +-0.02 (spec 4.2).
+  if (Math.abs(sum - 1) > 0.02) return null;
+  const conf = Number(a.confidence);
+  if (!Number.isFinite(conf) || conf < 0 || conf > 1) return null;
+  return { act: act as Act, conf, probs: { buy: probs[0]!, sell: probs[1]!, hold: probs[2]! } };
+}
+
+/** Parse defensivo da resposta `noul`: P(sim) em [0,1] (spec 4.2). */
+export function readNoulAnswer(raw: unknown): number | null {
+  const a = raw as { type?: unknown; noul?: unknown } | undefined;
+  if (!a || a.type !== "noul") return null;
+  const n = Number(a.noul);
+  return Number.isFinite(n) && n >= 0 && n <= 1 ? n : null;
+}
+
+/** O Jev da fusao: uma request por sleeve por ciclo, sem retry no tick. */
+export class JevPolicy implements Policy {
+  readonly name = "jev";
+
+  constructor(private policy: PolicyFile = policyOf()) {}
+
+  async decide(state: string, cycleId: string): Promise<Verdict> {
+    const t0 = performance.now();
+    // A POLICY so ve as doze palavras: o asset vem do proprio cycle_id e a
+    // estance, do bucket de inventario dentro do state.
+    const asset = cycleId.split("-").at(-1) ?? "?";
+    const questions = askQuestions(this.policy, { asset, stance: stanceFromState(state) });
+    try {
+      const r = await withDeadline(this.ask(state, questions), config.jevTimeoutMs);
+      const act = readChoiceAnswer(r.answers.act);
+      const hostile = readNoulAnswer(r.answers.too_hostile);
+      if (!act || hostile === null) return failedVerdict(cycleId, "parse");
+      return {
+        cycle_id: cycleId,
+        model: r.model,
+        latency_ms: Math.round(performance.now() - t0),
+        act: act.act,
+        act_probs: act.probs,
+        act_conf: act.conf,
+        too_hostile: hostile,
+        raw_ok: true,
+        input_tokens: r.tokens,
+      };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return failedVerdict(cycleId, /timeout/i.test(msg) ? "timeout" : "transport");
+    }
+  }
+
+  private async ask(state: string, questions: Questions) {
+    if (config.jevProvider === "gateway") {
+      const r = await evaluate({
+        model: config.jevModelId,
+        state: state as never,
+        questions: questions as never,
+        maxRetries: 0,
+      });
+      return {
+        answers: r.answers as unknown as Record<string, unknown>,
+        model: config.jevModelId,
+        tokens: r.usage?.inputTokens ?? 0,
+      };
+    }
+    const r = await typesafeClient().systemOne(
+      { model: config.jevModelId, state, questions },
+      { retry: { maxRetries: 0 } },
+    );
+    return {
+      answers: r.answers as unknown as Record<string, unknown>,
+      model: r.model,
+      tokens: r.usage.input_tokens ?? 0,
+    };
+  }
+}
+
+/** `null` = sem `POLICY`: o tick segue o caminho legado. */
+export function createPolicy(): Policy | null {
+  if (config.policy === "dumb") return new DumbPolicy();
+  if (config.policy === "jev") {
+    assertJevCredentials(
+      "jev",
+      config.jevProvider,
+      process.env as { TYPESAFE_API_KEY?: string; AI_GATEWAY_API_KEY?: string },
+    );
+    return new JevPolicy();
+  }
+  return null;
+}

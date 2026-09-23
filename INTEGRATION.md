@@ -102,3 +102,40 @@ grep -nE "HL_TESTNET|TICK_MS|QUOTE_USD|MODEL" src/config.ts
 bun test test/integration-map.test.ts
 FUSAO_REPO=/copia/corrompida bun test test/integration-map.test.ts   # tem de REPROVAR
 ```
+
+## Caminho da fusao (implementado depois deste mapa)
+
+Ligado por `POLICY=jev|dumb`. Sem `POLICY`, o tick e o de sempre e o `MODEL` decide — o caminho legado
+ficou intacto.
+
+```
+trader.onBlock            src/trader.ts
+  └─ fusion?  fusedTick   src/trader.ts
+       ├─ buildSnapshot   src/trader.ts        (numeros; o Jev nao ve isto)
+       ├─ toState         src/risk/buckets.ts  (7 buckets, <=12 palavras, zero digitos)
+       │    └─ stanceFromState + policy/jev_questions.json (placeholders {{asset}} {{stance}})
+       ├─ policy.decide   src/model.ts JevPolicy | src/policy/dumb.ts DumbPolicy
+       │    └─ systemOne / evaluate            (cliente + ramo Gateway: os de sempre)
+       ├─ riskIntent      src/risk/intent.ts   (gates da spec 3.6)
+       ├─ planFromRisk    src/plan.ts          (RiskIntent -> QuotePlan, ALO/IOC)
+       ├─ ledger.writeDecision  src/ledger/jsonl.ts
+       └─ enqueueQuote -> market.send          (o submit unico, sem alteracoes)
+```
+
+| Ficheiro novo | Caixa (spec 1) |
+|---|---|
+| `policy/jev_questions.json` | POLICY — o unico artefacto que a noite pode reescrever |
+| `src/policy/load.ts` | POLICY — schema, placeholders e o lint que recusa deriva |
+| `src/policy/dumb.ts` | POLICY — o controle da §9.4, sobre as mesmas palavras |
+| `src/risk/types.ts` | RISK — DTOs congelados (Snapshot, Verdict, RiskIntent, porta Policy) |
+| `src/risk/buckets.ts` | RISK — cortes numericos -> adjectivos, num so ficheiro |
+| `src/risk/intent.ts` | RISK — os gates |
+| `src/ledger/jsonl.ts` | LEDGER — append-only, ficheiro pelo dia UTC da decisao (D5) |
+
+Alteracoes ao venue, todas aditivas e nenhuma na assinatura de submit: `feed.bookAt` (instante do ultimo
+l2Book), `market.bookAt` (getter), campos opcionais do desk `state12`/`act`/`act_conf`/`too_hostile` em
+`src/types.ts` **e** `web/src/lib/bot-types.ts` (identicos, o teste diffa), `enqueueQuote` passou a receber
+`leverage` por parametro, e `emit` aceita as duas formas de decisao.
+
+Verificacao medida deste caminho: `bun test` 124 pass / 0 fail; arranque real com `POLICY=dumb` sem chave
+(livro de testnet, escritas a cada 2 s, ledger `20260923-BTC.jsonl` com `state` de 7 palavras e zero digitos).

@@ -2,7 +2,8 @@
 
 Base: clone limpo de `aowang-ai/jev-trade`, `main` = `a3f2f834a1b97dd42fab1193814179ac2e96d7cd`.
 Branch: `fusao/policy-risk-venue`. Mapa verificado: `INTEGRATION.md`. Alarme: `test/integration-map.test.ts`.
-Estado: **planeamento**. Nenhuma ordem foi enviada, nenhum segredo foi lido, copiado ou registado.
+Estado: **Fase A+B implementada** (T003-T017) na branch `fusao/policy-risk-venue`. Nenhuma ordem foi
+enviada, nenhum segredo foi lido, copiado ou registado. Decisoes D1-D8 fechadas pelo dono em 23 set 2026.
 
 ## Veredicto
 
@@ -88,9 +89,9 @@ classifica como não-negociável. Não é detalhe técnico: é escolher qual das
 
 ## 3. Fases
 
-**Fase 0 (feita nesta rodada)** — clone limpo, SHA gravado, `INTEGRATION.md`, alarme do mapa a correr no CI.
-**Fase A** — solda seca: `snapshot → state → verdict mock → intent → planFromRisk → submit existente`. Sem chave Jev.
-**Fase B** — Jev vivo: `systemOne` + `noul` + `confidence`, timeout 800 ms, policy file versionado, ledger `decision`.
+**Fase 0 (feita)** — clone limpo, SHA gravado, `INTEGRATION.md`, alarme do mapa a correr no CI.
+**Fase A (feita)** — solda seca: `snapshot → state → verdict mock → intent → planFromRisk → submit existente`. Sem chave Jev.
+**Fase B (codigo pronto, prova com chave pendente)** — Jev vivo: `systemOne` + `noul` + `confidence`, timeout 800 ms, policy file versionado, ledger `decision`.
 **Fase C/D/E** — outcome +15 min e tabela de atribuição · noite (`propose`/`show`/`accept`) · mainnet capado. PRs separados.
 
 O PR desta ronda entrega **A+B**, como a §10 manda. C, D e E não entram.
@@ -101,21 +102,21 @@ Formato `tasks.md` do Spec Kit (validado com `validar_formato_tasks.py`). `[P]` 
 
 - [ ] T001 [P] [Setup] Clonar `main` da origem e gravar o SHA de baseline — `INTEGRATION.md`
 - [ ] T002 [P] [Setup] Alarme que confere os invariantes do mapa contra o código — `test/integration-map.test.ts`
-- [ ] T003 [Foundational] Carregador tipado do policy file com versionamento e validação de schema — `src/policy/load.ts`
-- [ ] T004 [Foundational] Cortes numéricos → adjectivos, constantes nomeadas, um só ficheiro — `src/risk/buckets.ts`
-- [ ] T005 [Foundational] Tipos do veredicto e do intent da fusão (sem colidir com `Intent`) — `src/risk/types.ts`
-- [ ] T006 [US1] Gates do RISK: timeout, `raw_ok`, `too_hostile`, `conf`, inventário, book velho — `src/risk/intent.ts`
-- [ ] T007 [US1] Gancho no tick: RISK entre a decisão e o `planQuote` — `src/trader.ts`
-- [ ] T008 [US1] Ponte intent → `QuotePlan` mantendo o contrato de `market.send` — `src/plan.ts`
-- [ ] T009 [US1] Alavancagem passa a vir do config e não do modelo — `src/config.ts`, `src/trader.ts`
-- [ ] T010 [US1] Ledger append-only com `kind: decision` por ciclo — `src/ledger/jsonl.ts`
-- [ ] T011 [US2] Cliente Jev com `state` de ≤12 palavras e perguntas `choice`+`noul` do policy file — `src/model.ts`
-- [ ] T012 [US2] Controle `POLICY=dumb` a decidir sobre os adjectivos, mesmo schema de ledger — `src/policy/dumb.ts`
-- [ ] T013 [US2] Contrato de fio do desk expõe `state`/`act`/`act_conf`/`too_hostile` sem chaves — `src/types.ts`, `web/src/lib/bot-types.ts`
-- [ ] T014 [P] Testes de buckets: sem dígitos, ≤12 tokens, determinístico — `test/buckets.test.ts`
-- [ ] T015 [P] Testes dos gates do intent (timeout, conf, noul, inventário) — `test/intent-gates.test.ts`
-- [ ] T016 [P] Testes do parser do policy file e da recusa de deriva de schema — `test/policy-schema.test.ts`
-- [ ] T017 [P] Testes do ledger (duas escritas, mesmo `cycle_id`, append-only) — `test/ledger.test.ts`
+- [x] T003 [Foundational] Carregador tipado do policy file com versionamento e validação de schema — `src/policy/load.ts`
+- [x] T004 [Foundational] Cortes numéricos → adjectivos, constantes nomeadas, um só ficheiro — `src/risk/buckets.ts`
+- [x] T005 [Foundational] Tipos do veredicto e do intent da fusão (sem colidir com `Intent`) — `src/risk/types.ts`
+- [x] T006 [US1] Gates do RISK: timeout, `raw_ok`, `too_hostile`, `conf`, inventário, book velho — `src/risk/intent.ts`
+- [x] T007 [US1] Gancho no tick: RISK entre a decisão e o `planQuote` — `src/trader.ts`
+- [x] T008 [US1] Ponte intent → `QuotePlan` mantendo o contrato de `market.send` — `src/plan.ts`
+- [x] T009 [US1] Alavancagem passa a vir do config e não do modelo — `src/config.ts`, `src/trader.ts`
+- [x] T010 [US1] Ledger append-only com `kind: decision` por ciclo — `src/ledger/jsonl.ts`
+- [x] T011 [US2] Cliente Jev com `state` de ≤12 palavras e perguntas `choice`+`noul` do policy file — `src/model.ts`
+- [x] T012 [US2] Controle `POLICY=dumb` a decidir sobre os adjectivos, mesmo schema de ledger — `src/policy/dumb.ts`
+- [x] T013 [US2] Contrato de fio do desk expõe `state`/`act`/`act_conf`/`too_hostile` sem chaves — `src/types.ts`, `web/src/lib/bot-types.ts`
+- [x] T014 [P] Testes de buckets: sem dígitos, ≤12 tokens, determinístico — `test/buckets.test.ts`
+- [x] T015 [P] Testes dos gates do intent (timeout, conf, noul, inventário) — `test/intent-gates.test.ts`
+- [x] T016 [P] Testes do parser do policy file e da recusa de deriva de schema — `test/policy-schema.test.ts`
+- [x] T017 [P] Testes do ledger (duas escritas, mesmo `cycle_id`, append-only) — `test/ledger.test.ts`
 - [ ] T018 [US1] Prova em testnet: `hold` → nenhuma chamada de ordem; `buy` → ALO resting, nunca market — `INTEGRATION.md`
 - [ ] T019 [Polish] README: como correr em testnet, como ler a tabela de confiança, como **não** ir a mainnet — `README.md`
 
@@ -211,3 +212,53 @@ entry cost threshold and the entry spacing on the offline replay") com **7 fiche
 com razão, partir do `main` público e não abrir o tree sujo. Consequência a aceitar em voz alta: se a fusão
 partir do `main` público, **esse trabalho fica fora do PR** — e é trabalho de medição de custo de entrada, ou
 seja, do mesmo assunto. Não toco nele; a decisão (publicar antes ou deixar de fora) é tua.
+
+## 9. Fechado em 23 set 2026 — decisões D1–D8 e o que foi implementado
+
+O consultor fechou as oito decisões e autorizou T003–T013. Implementei T003–T017 (as quatro tarefas de teste
+da bateria §9.1 entram porque o critério de aceite as exige: "existe `snapshot_to_state` **testado**").
+
+| Decisão | Como ficou no código |
+|---|---|
+| D1 (b) manter 2 s | nada mudou: `TICK_MS` continua a cadência. **Não existe `CYCLE_SECS`.** |
+| D2 `RiskIntent` | `src/risk/types.ts`; o alarme passou a reprovar se nascer um `Intent` novo no RISK |
+| D3 timeout não cancela | `reason` separa os dois holds (`frozen_*` vs `jev_hold`/`low_conf`/`hostile`/`inventory_block`); `isFrozen`/`standsDown` decidem, e o teste prova as duas consequências |
+| D4 placeholders não numéricos | só `{{asset}}` e `{{stance}}`; placeholder desconhecido (p. ex. `{{tickMs}}`) é recusado no load |
+| D5 dia UTC da decisão | o `cycle_id` carrega o instante, e o outcome das 23:50 cai no ficheiro do dia da **decisão** (testado) |
+| D6 só acrescentar ao desk | `state12`, `act`, `act_conf`, `too_hostile` opcionais nas duas cópias dos tipos |
+| D7 sem agent wallet / sem `HL_AGENT_*` | nada disso foi criado |
+| D8 só o `main` público | baseline `a3f2f83`; o tree local nem foi aberto |
+| A4 `DumbPolicy` | `src/policy/dumb.ts`, lê `state.split` e mais nada; `MockModel` intacto |
+| A9 TS/Bun | nada de Python: `src/**/*.ts` e `test/*.test.ts` |
+
+### Interpretações que eu tive de tomar (não estavam escritas; discorda se quiseres)
+
+| # | Assunto | O que fiz | Por quê |
+|---|---|---|---|
+| I1 | `POLICY` ausente | o tick continua o **legado** (o `MODEL` decide); a fusão só liga com `POLICY=jev\|dumb` | A4/D6 mandam manter o `MODEL=mock` como default; assim o demo que corre hoje não muda de comportamento |
+| I2 | Alavancagem | `enqueueQuote` recebe `leverage` por parâmetro: a fusão passa `config.leverage`, o legado continua a passar a do modelo | "o modelo não escolhe alavancagem na v1" sem quebrar o caminho antigo |
+| I3 | Snapshot §3.1 | acrescentei os campos que a **própria** §3.2 exige (`tape`, `flow`) e corrigi dois nomes: `funding_bps` (a HL publica taxa **horária**, não 8h) e `depth_usd_10bps` (o livro só agrega bandas de 10/25/50 bps) | sem isso os buckets `pumping`/`bot_war` seriam ficção |
+| I4 | TIF | o `RiskIntent` pede `maker` sempre (como a §3.6 escreve) e o `plan.ts` decide o Ioc da saída reduce-only | o TIF é detalhe de venue, decidido no `plan.ts`, e o Jev nunca o escolhe |
+| I5 | Livro velho | `book_age_ms` vem de `feed.bookAt`, campo novo (aditivo) no venue; sem ele o gate da §3.6 seria decorativo | o gate tem de medir, não fingir |
+| I6 | `Verdict` | dois campos opcionais de diagnóstico: `note` ("timeout"/"parse"/"transport") e `input_tokens` (mantém o contador `jevUsd` do desk a funcionar) | a decisão continua a ser só `act`/`act_conf`/`too_hostile` |
+| I7 | `fill` na linha `decision` | escrevo `fill: null`; o fill chega assíncrono e a linha dele é da Fase C | o tick não bloqueia à espera do ack |
+
+### Lacunas declaradas (não são surpresas)
+
+- `outcome` +15 min, tabela confiança × acerto e `select_disagreements` são **Fase C**: não existem.
+- O turno da noite é **Fase D**: não existe, e o `accept` continua manual.
+- A prova de testnet com chave (T018: "hold produz Noop e buy produz uma ALO") **exige chave de testnet** e
+  ainda não foi feita — o que correu foi dry-run (`wallet null`), que prova o caminho todo menos o ack do venue.
+- **O `main` público não passa `tsc --noEmit`**: 7 erros de tipo, todos pré-existentes (medido num worktree de
+  `a3f2f83`). O CI só corre `bun test`, por isso passam despercebidos. O meu patch não acrescenta nenhum
+  (comparado erro a erro). Consertar os 7 é PR próprio, não este.
+
+### Evidência medida desta ronda
+
+```
+bun test test          → 124 pass / 0 fail  (64 do repo + 60 novos)
+tsc --noEmit           → 7 erros, exactamente os 7 do baseline
+POLICY=dumb (dry-run)  → arranca, ticks a 2000 ms, ledger 20260923-BTC.jsonl,
+                         state real: "tight deep dump flat flat extreme mid"
+alarme do mapa         → 5 corrupções reprovam; o caso legítimo passa
+```

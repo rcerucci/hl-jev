@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "updated_at": "2026-09-23T00:00:00Z",
+  "source": "human",
+  "questions": {
+    "act": {
+      "type": "choice",
+      "instructions": {
+        "question": "buy, sell, or hold {{asset}}?",
+        "goal": "One maker quote for this book and this inventory. hold means no new order.",
+        "timing": "one decision per tick",
+        "inputs": "state is a short line of adjectives in a fixed order: spread depth flow tape inventory funding clock. inventory is {{stance}}.",
+        "context": "size, price, time in force and leverage are chosen by the code, never by you."
+      },
+      "criteria": {
+        "buy": "Maker edge to lift or cover a short without chasing a violent tape.",
+        "sell": "Maker edge to hit or reduce a long without chasing a dump.",
+        "hold": "No edge, hostile book, or inventory already expresses the view."
+      }
+    },
+    "too_hostile": {
+      "type": "noul",
+      "instructions": {
+        "question": "Is this book too hostile to send any non-reduce order?",
+        "inputs": "state is the same short line of adjectives. inventory is {{stance}}.",
+        "context": "Answer yes only for a book where a resting quote would be obvious food."
+      },
+      "criteria": {
+        "true": "Unfillable book, bot_war plus violent tape, or funding extreme against the would-be add.",
+        "false": "A resting post-only quote can be placed without being obvious food."
+      }
+    }
+  }
+}

@@ -2,7 +2,11 @@ import { config } from "./config";
 import { bpsBetween, snapshotIndicators, venueFeatures } from "./indicators";
 import type { Market } from "./market";
 import type { Model, ModelDecision, TradeState } from "./model";
-import { planQuote, type QuotePlan } from "./plan";
+import { planFromRisk, planQuote, type QuotePlan } from "./plan";
+import { toSnapshot, toState } from "./risk/buckets";
+import { isFrozen, riskIntent, standsDown } from "./risk/intent";
+import type { Policy, Snapshot, Verdict } from "./risk/types";
+import { cycleId, type Ledger } from "./ledger/jsonl";
 import { aggregateFills, emptySummary, takeLiveFills, takeSimFills, type Resting, type TradeFeed } from "./trades";
 import type { BlockEvent, Book, Fill, PricePoint, Quote, Side, Timing, Totals } from "./types";
 
@@ -23,6 +27,20 @@ export function jevUnavailable(e: unknown): boolean {
  * is still answering. Hyperliquid leverage/order I/O runs in the background
  * so a fill or quote does not stall the next decision.
  */
+/** O que o caminho da fusao precisa da POLICY e do LEDGER (spec 1). */
+export interface Fusion {
+  policy: Policy;
+  ledger: Ledger;
+}
+
+/**
+ * O que o `emit` precisa de uma decisao, comum aos dois caminhos: o legado manda
+ * um `ModelDecision` inteiro, a fusao manda o `act` e o `bias` fica de fora —
+ * no caminho da fusao o lado vive em `act`.
+ */
+type Decidable = Pick<ModelDecision, "action" | "probabilities" | "upIn10" | "latencyMs"> &
+  Partial<Pick<ModelDecision, "intent" | "bias" | "leverage" | "inputTokens" | "state12" | "act" | "act_conf" | "too_hostile">>;
+
 export class Trader {
   readonly history: BlockEvent[] = [];
   private mids: number[] = [];
@@ -43,6 +61,8 @@ export class Trader {
     private onEvent: (e: BlockEvent, timing?: Timing) => void,
     private onFill: (block: number, fill: Fill) => void = () => {},
     private onQuote: (block: number, quote: Quote) => void = () => {},
+    /** Presente so quando `POLICY` esta definido. Ausente, o tick e o de sempre. */
+    private fusion: Fusion | null = null,
   ) {}
 
   get tape(): PricePoint[] {
@@ -77,19 +97,23 @@ export class Trader {
         return;
       }
       try {
-        const decision = await this.model.decide(this.buildState(block, book));
-        this.totals.decisions++;
-        this.totals.jevUsd += (decision.inputTokens / 1e6) * config.jevUsdPerMTok;
-        const plan = planQuote({
-          intent: decision.intent,
-          bias: decision.bias,
-          positionSz: this.position.sz,
-          quoteSz: this.market.quoteSize(book.mid),
-        });
-        timing.loopMs = Math.round(performance.now() - t0);
-        this.emit(block, book, decision, null, false, timing);
-        if (plan) this.enqueueQuote(block, decision, plan, book);
-        else this.enqueueStandDown();
+        if (this.fusion) {
+          await this.fusedTick(block, book, timing, t0, this.fusion);
+        } else {
+          const decision = await this.model.decide(this.buildState(block, book));
+          this.totals.decisions++;
+          this.totals.jevUsd += (decision.inputTokens / 1e6) * config.jevUsdPerMTok;
+          const plan = planQuote({
+            intent: decision.intent,
+            bias: decision.bias,
+            positionSz: this.position.sz,
+            quoteSz: this.market.quoteSize(book.mid),
+          });
+          timing.loopMs = Math.round(performance.now() - t0);
+          this.emit(block, book, decision, null, false, timing);
+          if (plan) this.enqueueQuote(block, plan, book, decision.leverage);
+          else this.enqueueStandDown();
+        }
       } catch (e) {
         const msg = (e as Error).message;
         if (jevUnavailable(e)) {
@@ -107,14 +131,19 @@ export class Trader {
     }
   }
 
-  private enqueueQuote(block: number, decision: ModelDecision, plan: QuotePlan, book: Book) {
+  /**
+   * `leverage` entra por parametro: o caminho da fusao passa `config.leverage`
+   * (o modelo nao escolhe alavancagem na v1) e o caminho legado continua a passar
+   * o que o modelo decidiu. A assinatura do `setLeverage` do venue nao muda.
+   */
+  private enqueueQuote(block: number, plan: QuotePlan, book: Book, leverage: number) {
     const seq = ++this.sendSeq;
     this.exchangeTail = this.exchangeTail.catch(() => {}).then(async () => {
       if (seq !== this.sendSeq) return;
       // An exit skips the leverage write: nothing about it depends on margin, and
       // the extra round trip is pure delay on the one order that has to land now.
       if (!plan.taker) {
-        await this.market.setLeverage(decision.leverage);
+        await this.market.setLeverage(leverage);
         if (seq !== this.sendSeq) return;
       }
       const cancel = [...this.orders.keys()].filter((id) => id > 0);
@@ -132,6 +161,73 @@ export class Trader {
       await this.market.cancelResting();
       if (seq !== this.sendSeq) return;
       this.orders.clear();
+    });
+  }
+
+  /**
+   * O tick da fusao (spec 8): snapshot -> state -> POLICY -> RISK -> planFromRisk
+   * e depois o **mesmo** `enqueueQuote` -> `market.send`. Nada aqui abre uma
+   * segunda via de ordem.
+   */
+  private async fusedTick(block: number, book: Book, timing: Timing, t0: number, fusion: Fusion) {
+    const now = Date.now();
+    const snap = this.buildSnapshot(now, book);
+    const state = toState(snap);
+    const cid = cycleId(new Date(now), this.market.coin);
+    const verdict = await fusion.policy.decide(state, cid);
+    this.totals.decisions++;
+    this.totals.jevUsd += ((verdict.input_tokens ?? 0) / 1e6) * config.jevUsdPerMTok;
+    const intent = riskIntent({ cycleId: cid, sleeve: this.market.coin, verdict, snap });
+    const frozen = isFrozen(intent);
+    const plan = planFromRisk(intent, this.position.sz, this.market.quoteSize(book.mid));
+    timing.loopMs = Math.round(performance.now() - t0);
+    if (frozen) this.totals.lateBlocks++;
+    this.emit(block, book, fusedDecision(verdict, state), null, frozen, timing);
+    fusion.ledger.writeDecision({
+      kind: "decision",
+      cycle_id: cid,
+      ts: now,
+      sleeve: this.market.coin,
+      state,
+      verdict,
+      intent,
+      // O fill chega assincrono (userFills/dry-run): a linha do fill e escrita
+      // quando ele existe, com o mesmo cycle_id. Ver a nota do PR.
+      fill: null,
+    });
+    if (plan) this.enqueueQuote(block, plan, book, config.leverage);
+    else if (standsDown(intent)) this.enqueueStandDown();
+    // Congelado (timeout/JSON invalido/livro velho): sem ordem nova **e** sem
+    // cancelar. Nao ha mais nada a fazer neste tick — e a decisao D3.
+  }
+
+  /**
+   * O snapshot da fusao. Le os mesmos indicadores do `buildState` legado; a
+   * duplicacao e deliberada para o caminho legado nao mudar de comportamento.
+   */
+  private buildSnapshot(ts: number, book: Book): Snapshot {
+    const m = this.mids, n = m.length, H = config.horizonBlocks;
+    const ret = (k: number) => (n > k ? ((m[n - 1]! - m[n - 1 - k]!) / m[n - 1 - k]!) * 10_000 : 0);
+    const a = this.market.account;
+    const indicators = snapshotIndicators(this.market.candleCloses(80), book.mid);
+    const features = venueFeatures(this.market.assetCtx, book.mid);
+    const posSz = this.position.sz;
+    const summary = this.trades ? this.trades.summary(H, book.block) : emptySummary();
+    const bookAt = this.market.bookAt;
+    return toSnapshot({
+      ts,
+      sleeve: this.market.coin,
+      book: { bid: book.bid, ask: book.ask, mid: book.mid, spreadBps: book.spreadBps, depthBps: book.depthBps },
+      bookAgeMs: bookAt == null ? Number.POSITIVE_INFINITY : Math.max(0, ts - bookAt),
+      returnsBps: { last1: ret(1), last5: ret(5), last20: ret(20) },
+      volBps: indicators.vol20Bps ?? null,
+      prints: summary,
+      position: { side: posSz > 0 ? "long" : posSz < 0 ? "short" : "flat", size: posSz },
+      account: a ? { equityUsd: a.accountValue, unrealizedUsd: a.unrealizedUsd, leverage: a.leverage } : null,
+      fundingBps: features.fundingBps,
+      mark: this.market.assetCtx?.markPx ?? null,
+      bankrollUsd: config.bankrollUsd,
+      maxLeverage: this.market.maxLeverage,
     });
   }
 
@@ -279,7 +375,7 @@ export class Trader {
   private entryPrice() { return this.position.sz ? this.position.costUsd / this.position.sz : null; }
   private unrealizedUsd(mid: number) { return this.position.sz ? this.position.sz * (mid - this.entryPrice()!) : 0; }
 
-  private emit(block: number, book: Book, decision: ModelDecision | null, quote: Quote | null, late: boolean, timing?: Timing) {
+  private emit(block: number, book: Book, decision: Decidable | null, quote: Quote | null, late: boolean, timing?: Timing) {
     this.syncFromVenue();
     const t = this.totals;
     t.gasSz = book.mid ? t.gasUsd / book.mid : 0;
@@ -293,7 +389,18 @@ export class Trader {
       coin: this.market.coin,
       block, ts: Date.now(), mid: book.mid, bestBid: book.bid, bestAsk: book.ask, spreadBps: round(book.spreadBps, 2),
       decision: late
-        ? { action: "hold", probabilities: { buy: 0, sell: 0, hold: 1 }, upIn10: 0.5, latencyMs: 0, late: true }
+        ? {
+          // Um bloco congelado continua a mostrar o que o Jev respondeu, marcado late.
+          action: decision?.action ?? "hold",
+          probabilities: decision?.probabilities ?? { buy: 0, sell: 0, hold: 1 },
+          upIn10: decision?.upIn10 ?? 0.5,
+          latencyMs: decision ? Math.round(decision.latencyMs) : 0,
+          late: true,
+          state12: decision?.state12,
+          act: decision?.act,
+          act_conf: decision?.act_conf,
+          too_hostile: decision?.too_hostile,
+        }
         : decision && {
           action: decision.action,
           intent: decision.intent,
@@ -303,6 +410,10 @@ export class Trader {
           upIn10: decision.upIn10,
           latencyMs: Math.round(decision.latencyMs),
           late: false,
+          state12: decision.state12,
+          act: decision.act,
+          act_conf: decision.act_conf,
+          too_hostile: decision.too_hostile,
         },
       quote,
       fill: null,
@@ -327,6 +438,30 @@ export class Trader {
 
 const round = (x: number, d: number) => Math.round(x * 10 ** d) / 10 ** d;
 const rnull = (x: number | null, d: number) => (x == null || !Number.isFinite(x) ? null : round(x, d));
+
+/** O `ModelDecision` do mundo da fusao: alimenta o desk e a linha do ledger. */
+function fusedDecision(v: Verdict, state: string): Decidable {
+  return {
+    action: v.act,
+    leverage: config.leverage,
+    probabilities: {
+      buy: v.act_probs.buy,
+      sell: v.act_probs.sell,
+      hold: v.act_probs.hold,
+      long: 0,
+      short: 0,
+      open: 0,
+      close: 0,
+    },
+    upIn10: v.act_probs.buy,
+    latencyMs: v.latency_ms,
+    inputTokens: v.input_tokens ?? 0,
+    state12: state,
+    act: v.act,
+    act_conf: v.act_conf,
+    too_hostile: v.too_hostile,
+  };
+}
 
 function snapNums<T extends Record<string, number | null>>(obj: T): T {
   const out = { ...obj };

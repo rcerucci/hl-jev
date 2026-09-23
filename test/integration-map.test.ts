@@ -144,18 +144,23 @@ describe("perguntas e veredicto de hoje (baseline pinado ao SHA)", () => {
     expect(m).toContain("export const createModel");
   });
 
-  test("o controlo dumb tem de consumir os adjectivos, nao os numeros", () => {
-    // Guarda contra o erro previsto na secao F5 do plano: o MockModel decide a
-    // partir de returnsBps/bookImbalance/cvd. O controle da secao 9.4 da spec
-    // tem de receber a mesma string de 12 palavras que o Jev recebe.
-    const buckets = () => {
-      try {
-        return read("src/risk/buckets.ts");
-      } catch {
-        return null;
-      }
-    };
-    const t = buckets();
-    if (t !== null) expect(t).not.toMatch(/returnsBps|bookImbalance|cvdSz|fundingBps/);
+  test("o controle dumb le as palavras, nao os numeros (decisao A4)", () => {
+    // O controle da secao 9.4 tem de ver o mesmo `state12` que o Jev ve. Se este
+    // ficheiro passar a ler campos numericos, o experimento compara outra coisa.
+    // A regra olha so o codigo: comentario que explica a decisao nomeando os
+    // campos numericos nao e leitura de campo (foi um falso positivo real).
+    const t = read("src/policy/dumb.ts")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "");
+    expect(t).toContain("state.split");
+    for (const field of ["returnsBps", "bookImbalance", "cvdSz", "funding_bps", "spread_bps", "pos_notional_usd"]) {
+      expect(t, `dumb.ts passou a ler ${field}`).not.toContain(field);
+    }
+  });
+
+  test("o DTO do RISK nao se chama Intent (o nome ja e do repo)", () => {
+    const t = read("src/risk/types.ts");
+    expect(t).toContain("export interface RiskIntent");
+    expect(t).not.toMatch(/export interface Intent\b/);
   });
 });
