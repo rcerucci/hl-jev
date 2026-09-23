@@ -44,7 +44,7 @@ function palette() {
   return {
     fundo: v("--bg", "#f4f1e7"),
     tinta: v("--ink", "#2b2b27"),
-    texto: v("--muted", "#6d6c64"),
+    texto: v("--muted", "#6a6961"),
     grelha: v("--grid", "#ded9cb"),
     borda: v("--border", "#2f2f2b"),
     buy: v("--buy", "#4d7150"),
