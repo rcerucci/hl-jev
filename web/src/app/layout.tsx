@@ -92,7 +92,7 @@ const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem("theme");if(t!=
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={plex.variable}>
+    <html lang="en" className={plex.variable} suppressHydrationWarning>
       <head>
         <link rel="describedby" href="https://www.jev-trade.com/llms.txt" />
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
