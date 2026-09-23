@@ -921,10 +921,14 @@ todos os ciclos de dentro da janela) e o `|mov|` da âncora da janela.
 | 18:52 | 450 | `flat` | 93,8 % | 3,8 bps |
 | 19:07 | 450 | `flat` | 80,7 % | 9,7 bps |
 | 19:22 | 450 | `flat` | 74,7 % | 0,8 bps |
-| 19:37 | 450 | `flat` | 94,4 % | *por graduar* |
-| 19:52 | 53 | `flat` | 62,3 % | *por graduar* |
+| 19:37 | 450 | `flat` | 94,4 % | **31,0 bps** |
+| 19:52 | 92 | `flat` | 71,7 % | *por graduar* |
 
 O lado "antes" (`last5`, 11 janelas) é igual: **`flat` dominante em todas**, 90,4 %–100 %.
+
+Com a âncora das 19:37 graduada, a amostra dobra e **vai contra**: **2 janelas com `|mov| ≥ 10 bps` — e as
+duas com `flat` dominante**. Numa delas o livro andou **31,0 bps em 15 min** e o adjectivo do bucket foi
+`flat` em 94,4 % dos ciclos dessa janela.
 
 **As duas leituras que isto dá — e que a leitura por âncora não dava:**
 
@@ -942,3 +946,10 @@ de *movimentos*; o que elas não resolvem é a ausência de variância do adject
 o ensaio não lhes toca sem autorização nova.
 
 **Nada se altera neste passo:** `last20` fica, limiares ficam, `dumb`/θ/JSON intactos, `n_lados` fora de meta.
+
+**Nota de método — uma reserva minha à estatística escolhida.** A palavra **dominante** é enviesada para `flat`
+por construção: `flat` é o *default* do bucket, e basta o livro não andar 4 bps em 40 s para lá cair. Na janela
+das 18:37, **23 % dos ciclos não eram `flat`** (`grinding` 51, `violent` 40, `pumping` 11) e a dominante é `flat`
+à mesma. O complemento — a palavra **mais extrema** vista dentro da janela (ou o `max |last20|`) — responderia a
+outra pergunta: *"o bucket chegou a captar o movimento?"* em vez de *"o que o estado diz na maior parte do
+tempo?"*. Fica como proposta; não a implemento sem o dono pedir, para não multiplicar estatísticas a meio do ensaio.
