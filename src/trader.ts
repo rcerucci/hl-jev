@@ -39,7 +39,7 @@ export interface Fusion {
  * no caminho da fusao o lado vive em `act`.
  */
 type Decidable = Pick<ModelDecision, "action" | "probabilities" | "upIn10" | "latencyMs"> &
-  Partial<Pick<ModelDecision, "intent" | "bias" | "leverage" | "inputTokens" | "state12" | "act" | "act_conf" | "too_hostile">>;
+  Partial<Pick<ModelDecision, "intent" | "bias" | "leverage" | "inputTokens" | "state12" | "act" | "act_conf" | "too_hostile" | "reason">>;
 
 export class Trader {
   readonly history: BlockEvent[] = [];
@@ -182,7 +182,7 @@ export class Trader {
     const plan = planFromRisk(intent, this.position.sz, this.market.quoteSize(book.mid));
     timing.loopMs = Math.round(performance.now() - t0);
     if (frozen) this.totals.lateBlocks++;
-    this.emit(block, book, fusedDecision(verdict, state), null, frozen, timing);
+    this.emit(block, book, fusedDecision(verdict, state, intent.reason), null, frozen, timing);
     fusion.ledger.writeDecision({
       kind: "decision",
       cycle_id: cid,
@@ -400,6 +400,7 @@ export class Trader {
           act: decision?.act,
           act_conf: decision?.act_conf,
           too_hostile: decision?.too_hostile,
+          reason: decision?.reason,
         }
         : decision && {
           action: decision.action,
@@ -414,6 +415,7 @@ export class Trader {
           act: decision.act,
           act_conf: decision.act_conf,
           too_hostile: decision.too_hostile,
+          reason: decision.reason,
         },
       quote,
       fill: null,
@@ -440,7 +442,7 @@ const round = (x: number, d: number) => Math.round(x * 10 ** d) / 10 ** d;
 const rnull = (x: number | null, d: number) => (x == null || !Number.isFinite(x) ? null : round(x, d));
 
 /** O `ModelDecision` do mundo da fusao: alimenta o desk e a linha do ledger. */
-function fusedDecision(v: Verdict, state: string): Decidable {
+function fusedDecision(v: Verdict, state: string, reason?: string): Decidable {
   return {
     action: v.act,
     leverage: config.leverage,
@@ -460,6 +462,7 @@ function fusedDecision(v: Verdict, state: string): Decidable {
     act: v.act,
     act_conf: v.act_conf,
     too_hostile: v.too_hostile,
+    reason,
   };
 }
 

@@ -26,7 +26,7 @@
 }
 
 .card:hover {
-  background: var(--surface-hover, #f1f3f4);
+  background: var(--surface-hover);
 }
 
 .active {

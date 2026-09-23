@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   CandlestickSeries,
   ColorType,
@@ -34,10 +34,50 @@ type Props = {
   formatPrice: (n: number) => string;
 };
 
-const UP = "#000000";
-const DOWN = "#ffffff";
-const BUY = "#00aa00";
-const SELL = "#cc0000";
+/**
+ * O grafico pinta em canvas e nao ve as CSS vars: le-as do documento para nao
+ * manter uma segunda paleta a mao. Chamado so no cliente (dentro de efeitos).
+ */
+function palette() {
+  const cs = getComputedStyle(document.documentElement);
+  const v = (nome: string, alt: string) => cs.getPropertyValue(nome).trim() || alt;
+  return {
+    fundo: v("--bg", "#f4f1e7"),
+    tinta: v("--ink", "#2b2b27"),
+    texto: v("--muted", "#6a6961"),
+    grelha: v("--grid", "#ded9cb"),
+    borda: v("--border", "#2f2f2b"),
+    buy: v("--buy", "#4d7150"),
+    sell: v("--sell", "#9a4a3e"),
+  };
+}
+
+type Palette = ReturnType<typeof palette>;
+
+/** Velas monocromaticas: alta cheia, baixa oca, contorno sempre na tinta. */
+function seriesOptions(p: Palette) {
+  return {
+    upColor: p.tinta,
+    downColor: p.fundo,
+    borderUpColor: p.tinta,
+    borderDownColor: p.tinta,
+    wickUpColor: p.tinta,
+    wickDownColor: p.tinta,
+  };
+}
+
+function themeOptions(p: Palette, secondsVisible: boolean) {
+  return {
+    layout: {
+      background: { type: ColorType.Solid, color: p.fundo },
+      textColor: p.texto,
+      fontFamily: "IBM Plex Mono, ui-monospace, monospace",
+    },
+    grid: { vertLines: { color: p.grelha }, horzLines: { color: p.grelha } },
+    rightPriceScale: { borderColor: p.borda },
+    timeScale: { borderColor: p.borda, timeVisible: true, secondsVisible },
+  };
+}
 
 function asTime(sec: number): UTCTimestamp {
   return sec as UTCTimestamp;
@@ -53,12 +93,12 @@ function toBars(rows: Candle[]): CandlestickData<Time>[] {
   }));
 }
 
-function toMarkers(rows: FillMark[]): SeriesMarker<Time>[] {
+function toMarkers(rows: FillMark[], p: Palette): SeriesMarker<Time>[] {
   return rows.map((m) => ({
     time: asTime(m.time),
     position: m.side === "buy" ? "belowBar" : "aboveBar",
     shape: m.side === "buy" ? "arrowUp" : "arrowDown",
-    color: m.side === "buy" ? BUY : SELL,
+    color: m.side === "buy" ? p.buy : p.sell,
     size: 0.8,
   }));
 }
@@ -93,40 +133,32 @@ export default function CandlePane({
   const rangeRef = useRef("");
   const formatRef = useRef(formatPrice);
   formatRef.current = formatPrice;
+  /** Gatilho: muda a cada troca de tema, para as cores do canvas serem relidas. */
+  const [tema, setTema] = useState(0);
+
+  useEffect(() => {
+    const alvo = document.documentElement;
+    const obs = new MutationObserver(() => setTema((n) => n + 1));
+    obs.observe(alvo, { attributes: true, attributeFilter: ["data-theme"] });
+    setTema((n) => n + 1);
+    return () => obs.disconnect();
+  }, []);
 
   useEffect(() => {
     const el = hostRef.current;
     if (!el) return;
+    const p = palette();
+    const temaOpts = themeOptions(p, secondsVisible);
     const chart = createChart(el, {
       width: Math.max(1, el.clientWidth),
       height: Math.max(1, el.clientHeight),
-      layout: {
-        background: { type: ColorType.Solid, color: "#ffffff" },
-        textColor: "#666666",
-        fontFamily: "IBM Plex Mono, ui-monospace, monospace",
-      },
-      grid: {
-        vertLines: { color: "#e5e5e5" },
-        horzLines: { color: "#e5e5e5" },
-      },
+      ...temaOpts,
       crosshair: { mode: CrosshairMode.Normal },
-      rightPriceScale: { borderColor: "#000000", scaleMargins: { top: 0.08, bottom: 0.08 } },
-      timeScale: {
-        borderColor: "#000000",
-        timeVisible: true,
-        secondsVisible,
-        shiftVisibleRangeOnNewBar: true,
-      },
-      localization: { priceFormatter: (p: number) => formatRef.current(p) },
+      rightPriceScale: { borderColor: p.borda, scaleMargins: { top: 0.08, bottom: 0.08 } },
+      timeScale: { ...temaOpts.timeScale, shiftVisibleRangeOnNewBar: true },
+      localization: { priceFormatter: (n: number) => formatRef.current(n) },
     });
-    const series = chart.addSeries(CandlestickSeries, {
-      upColor: UP,
-      downColor: DOWN,
-      borderUpColor: UP,
-      borderDownColor: UP,
-      wickUpColor: UP,
-      wickDownColor: UP,
-    });
+    const series = chart.addSeries(CandlestickSeries, seriesOptions(p));
     const markers = createSeriesMarkers(series, []);
     const ro = new ResizeObserver((entries) => {
       const r = entries[0]?.contentRect;
@@ -149,6 +181,21 @@ export default function CandlePane({
       rangeRef.current = "";
     };
   }, []);
+
+  // Tema trocado: o canvas nao segue CSS, tem de ser reaplicado a mao.
+  useEffect(() => {
+    const chart = chartRef.current;
+    const series = seriesRef.current;
+    if (!chart || !series) return;
+    const p = palette();
+    const temaOpts = themeOptions(p, secondsVisible);
+    chart.applyOptions({
+      ...temaOpts,
+      rightPriceScale: { borderColor: p.borda, scaleMargins: { top: 0.08, bottom: 0.08 } },
+      timeScale: { ...temaOpts.timeScale, shiftVisibleRangeOnNewBar: true },
+    });
+    series.applyOptions(seriesOptions(p));
+  }, [tema, secondsVisible]);
 
   useEffect(() => {
     chartRef.current?.applyOptions({ timeScale: { secondsVisible, timeVisible: true } });
@@ -178,8 +225,8 @@ export default function CandlePane({
   }, [candles, rangeKey, visibleBars]);
 
   useEffect(() => {
-    markersRef.current?.setMarkers(toMarkers(marks));
-  }, [marks]);
+    markersRef.current?.setMarkers(toMarkers(marks, palette()));
+  }, [marks, tema]);
 
   useEffect(() => {
     const series = seriesRef.current;
@@ -193,7 +240,7 @@ export default function CandlePane({
     }
     const next = {
       price: entry.price,
-      color: entry.side === "long" ? BUY : SELL,
+      color: entry.side === "long" ? palette().buy : palette().sell,
       lineWidth: 1 as const,
       lineStyle: LineStyle.Solid,
       axisLabelVisible: true,
@@ -204,7 +251,7 @@ export default function CandlePane({
       return;
     }
     entryLineRef.current = series.createPriceLine(next);
-  }, [entry]);
+  }, [entry, tema]);
 
   return <div ref={hostRef} className="lwc-host" style={{ position: "absolute", inset: 0 }} />;
 }

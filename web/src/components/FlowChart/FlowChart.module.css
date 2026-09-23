@@ -62,15 +62,15 @@
 .legDown::before {
   width: 8px;
   height: 8px;
-  border: 1px solid #000;
+  border: 1px solid var(--ink);
 }
 
 .legUp::before {
-  background: #000;
+  background: var(--ink);
 }
 
 .legDown::before {
-  background: #fff;
+  background: var(--bg);
 }
 
 .legBuy::before,
@@ -115,7 +115,7 @@
 .tagText {
   font: 500 11px var(--font-mono), monospace;
   font-variant-numeric: tabular-nums;
-  fill: #ffffff;
+  fill: var(--bg);
 }
 
 .cross {
