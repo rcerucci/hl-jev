@@ -365,15 +365,27 @@ Leitura, na ordem combinada com o consultor:
 
 1. `c/outcome` = `ciclos` nas duas colunas (224/224) — o worker não salta velas.
 2. `%hold` 100% nas duas políticas: **neste livro o Jev é travão, não oráculo**.
-3. `n` em `conf ≥ 0,80` = **0** nas duas colunas. Nos 117 ciclos válidos o Jev ficou em 0,12–**0,78**
-   (mediana 0,30) e nunca cruzou o limiar.
+3. `n` em `conf ≥ 0,80` = **0** nas duas colunas. Nos 117 ciclos válidos, **deste ensaio**, o Jev ficou em
+   0,12–0,78 (mediana 0,30) e não cruzou o limiar. Isso não é propriedade do modelo — no run de 30 minutos
+   seguinte chegou a 0,90 (ver a correcção no fim desta secção).
 4. Logo, sem acerto e sem veredicto §9.4: **amostra insuficiente**.
 
 Hipótese registada e **não** accionada: o P(0,8) de fábrica do modelo não se transfere automaticamente para
-este vocabulário de sete adjectivos. É problema de limiar, de buckets — e sobretudo de **livro**: um estado
-distinto em 224 ciclos significa que este testnet parado não gera experimento. Baixar o `JEV_CONF_ACT` para
-a coluna deixar de estar vazia está proibido por decisão do consultor, e é a decisão certa: afinar o
-instrumento até o número aparecer não é medir. O próximo ensaio é **outro livro ou outro horizonte**.
+este vocabulário de sete adjectivos. Baixar o `JEV_CONF_ACT` para a coluna deixar de estar vazia está proibido
+por decisão do consultor, e é a decisão certa: afinar o instrumento até o número aparecer não é medir.
+
+**Correcção medida (23 set 2026, mais tarde no mesmo dia).** A primeira versão desta secção dizia «um estado
+distinto em 224 ciclos» e isso era **falso**: era a leitura dos 13 ciclos do ensaio da manhã (§9), colada ao
+100+100 que ainda não tinha sido medido. Medido sobre a janela do ensaio: **13 estados distintos** na coluna
+do Jev, 4 no controle, com um estado a dominar 63% (`tight deep dump flat flat extreme mid`); o run de 30
+minutos seguinte (§12) deu **18 estados em 922 ciclos**. O livro mexe — mas só em `flow`/`tape`: `spread`,
+`inventory` e `clock` ficaram constantes na amostra toda.
+
+O que continua verdadeiro, e é o essencial: 100% `hold` e **zero lados de alta confiança**, logo nenhum
+experimento de direcção. E a confiança não fica sempre abaixo do limiar — o máximo é que era da amostra
+curta: 0,78 nos 117 ciclos do ensaio, **0,90** no run de 30 minutos (sete ciclos acima de 0,80, todos
+`act=hold` com P(hold) 0,90–0,94). O raro é o **lado**, não a confiança — e é isso que o próximo ensaio tem
+de produzir para haver o que graduar.
 
 ### Prova do venue (T018), com signer real
 
@@ -413,3 +425,60 @@ CI               → verde nos dois runs em 00fd5f3, 02c5808 e 634a3a4
 ensaio           → 224/224 outcomes, `horizon_secs: 900` gravado em todas as linhas
 T018 venue       → ALO resting real (oid 60855824109, `taker=false`), cancelada na limpeza
 ```
+
+## 12. Run de 30 minutos em testnet e o desk — 23 set 2026
+
+### O run (uma instância, tick de 2000 ms)
+
+Configuração: `HL_TESTNET=true`, `POLICY=jev`, `MODEL=jev`, `HL_COINS=BTC`, `DRY_RUN=false`, chave da sleeve
+BTC no clone (fora do git, fora do chat).
+
+| Medida | Valor |
+|---|---|
+| ticks / ciclos no ledger | **922 / 922** (1:1 com as linhas do log) |
+| respostas válidas / congeladas | **922 / 0** |
+| `%hold` | **100%** (922/922) |
+| ordens colocadas | **0** (`quotes: 0`, `openOrders: 0`, nenhum `oid`) |
+| fills | **0** nesta sessão (o último fill da carteira é das 02:40Z, histórico) |
+| `accountValue` / `withdrawable` | **0 / 0 antes e depois** |
+| motivos do gate | `hostile` **433** · `low_conf` **489** |
+| `act_conf` | 0,15 – **0,90** (mediana 0,64) |
+| latência do Jev | 261 – 588 ms (mediana **324**) |
+| estados distintos | **18** |
+| custo | 539 426 tokens de entrada → **US$ 0,0227** |
+| fim | 0 resting, processo parado, sem órfão |
+
+Duas conferências cruzadas que valem mais que o total: o contador do próprio motor (`jevUsd 0,007923` aos 322
+blocos) extrapola para 0,0227 aos 922, batendo com a conta feita pelos tokens; e `blocks == decisions` nos
+dois momentos.
+
+O que este run **não** é: prova de edge. É o encaixe a funcionar com signer vivo — o Jev fala, o gate trava, o
+executor não envia ordem, o ledger escreve. Hold a 100% é o resultado **esperado** neste livro, não uma falha.
+
+### O desk
+
+O `web/` é um Next que corre **à parte** do motor (`bun run dev -p 3001`, API em `:3000`). Duas coisas ficaram
+por fazer na primeira passagem da fusão e estão feitas agora:
+
+- **render da fusão (D6)**: o painel mostra `act`, `act_conf`, `too_hostile`, o estado de ≤12 palavras e o
+  motivo do gate (`reason`, campo aditivo no `ModelDecision`, no `Decidable` e nas duas cópias do tipo). Sem
+  `act` na decisão, o desk renderiza o caminho legado como sempre.
+- **tema claro/escuro com paleta de tinta electrónica**: o CSS só tinha paleta clara — o escuro que se via era
+  o do navegador a forçar, e era ele que recolorava o canvas do gráfico. Agora há paleta própria nos dois
+  temas, sem branco puro nem preto puro e com acentos dessaturados, botão de troca com escolha gravada e
+  guião no `<head>` antes da primeira pintura. O gráfico pinta em canvas e não vê CSS vars: lê as **mesmas**
+  variáveis do documento, com um observador em `data-theme` que reaplica na troca.
+
+Contrastes medidos (WCAG, calculados a partir do ficheiro, não estimados):
+
+| par | claro | escuro | mínimo |
+|---|---|---|---|
+| tinta / papel | 12,58:1 | 11,86:1 | 4,5 |
+| tinta-2 / papel | 8,64:1 | 7,94:1 | 4,5 |
+| muted / papel | 4,88:1 | 5,04:1 | 4,5 |
+| muted / painel-2 | **4,63:1** | **4,67:1** | 4,5 |
+| buy / sell / link | 4,90 / 5,43 / 6,97 | 5,67 / 5,34 / 6,83 | 3,0 (acento) |
+
+A folga mais apertada é `muted` sobre painel (`#6a6961` no claro, `#8d8a81` no escuro), ajustada o mínimo
+necessário para passar AA. **Qualquer cor nova entra em `web/src/app/globals.css`**; um hex fora de lá é uma
+segunda paleta a divergir — foi exactamente esse o defeito que o gráfico tinha.
