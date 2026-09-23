@@ -330,6 +330,7 @@ thresholds or the dumb policy to invent sides.
 - [ ] Nenhum commit com `HL_TESTNET=false`
 - [ ] Nenhum claim de PnL sem `n_lados` e sem filtro de `cycle_id` da sessão
 - [ ] Nenhuma ordem de livro misto em nenhum ensaio
+- [x] Ensaio de buckets do `tape`: **encerrado** (23 set 2026) — regra 4 *dominante* não aplicável (default `flat` vs 900 s); `last20` fica; palavra extrema só como diagnóstico. `MOVE`/`GRIND` intocados. Ver PLANO §17.6–§17.10.
 
 ---
 

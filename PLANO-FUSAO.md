@@ -953,3 +953,33 @@ das 18:37, **23 % dos ciclos não eram `flat`** (`grinding` 51, `violent` 40, `p
 à mesma. O complemento — a palavra **mais extrema** vista dentro da janela (ou o `max |last20|`) — responderia a
 outra pergunta: *"o bucket chegou a captar o movimento?"* em vez de *"o que o estado diz na maior parte do
 tempo?"*. Fica como proposta; não a implemento sem o dono pedir, para não multiplicar estatísticas a meio do ensaio.
+
+### 17.10 O ensaio de buckets do `tape`, nesta letra, fica **encerrado** (23 set 2026)
+
+**Decisão do dono.** `MOVE`/`GRIND` **não se abrem**: baixar o corte para a dominante deixar de ser `flat` seria
+caçar variância — primo de alargar o `dumb`. `last20` **fica** (vocabulário mais rico, regra 8 respeitada). A
+palavra **extrema** entra só como **diagnóstico** e **nunca promove**.
+
+**O diagnóstico — primeiro e único uso autorizado** (`--janelas`, coluna `extrema`):
+
+| janela | \|mov 15 min\| | dominante | extrema | % dos ciclos na extrema |
+|---|---|---|---|---|
+| 18:37 | 18,9 bps | `flat` | **`violent`** | 8,9 % |
+| 18:52 | 3,8 bps | `flat` | `grinding` | 6,2 % |
+| 19:07 | 9,7 bps | `flat` | **`dumping`** | 3,8 % |
+| 19:22 | 0,8 bps | `flat` | `grinding` | 25,3 % |
+| 19:37 | **31,0 bps** | `flat` | `grinding` | 5,6 % |
+
+- **O bucket dispara onde o movimento é rápido:** na janela das 18:37 chegou a `violent` em 8,9 % dos ciclos, e
+  na das 19:07 a `dumping`. No encoder antigo o máximo por janela nunca passava de `dumping` a 1,9 %. **O
+  encoder novo fala mais, e mais alto.**
+- **E a janela de 31,0 bps não teve um único disparo:** o movimento de 15 min foi **gradual** — nenhum intervalo
+  de 40 s passou 15 bps. Nenhuma janela de 40 s veria isto, por construção.
+
+**O que o ensaio passou a significar.** O `tape` a 40 s descreve **microestrutura**; o `outcome` descreve
+**15 minutos**. Não se ordenam pela palavra que ocupa 75–94 % da janela, e a correcção não é o corte nem a
+janela — é reconhecer que são **dois relógios**. **O ensaio de buckets do `tape`, nesta letra, está encerrado.**
+
+**O que continua aberto, e não foi respondido por isto:** o Jev escolhe `hold` em 100 % dos ciclos também com o
+estado novo. Essa é a pergunta das **perguntas/modelo**, não do `tape` — a mesma que já estava em cima da mesa
+antes deste ensaio. Sem Laya, sem Fase D, sem segundo patch de limiar.
