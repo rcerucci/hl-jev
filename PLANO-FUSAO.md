@@ -100,8 +100,8 @@ O PR desta ronda entrega **A+B**, como a §10 manda. C, D e E não entram.
 
 Formato `tasks.md` do Spec Kit (validado com `validar_formato_tasks.py`). `[P]` = paralelizável.
 
-- [ ] T001 [P] [Setup] Clonar `main` da origem e gravar o SHA de baseline — `INTEGRATION.md`
-- [ ] T002 [P] [Setup] Alarme que confere os invariantes do mapa contra o código — `test/integration-map.test.ts`
+- [x] T001 [P] [Setup] Clonar `main` da origem e gravar o SHA de baseline — `INTEGRATION.md`
+- [x] T002 [P] [Setup] Alarme que confere os invariantes do mapa contra o código — `test/integration-map.test.ts`
 - [x] T003 [Foundational] Carregador tipado do policy file com versionamento e validação de schema — `src/policy/load.ts`
 - [x] T004 [Foundational] Cortes numéricos → adjectivos, constantes nomeadas, um só ficheiro — `src/risk/buckets.ts`
 - [x] T005 [Foundational] Tipos do veredicto e do intent da fusão (sem colidir com `Intent`) — `src/risk/types.ts`
@@ -118,7 +118,7 @@ Formato `tasks.md` do Spec Kit (validado com `validar_formato_tasks.py`). `[P]` 
 - [x] T016 [P] Testes do parser do policy file e da recusa de deriva de schema — `test/policy-schema.test.ts`
 - [x] T017 [P] Testes do ledger (duas escritas, mesmo `cycle_id`, append-only) — `test/ledger.test.ts`
 - [ ] T018 [US1] Prova em testnet: `hold` → nenhuma chamada de ordem; `buy` → ALO resting, nunca market — `INTEGRATION.md`
-- [ ] T019 [Polish] README: como correr em testnet, como ler a tabela de confiança, como **não** ir a mainnet — `README.md`
+- [x] T019 [Polish] README: como correr em testnet, como ler a tabela de confiança, como **não** ir a mainnet — `README.md`
 
 ## 5. Matriz de aceitação (§12 da spec) → tarefa
 
