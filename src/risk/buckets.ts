@@ -13,7 +13,7 @@ export const SPREAD = { TIGHT_BPS: 2, NORMAL_BPS: 6, WIDE_BPS: 15 } as const;
 export const DEPTH_USD = { THIN: 2_000, DEEP: 20_000 } as const;
 /** Impressoes na janela do tick e desequilibrio de agressao. */
 export const FLOW = { QUIET_PRINTS: 8, BOT_WAR_PRINTS: 60, ONE_SIDED: 0.25 } as const;
-/** Movimento em bps na janela curta (last5) e volatilidade realizada. */
+/** Movimento em bps em **20 ticks** (`last20`; com `TICK_MS=2000` sao ~40 s) e volatilidade realizada. */
 export const TAPE = { GRIND_BPS: 4, MOVE_BPS: 15, VIOLENT_BPS: 40 } as const;
 /** |notional| / referencia de capital: perto de zero e plano, >= HEAVY e pesado. */
 export const INVENTORY = { FLAT_RATIO: 0.005, HEAVY_RATIO: 0.5 } as const;
@@ -110,7 +110,13 @@ export function flowBucket(prints: Snapshot["prints"]): string {
 }
 
 export function tapeBucket(returns: Snapshot["returns_bps"], volBps: number | null): string {
-  const short = returns.last5;
+  // Ensaio de buckets (PLANO-FUSAO secao 17): o tape lia `last5` — 5 TICKS, ou seja 10 s com TICK_MS=2000
+  // (a serie `mids` e empilhada uma vez por tick) — e o `outcome` mede 900 s: 90x de diferenca.
+  // Medido: 226 de 235 ciclos com |mov 15 min| >= 10 bps vinham com `tape = flat`, e `flat` tinha
+  // mediana de movimento MAIOR que `grinding` (ordem nao monotona). Passa a ler `last20` (20 ticks ~ 40 s),
+  // que o processo JA calcula: nao se inventa serie nova. Regra 8: nada de janela do rótulo (`mark_plus_15m`).
+  // Os limiares GRIND/MOVE/VIOLENT ficam intocados neste passo.
+  const short = returns.last20;
   const abs = Math.abs(short);
   if (abs >= TAPE.VIOLENT_BPS || (volBps ?? 0) >= TAPE.VIOLENT_BPS) return "violent";
   if (abs >= TAPE.MOVE_BPS) return short > 0 ? "pumping" : "dumping";

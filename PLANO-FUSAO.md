@@ -741,7 +741,7 @@ Fonte: `src/risk/buckets.ts`, único sítio com cortes (spec §3.2, "sem magia e
 | spread | `TIGHT 2` · `NORMAL 6` · `WIDE 15` bps | instantâneo |
 | depth | `THIN 2 000` · `DEEP 20 000` USD a 10 bps | livro actual |
 | flow | `QUIET_PRINTS 8` · `BOT_WAR_PRINTS 60` · `ONE_SIDED 0,25` | impressões da janela do tick |
-| **tape** | **`GRIND 4` · `MOVE 15` · `VIOLENT 40` bps** | **`returns.last5`** e `volBps` |
+| **tape** | **`GRIND 4` · `MOVE 15` · `VIOLENT 40` bps** | **`returns.last5`** (5 ticks ≈ 10 s) e `volBps` |
 | inventory | `FLAT_RATIO 0,005` · `HEAVY_RATIO 0,5` | notional / referência de capital |
 | funding | `NEUTRAL 0,1` · `EXTREME 1` bps | hora corrente |
 | clock | `SETTLE 5` · `FUNDING_FROM 55` · morto 2–5 h | minuto UTC |
@@ -772,8 +772,10 @@ tinham `tape = flat`**. E `flat` (n = 429, 94,5 % da amostra) tem mediana de **1
 
 ### 17.3 Três leituras estruturais (só leitura — nada foi alterado)
 
-1. **Mismatch de janela, lido no código:** o `tape` lê **`returns.last5`** — 5 segundos — e o `outcome` mede
-   **900 s**. São 180× de diferença: `flat` fala do instante, não do horizonte.
+1. **Mismatch de janela, lido no código:** o `tape` lê **`returns.last5`** e `lastN` conta **ticks** — a série
+   `mids` é empilhada uma vez por tick (`trader.ts:89`). Com `TICK_MS=2000`, `last5` = **10 s** e `last20` =
+   **40 s**, contra os **900 s** do `outcome`: 90× de diferença hoje, 22× com o patch. `flat` fala do instante,
+   não do horizonte.
 2. **O sinal de que se precisa já existe e não é usado:** o `Snapshot` traz `returns_bps { last1, last5, last20 }`
    e o encoder usa **só `last5`**. Um `tape` que leia `last20` **não inventa sinal nenhum** — passa a ler o que
    já está calculado. (Proposta para o passo seguinte; **não** aplicada aqui.)
@@ -799,3 +801,20 @@ tinham `tape = flat`**. E `flat` (n = 429, 94,5 % da amostra) tem mediana de **1
 7. **Offline só existe se o ledger tiver o `TradeState` numérico** — e não tem: a linha de decisão guarda as
    **7 palavras**, não o snapshot. Logo o "depois" é **vivo**, com o encoder novo e snapshot datado; o "antes"
    é o §17.2, tirado do ledger.
+8. **Regra 8 (aceite em 23 set 2026) — a janela do `tape` não pode ser a do rótulo.** Alinhar o `tape` com os
+   900 s tornaria a monotonia da regra 4 **tautológica** e daria ao Jev o futuro do teste. O patch usa
+   **`last20` = 20 ticks ≈ 40 s** (correcção de unidades: `lastN` conta ticks, não segundos — `TICK_MS=2000`),
+   que o processo **já calcula**: nenhuma série nova, e `mark_plus_15m` **nunca** entra no estado.
+
+### 17.5 O patch (passo 3) — `tape` passa a ler `last20`
+
+Um campo, uma linha de lógica em `src/risk/buckets.ts`: `returns.last5` → **`returns.last20`**. Limiares
+`GRIND 4` / `MOVE 15` / `VIOLENT 40` **intocados**, `flow` e `funding` intocados, `dumb` intocado,
+`jev_questions.json` e θ intocados. Teste novo que **pina a janela** (20 s diz `pumping`, 5 s diz `flat` → tem
+de seguir os 20 s): sem ele, uma regressão para `last5` passaria despercebida, porque o teste antigo alimentava
+os dois campos com o mesmo valor.
+
+**Sucesso = monotonia semântica do `tape` E `%flat` entre os ciclos com `|mov 15 min| ≥ 10 bps` a descer de
+96,2 %.** Medido pelo mesmo `provas/buckets/antes-depois.py`, agora com `--desde` no início da sessão nova para
+não misturar encoder antigo e novo no mesmo número. `n_lados ≥ 20` continua a **não** ser meta. Se `last20`
+ainda der ~95 % `flat`, **pára-se e publica-se** — sem mexer em `GRIND`/`MOVE` no mesmo PR.

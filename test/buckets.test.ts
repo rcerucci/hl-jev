@@ -80,14 +80,25 @@ test("buckets de fluxo: quiet, bot_war, lift, dump, two_way", () => {
 });
 
 test("buckets de fita: flat, grinding, pumping, dumping, violent", () => {
-  const tape = (last5: number, vol: number | null = 0) =>
-    state({ returnsBps: { last1: 0, last5, last20: last5 }, volBps: vol }).split(" ")[3];
+  // A janela do `tape` e `last20` (ensaio de buckets, PLANO-FUSAO secao 17).
+  const tape = (bps20: number, vol: number | null = 0) =>
+    state({ returnsBps: { last1: 0, last5: 0, last20: bps20 }, volBps: vol }).split(" ")[3];
   expect(tape(TAPE.GRIND_BPS - 1)).toBe("flat");
   expect(tape(TAPE.GRIND_BPS + 1)).toBe("grinding");
   expect(tape(TAPE.MOVE_BPS + 1)).toBe("pumping");
   expect(tape(-(TAPE.MOVE_BPS + 1))).toBe("dumping");
   expect(tape(TAPE.VIOLENT_BPS + 1)).toBe("violent");
   expect(tape(0, TAPE.VIOLENT_BPS)).toBe("violent");
+});
+
+test("o tape le os 20 ticks, nao os 5 (alarme do ensaio de buckets)", () => {
+  const com = (r: { last1: number; last5: number; last20: number }, vol: number | null = 0) =>
+    state({ returnsBps: r, volBps: vol }).split(" ")[3];
+  // `lastN` conta TICKS (a serie `mids` e empilhada por tick): last5 = 10 s, last20 = 40 s.
+  // 20 ticks diz pump e 5 ticks diz flat: tem de seguir os 20. Era este o defeito — o adjectivo
+  // falava de 10 s enquanto o `outcome` mede 900 s (226 de 235 ciclos com |mov| >= 10 bps vinham `flat`).
+  expect(com({ last1: 0, last5: 0, last20: TAPE.MOVE_BPS + 1 })).toBe("pumping");
+  expect(com({ last1: 0, last5: TAPE.MOVE_BPS + 1, last20: 0 })).toBe("flat");
 });
 
 test("buckets de inventario contra o capital de referencia", () => {
