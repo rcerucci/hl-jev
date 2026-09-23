@@ -517,6 +517,14 @@ E o que o **próprio ledger** já dizia, sem rede:
 | `too_hostile` | mediana 0,52 · **1995** de 2923 ≥ 0,50 |
 | Actos | `hold` em **2923/2923** |
 
+**`dir_after` = `down` em 224/224 — e isso não são 224 confirmações.** As 224 observações cabem em **23,6
+minutos** (15:12:53Z→15:36:32Z, tudo na hora 15Z) e cada uma gradua uma janela de 15 min: cabem lá **duas
+janelas independentes**. O movimento gravado nessa hora: mediana **-26,2 bps**, mínimo -45,7, máximo -2,2 —
+uma queda contínua, amostrada 224 vezes. É o mesmo defeito que a sonda tinha (janelas de 15 min que
+partilham 14 min entre si), agora dentro do corpus. **No V4b-0 imprime-se `dir_after` por hora**; se
+continuar 100 % `down` noutro dia, é o cálculo, não o mercado. Estados distintos hoje: **43** (15Z: 10 · 16Z:
+27 · 17Z: 24).
+
 **O que isto decide**
 
 1. **"O testnet parado" está falsificado.** 211 dos 224 outcomes têm movimento ≥ 10 bps nos 15 min seguintes;
@@ -531,11 +539,76 @@ E o que o **próprio ledger** já dizia, sem rede:
    **mesmo livro** do estado evita o desvio de nível sem perder nada. O que trava a V3 viva não é a fita — é
    a política nunca escolher lado. **V4b-0 (Laya nos mesmos estados) é o experimento decisivo.**
 
-Fica **para o dono**: a linha do V3 no `VALIDACAO-PNL.md` propõe `MARKS_VENUE=mainnet`; a medição tira-lhe o
-motivo. Ou se mantém marcas no mesmo livro (proposta), ou se mantém o misto com o desvio declarado — mas já
-não por causa de um livro parado.
+**Decisão tomada (23 set 2026): marcas no mesmo livro do estado** — `MARKS_VENUE=testnet` por default. Mainnet
+deixa de ser obrigatório para "haver movimento"; o livro misto continua proibido de mandar ordem (essa regra
+**não** caiu) e as duas mids por ciclo passam a diagnóstico opcional. O 5/5 **não** é prova de que o rótulo
+seria o mesmo em mainnet: é ausência de inversão nesta janela, não equivalência entre fitas.
 
 **Achado de instrumentação (não corrigido aqui, é código de produto):** a linha de decisão do ledger **não
 guarda o gate que disparou**. O motivo (`hostile` / `low_conf` / `hold` / `frozen_*`) só existe no SSE; o
 ficheiro fica sem ele. Nos dados actuais ainda se reconstrói a partir de `too_hostile` e `act_conf`, mas um
 corpus antigo não se explica sozinho. Candidato a PR pequeno: um campo `gate` no `verdict`.
+
+## 14. V4b-0 (parte 1) — jev × dumb nos mesmos estados (23 set 2026)
+
+Replay **offline**, sem rede e sem chave: `provas/v4b-0/replay-jev-dumb.ts`. Importa a heurística de
+**produto** (`dumbAct` / `dumbHostile` de `src/policy/dumb.ts`) em vez de a recopiar — medir uma cópia
+mediria a cópia. O `act` gravado no ledger é o verdict **cru** (o gate vive em `risk/intent.ts`), por isso o
+replay aplica o gate na mesma ordem do produto: `hostile` (≥ 0,65) antes de `low_conf` (< 0,80).
+
+| | jev (gravado) | dumb (recomputado) |
+|---|---|---|
+| decisões válidas | 3144 | 3144 |
+| actos crus | `hold` 3144 | `hold` 3138 · `sell` 5 · `buy` 1 |
+| lados crus | **0** | **6** |
+| `n_lados` (conf ≥ 0,80) | **0** | **6** |
+| bloqueados pelo gate | 2960 (hostile 613 · low_conf 2347) | 3139 (holds 3138 · **hostile 1**) |
+
+Os seis estados onde a `dumb` escolhe lado — e o Jev fez `hold` nos seis:
+
+```
+"tight deep dump dumping flat extreme mid"          -> dumb sell | jev hold | 15:30:17Z (+3 ciclos iguais)
+"unfillable empty bot_war dumping flat extreme mid" -> dumb sell | jev hold | 16:14:58Z   <- travado pelo proprio hostile
+"tight deep bot_war pumping flat extreme mid"       -> dumb buy  | jev hold | 16:15:08Z
+```
+
+**O vocabulário, medido** (7 posições, por decisões):
+
+| pos | bucket | palavras |
+|---|---|---|
+| 0 | spread | `tight` 3109 · `normal` 25 · `wide` 9 · `unfillable` 1 |
+| 1 | depth | `deep` 3104 · `thin` 35 · `ok` 4 · `empty` 1 |
+| 2 | flow | `dump` 1125 · `two_way` 903 · `lift` 477 · `bot_war` 467 · `quiet` 172 |
+| 3 | tape | `flat` 3005 · `grinding` 133 · `dumping` 5 · `pumping` 1 |
+| 4 | tape-2 | `flat` 3144 |
+| 5 | move | `extreme` 3144 |
+| 6 | funding | `mid` 2844 · `funding_window` 150 · `open_liq` 150 |
+
+Três leituras que isto dá de graça:
+
+1. **O `noul` não é o travão.** `noul ≥ 0,65` em **613** ciclos e `< 0,65` em **2531** — e a escolha é `hold`
+   em **3144/3144**, nas duas bandas. O modelo não escolhe lado **mesmo quando o noul diz que o livro não é
+   hostil**. Travar o `noul` não destrava nada: o que não aparece é o **lado**, não a permissão.
+2. **A `dumb` escolhe lado onde o Jev recusa** — mas 6 em 3144 (0,19 %), abaixo do mínimo de 20. O controlo
+   não empata: o controlo **não tem amostra**. O que já se pode dizer: o adjectivo (`dumping` / `pumping` na
+   posição `tape`) **carrega lado** quando aparece — e o `tape` é `flat` em 3005 de 3144 (95,6 %).
+3. **A metade hostil da `dumb` disparou 1 vez em 3144.** `dumbHostile` exige `violent` — que **nunca** aparece
+   no vocabulário — ou `unfillable`, que aparece **1 vez**, na posição `spread` (onde significa outra coisa).
+   O Jev teve **613** ciclos hostis. Não se corrige (§5 proíbe alargar o `dumb`): a tabela passa a declarar
+   que a coluna do controlo não tem travão.
+
+**`dir_after` por hora** (pedido do dono; worker de outcome relançado):
+
+| hora | n | `dir_after` | movimento mediana |
+|---|---|---|---|
+| 15Z | 224 | `down` 224 | -26,2 bps |
+| 16Z | 73 | `down` 66 · **`up` 7** | -6,2 bps |
+
+**Não é o cálculo preso:** há 7 janelas `up` na hora seguinte. O que há é uma janela de queda (o corpus
+cobre ~2,7 h de uma sessão), e 224 observações continuam a não ser 224 confirmações. O worker parou por
+**429 (rate limit)** da API pública de testnet aos 297 outcomes — é idempotente, uma passagem posterior
+completa o resto (as horas 17Z/18Z ficam por graduar).
+
+**O que falta para o V4b-0 fechar:** a coluna **Laya** (parte 2), que precisa dos pesos locais e do caminho
+de execução. Sem ela, a pergunta do replay — *alguém escolhe lado onde o Jev recusa?* — tem hoje uma
+resposta parcial: **o adjectivo escolhe (6×), o modelo não escolhe (0× em 3144, a qualquer `noul`)**.
