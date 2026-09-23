@@ -14,6 +14,8 @@ type Kind = "buy" | "sell" | "hold" | "late";
 function kindOf(event: BlockEvent): Kind {
   const d = event.decision;
   if (!d || d.late) return "late";
+  // Caminho da fusao: o lado vem do `act` da POLICY, nao do par intent/bias.
+  if (d.act) return d.act === "buy" ? "buy" : d.act === "sell" ? "sell" : "hold";
   if (d.intent === "hold" || d.action === "hold") return "hold";
   if (d.bias === "short" || d.action === "sell") return "sell";
   if (d.bias === "long" || d.action === "buy") return "buy";
@@ -37,6 +39,7 @@ const KIND_CLASS: Record<Kind, string> = {
 function wordOf(event: BlockEvent, kind: Kind): string {
   const d = event.decision;
   if (kind === "late") return "LATE";
+  if (d?.act) return d.act.toUpperCase();
   if (kind === "hold") return "HOLD";
   if (d?.intent === "close") return "CLOSE";
   if (d?.intent === "open") return "OPEN";
@@ -78,10 +81,11 @@ export default function Feed({
   }, []);
 
   const callRows = useMemo(() => events.filter(isCallRow), [events]);
+  const fusion = useMemo(() => events.some((e) => e.decision?.act != null), [events]);
 
   return (
     <section className={styles.feed}>
-      <div className={styles.railHead}>CALLS</div>
+      <div className={styles.railHead}>{fusion ? "JEV CALLS" : "CALLS"}</div>
       <div className={styles.list} ref={listRef}>
         {waiting && callRows.length === 0 ? (
           <div aria-busy="true" aria-label="Loading calls">
@@ -126,7 +130,9 @@ export default function Feed({
               detail = `${word} ${fmtSize(quote.size)} @ ${fmtPrice(quote.price)}${bias}${lev}${quote.reduceOnly ? " reduce" : ""}`;
               detailMuted = quote.status === "reverted";
             } else if (decided && kind === "hold") {
-              detail = event.position.side === "flat" ? "flat, no order" : "position held";
+              // Na fusao interessa *porque* travou: o gate escreve o motivo.
+              const gate = decision?.reason && decision.reason !== "jev_act" ? `${decision.reason} · ` : "";
+              detail = `${gate}${event.position.side === "flat" ? "flat, no order" : "position held"}`;
               detailMuted = true;
             } else if (decided && decision?.intent === "close" && event.position.side === "flat") {
               detail = "already flat";
@@ -144,6 +150,7 @@ export default function Feed({
                 <span className={`${styles.cell} ${styles.lat}`}>{lat}</span>
                 <span
                   className={`${styles.cell} ${styles.detail}${detailMuted ? ` ${styles.muted}` : ""}`}
+                  title={decision?.state12}
                 >
                   {detail}
                 </span>

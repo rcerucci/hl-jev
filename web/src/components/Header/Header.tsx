@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { fmtSignedUsd, fmtUsd } from "@/lib/format";
 import Logo from "@/components/Logo/Logo";
 import { Bone } from "@/components/Skeleton/Skeleton";
@@ -43,6 +44,37 @@ function GitHubMark() {
   );
 }
 
+/**
+ * Claro/escuro. O tema vive em `data-theme` no <html> (o guiao do <head> ja o
+ * resolveu antes da pintura); aqui so se troca e se grava a escolha.
+ */
+function ThemeToggle() {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const atual = document.documentElement.getAttribute("data-theme");
+    setTheme(atual === "dark" ? "dark" : "light");
+  }, []);
+
+  const trocar = () => {
+    const proximo = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", proximo);
+    try {
+      localStorage.setItem("theme", proximo);
+    } catch {
+      /* sem armazenamento: o tema vale so nesta sessao */
+    }
+    setTheme(proximo);
+  };
+
+  const alvo = theme === "dark" ? "claro" : "escuro";
+  return (
+    <button type="button" className={styles.themeBtn} onClick={trocar} title={`mudar para ${alvo}`} aria-label={`mudar para tema ${alvo}`}>
+      {alvo}
+    </button>
+  );
+}
+
 export default function Header({ connection, balance, unrealized, realized }: HeaderProps) {
   const live = connection === "live";
 
@@ -50,20 +82,21 @@ export default function Header({ connection, balance, unrealized, realized }: He
     <div className={styles.header}>
       <span className={styles.brandLockup}>
         <Logo size={20} />
-        <h1 className={styles.brand}>Jev Trade</h1>
-        <p className={styles.tagline}>Live Jev trading bot</p>
+        <h1 className={styles.brand}>Jev × Hyperliquid</h1>
+        <p className={styles.tagline}>fusao · testnet</p>
         <span className={styles.links}>
           <a
             className={styles.link}
-            href="https://github.com/aowang-ai/jev-trade"
+            href="https://github.com/rcerucci/hl-jev"
             target="_blank"
             rel="noreferrer"
-            aria-label="jev-trade on GitHub"
+            aria-label="hl-jev on GitHub"
           >
             <GitHubMark />
           </a>
         </span>
       </span>
+      <ThemeToggle />
       <span className={styles.status} data-live={live ? "true" : "false"}>
         <span className={styles.dot} aria-hidden="true" />
         <span>{live ? "Live" : "Offline"}</span>

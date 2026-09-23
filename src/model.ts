@@ -85,6 +85,8 @@ export interface ModelDecision {
   act?: Action;
   act_conf?: number;
   too_hostile?: number;
+  /** Porque o gate travou (hostile, low_conf, frozen_*, ...). So no caminho da fusao. */
+  reason?: string;
 }
 
 export interface Model {

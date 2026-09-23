@@ -109,6 +109,23 @@
   font-variant-numeric: tabular-nums;
 }
 
+.stateLine {
+  margin-top: 8px;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.gateLine {
+  margin-top: 3px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fill {
     transition: none;

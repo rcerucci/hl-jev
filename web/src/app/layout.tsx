@@ -10,9 +10,9 @@ const plex = IBM_Plex_Mono({
 });
 
 const site = "https://www.jev-trade.com";
-const title = "Jev Trade | Live Jev trading bot on crypto and other assets";
+const title = "Jev x Hyperliquid | fusao em testnet";
 const description =
-  "Jev Trade is live Jev trading: a bot that reads the book every tick and trades BTC, ETH, SOL, DOGE, and BNB.";
+  "Desk da fusao: politica tipada (Jev, com gate humano) sobre o executor Hyperliquid. Testnet. Nao e um sinal de compra nem prova de edge.";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -77,15 +77,25 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#ffffff",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0d10" },
+  ],
   viewportFit: "cover",
 };
+
+/**
+ * Resolve o tema antes da primeira pintura: escolha gravada > preferencia do
+ * sistema > claro. Sem isto o escuro pisca a branco a cada navegacao.
+ */
+const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","light");}})();`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={plex.variable}>
       <head>
         <link rel="describedby" href="https://www.jev-trade.com/llms.txt" />
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />

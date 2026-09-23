@@ -46,6 +46,56 @@
   --card-max: none;
 }
 
+/*
+ * Tema escuro. Escolhido pelo botao do cabecalho (data-theme no <html>, gravado
+ * em localStorage) ou, sem escolha, pela preferencia do sistema — o guiao no
+ * <head> resolve-o antes da primeira pintura.
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0b0d10;
+  --panel: #0b0d10;
+  --panel-2: #12151a;
+  --border: #454b54;
+  --border-2: #2b3138;
+  --track: #1c2128;
+
+  --ink: #e9ecf0;
+  --ink-2: #c3c9d1;
+  --muted: #8d949e;
+  --muted-2: #8d949e;
+  --link-muted: #c3c9d1;
+
+  --buy: #3ddc84;
+  --buy-ink: #3ddc84;
+  --buy-bar: #3ddc84;
+  --buy-bar-dim: #1e4030;
+  --sell: #ff5f56;
+  --sell-ink: #ff5f56;
+  --sell-bar: #ff5f56;
+  --sell-bar-dim: #45211f;
+
+  --late: #f0b429;
+  --late-ink: #f0b429;
+  --late-cell: #2e2712;
+  --hold-cell: #1b2027;
+  --up-bar: #3ddc84;
+  --down-bar: #ff5f56;
+  --link: #8ab4ff;
+
+  --badge-jev-bg: #e9ecf0;
+  --badge-jev-fg: #0b0d10;
+  --badge-standin-bg: #e9ecf0;
+  --badge-standin-fg: #0b0d10;
+  --live-dot: #3ddc84;
+  --pnl-pos: #3ddc84;
+  --pnl-neg: #ff5f56;
+  --grid: #232931;
+
+  --page-bg: #0b0d10;
+}
+
 *,
 *::before,
 *::after {

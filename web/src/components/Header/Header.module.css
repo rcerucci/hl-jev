@@ -70,6 +70,27 @@
   white-space: nowrap;
 }
 
+/* Tema claro/escuro. Caixa baixa, mono, do mesmo tamanho do resto do cabecalho. */
+.themeBtn {
+  flex: none;
+  padding: 5px 9px;
+  border: 1px solid var(--border-2);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-mono), "IBM Plex Mono", monospace;
+  font-weight: 700;
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.themeBtn:hover {
+  color: var(--ink);
+  border-color: var(--border);
+}
+
 .dot {
   width: 7px;
   height: 7px;

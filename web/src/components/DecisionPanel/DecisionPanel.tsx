@@ -73,6 +73,8 @@ export default function DecisionPanel({ latest, waiting = false }: DecisionPanel
   }
 
   const decision = latest?.decision ?? null;
+  // O caminho fundido marca-se com `act`: e o unico campo que a POLICY escreve.
+  const fusion = decision?.act != null;
   const late = decision ? decision.late : true;
   const held = decision?.intent === "hold";
   const chosen =
@@ -82,74 +84,154 @@ export default function DecisionPanel({ latest, waiting = false }: DecisionPanel
 
   const probs = decision?.probabilities ?? { buy: 0, sell: 0, hold: 0 };
   // A hold is a real answer, so its bars stay readable instead of greying out.
-  const decided = decision !== null && !late && (chosen !== null || held);
+  const decided = decision !== null && !late && (fusion || chosen !== null || held);
   const pctOf = (p: number | undefined) => (decided ? fmtPct(p ?? 0) : "-");
+  const num = (x: number | undefined) => (typeof x === "number" ? x.toFixed(2) : "-");
 
-  const headline = decided ? fmtCall(decision) || "LATE" : "LATE";
-  const headlineColor = held
-    ? "var(--ink-2)"
-    : chosen
-      ? (decision?.bias ?? decision?.action) === "short" || decision?.action === "sell"
+  const headline = !decided
+    ? "LATE"
+    : fusion
+      ? (decision?.act ?? "hold").toUpperCase()
+      : fmtCall(decision) || "HOLD";
+  const headlineColor = !decided
+    ? "var(--late-ink)"
+    : fusion
+      ? decision?.act === "sell"
         ? "var(--sell-ink)"
-        : "var(--buy-ink)"
-      : "var(--late-ink)";
+        : decision?.act === "buy"
+          ? "var(--buy-ink)"
+          : "var(--ink-2)"
+      : held
+        ? "var(--ink-2)"
+        : chosen
+          ? (decision?.bias ?? decision?.action) === "short" || decision?.action === "sell"
+            ? "var(--sell-ink)"
+            : "var(--buy-ink)"
+          : "var(--late-ink)";
+
+  // Na fusao as barras sao as tres opcoes do Jev mais a hostilidade do `noul`
+  // (o limiar do noul e do codigo, nao do modelo: a barra acende quando o gate
+  // travou por `hostile`, nao quando passa de um numero).
+  const fusionBars = [
+    {
+      label: "buy",
+      labelColor: "var(--buy-ink)",
+      active: decision?.act === "buy",
+      value: probs.buy ?? 0,
+      fill: "var(--buy-bar)",
+      dim: "var(--buy-bar-dim)",
+    },
+    {
+      label: "sell",
+      labelColor: "var(--sell-ink)",
+      active: decision?.act === "sell",
+      value: probs.sell ?? 0,
+      fill: "var(--sell-bar)",
+      dim: "var(--sell-bar-dim)",
+    },
+    {
+      label: "hold",
+      labelColor: "var(--ink)",
+      active: decision?.act === "hold",
+      value: probs.hold ?? 0,
+      fill: "var(--ink-2)",
+      dim: "var(--hold-cell)",
+    },
+    {
+      label: "hostile",
+      labelColor: "var(--late-ink)",
+      active: decision?.reason === "hostile",
+      value: decision?.too_hostile ?? 0,
+      fill: "var(--late-ink)",
+      dim: "var(--late-cell)",
+    },
+  ];
 
   return (
     <div className={styles.panel}>
       <section className={styles.section}>
-        <div className={styles.railHead}>CALL</div>
+        <div className={styles.railHead}>{fusion ? "JEV · POLICY" : "CALL"}</div>
         <div className={styles.body}>
           <div className={styles.headline}>
             <span className={styles.headlineWord} style={{ color: headlineColor }}>
               {headline}
             </span>
             {decided && decision ? (
-              <span className={styles.metaLine}>{decision.latencyMs} ms</span>
+              <span className={styles.metaLine}>
+                {fusion
+                  ? `conf ${num(decision.act_conf)} · hostile ${num(decision.too_hostile)} · ${decision.latencyMs} ms`
+                  : `${decision.latencyMs} ms`}
+              </span>
             ) : null}
           </div>
 
           <div className={styles.bars}>
-            <BarRow
-              label="long"
-              labelColor="var(--buy-ink)"
-              active={!held && decision?.bias === "long"}
-              value={probs.long ?? probs.buy}
-              fill={!held && decision?.bias === "long" ? "var(--buy-bar)" : "var(--buy-bar-dim)"}
-              pct={pctOf(probs.long ?? probs.buy)}
-            />
-            <BarRow
-              label="short"
-              labelColor="var(--sell-ink)"
-              active={!held && decision?.bias === "short"}
-              value={probs.short ?? probs.sell}
-              fill={!held && decision?.bias === "short" ? "var(--sell-bar)" : "var(--sell-bar-dim)"}
-              pct={pctOf(probs.short ?? probs.sell)}
-            />
-            <BarRow
-              label="open"
-              labelColor="var(--ink)"
-              active={decision?.intent === "open"}
-              value={probs.open ?? 0}
-              fill={decision?.intent === "open" ? "var(--buy-bar)" : "var(--buy-bar-dim)"}
-              pct={pctOf(probs.open)}
-            />
-            <BarRow
-              label="close"
-              labelColor="var(--ink)"
-              active={decision?.intent === "close"}
-              value={probs.close ?? 0}
-              fill={decision?.intent === "close" ? "var(--sell-bar)" : "var(--sell-bar-dim)"}
-              pct={pctOf(probs.close)}
-            />
-            <BarRow
-              label="hold"
-              labelColor="var(--ink)"
-              active={held}
-              value={probs.hold ?? 0}
-              fill={held ? "var(--ink-2)" : "var(--hold-cell)"}
-              pct={pctOf(probs.hold)}
-            />
+            {fusion
+              ? fusionBars.map((b) => (
+                  <BarRow
+                    key={b.label}
+                    label={b.label}
+                    labelColor={b.labelColor}
+                    active={b.active}
+                    value={b.value}
+                    fill={b.active ? b.fill : b.dim}
+                    pct={pctOf(b.value)}
+                  />
+                ))
+              : (
+                  <>
+                    <BarRow
+                      label="long"
+                      labelColor="var(--buy-ink)"
+                      active={!held && decision?.bias === "long"}
+                      value={probs.long ?? probs.buy}
+                      fill={!held && decision?.bias === "long" ? "var(--buy-bar)" : "var(--buy-bar-dim)"}
+                      pct={pctOf(probs.long ?? probs.buy)}
+                    />
+                    <BarRow
+                      label="short"
+                      labelColor="var(--sell-ink)"
+                      active={!held && decision?.bias === "short"}
+                      value={probs.short ?? probs.sell}
+                      fill={!held && decision?.bias === "short" ? "var(--sell-bar)" : "var(--sell-bar-dim)"}
+                      pct={pctOf(probs.short ?? probs.sell)}
+                    />
+                    <BarRow
+                      label="open"
+                      labelColor="var(--ink)"
+                      active={decision?.intent === "open"}
+                      value={probs.open ?? 0}
+                      fill={decision?.intent === "open" ? "var(--buy-bar)" : "var(--buy-bar-dim)"}
+                      pct={pctOf(probs.open)}
+                    />
+                    <BarRow
+                      label="close"
+                      labelColor="var(--ink)"
+                      active={decision?.intent === "close"}
+                      value={probs.close ?? 0}
+                      fill={decision?.intent === "close" ? "var(--sell-bar)" : "var(--sell-bar-dim)"}
+                      pct={pctOf(probs.close)}
+                    />
+                    <BarRow
+                      label="hold"
+                      labelColor="var(--ink)"
+                      active={held}
+                      value={probs.hold ?? 0}
+                      fill={held ? "var(--ink-2)" : "var(--hold-cell)"}
+                      pct={pctOf(probs.hold)}
+                    />
+                  </>
+                )}
           </div>
+
+          {fusion && decided && decision?.state12 ? (
+            <div className={styles.stateLine} title="as palavras que a POLICY viu (sem numeros)">
+              {decision.state12}
+            </div>
+          ) : null}
+          {fusion && decided && decision?.reason ? (
+            <div className={styles.gateLine}>gate: {decision.reason}</div>
+          ) : null}
         </div>
       </section>
     </div>
