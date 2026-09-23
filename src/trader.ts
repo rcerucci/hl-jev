@@ -400,6 +400,7 @@ export class Trader {
           act: decision?.act,
           act_conf: decision?.act_conf,
           too_hostile: decision?.too_hostile,
+          reason: decision?.reason,
         }
         : decision && {
           action: decision.action,
@@ -414,6 +415,7 @@ export class Trader {
           act: decision.act,
           act_conf: decision.act_conf,
           too_hostile: decision.too_hostile,
+          reason: decision.reason,
         },
       quote,
       fill: null,
