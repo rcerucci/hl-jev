@@ -572,7 +572,7 @@ Os seis estados onde a `dumb` escolhe lado — e o Jev fez `hold` nos seis:
 "tight deep bot_war pumping flat extreme mid"       -> dumb buy  | jev hold | 16:15:08Z
 ```
 
-**O vocabulário, medido** (7 posições, por decisões):
+**O vocabulário, medido** (7 posições, por decisões — a ordem é a do `toState`: `spread depth flow tape inventory funding clock`):
 
 | pos | bucket | palavras |
 |---|---|---|
@@ -580,9 +580,13 @@ Os seis estados onde a `dumb` escolhe lado — e o Jev fez `hold` nos seis:
 | 1 | depth | `deep` 3104 · `thin` 35 · `ok` 4 · `empty` 1 |
 | 2 | flow | `dump` 1125 · `two_way` 903 · `lift` 477 · `bot_war` 467 · `quiet` 172 |
 | 3 | tape | `flat` 3005 · `grinding` 133 · `dumping` 5 · `pumping` 1 |
-| 4 | tape-2 | `flat` 3144 |
-| 5 | move | `extreme` 3144 |
-| 6 | funding | `mid` 2844 · `funding_window` 150 · `open_liq` 150 |
+| 4 | inventory | `flat` 3144 |
+| 5 | funding | `extreme` 3144 |
+| 6 | clock | `mid` 2844 · `funding_window` 150 · `open_liq` 150 |
+
+*(Correcção de rótulos: uma versão anterior desta tabela chamava `tape-2`/`move`/`funding` às posições 4/5/6. Os
+**valores** estavam certos; os nomes não. A posição 4 é `inventory` — por isso `flat` em 100 %, não há posição
+aberta — a 5 é `funding` e a 6 é `clock`.)*
 
 Três leituras que isto dá de graça:
 
@@ -983,3 +987,50 @@ janela — é reconhecer que são **dois relógios**. **O ensaio de buckets do `
 **O que continua aberto, e não foi respondido por isto:** o Jev escolhe `hold` em 100 % dos ciclos também com o
 estado novo. Essa é a pergunta das **perguntas/modelo**, não do `tape` — a mesma que já estava em cima da mesa
 antes deste ensaio. Sem Laya, sem Fase D, sem segundo patch de limiar.
+
+## 18. Ensaio das perguntas (v2) — 23 set 2026
+
+O ensaio de buckets fechou com uma conclusão incómoda: **100 % `hold` mesmo com o estado novo**. Fica uma
+hipótese que o `tape` não pode responder — o Jev pode estar a recusar **o livro** ou a recusar um **enunciado
+incoerente** com o vocabulário que recebe. É isso que este ensaio separa.
+
+### 18.1 As incoerências medidas entre o texto (v1) e o vocabulário real
+
+| o v1 pedia | o encoder emite, neste livro |
+|---|---|
+| `too_hostile=true` se "funding extreme against the would-be add" | a posição do funding é **`extreme` em 100 %** dos ciclos — e o adjectivo **não diz a direcção**, logo "against the add" é impossível de avaliar |
+| `too_hostile=true` se "bot_war plus violent tape" | `flow=bot_war` **sozinho** é 46 % dos ciclos — e é o fluxo com **menor** movimento (mediana 4,1 bps) |
+| `buy` "without chasing a violent tape"; `sell` "without chasing a dump" | `violent` (tape) é **raro** (3,4 %) e pode estar a anular qualquer lado; e "dump" é palavra do **flow** enquanto a do **tape** é `dumping` — dois buckets citados com o mesmo nome |
+
+*(A tabela do §17.2 tinha as posições 4/5/6 mal rotuladas — `tape-2`/`move`/`funding`; os valores estavam
+certos, os nomes não. Corrigido: 4 = `inventory`, 5 = `funding`, 6 = `clock`.)*
+
+### 18.2 O que muda — só o texto (`policy/jev_questions.json`, `version: 2`)
+
+Mesmas duas perguntas, mesmo schema (`act` = choice com buy/sell/hold; `too_hostile` = noul com true/false).
+O enunciado passa a citar **palavras que o encoder emite**, com o **bucket certo**:
+
+- **`too_hostile=true`** = `spread` é **`unfillable`** ou `tape` é **`violent`**. **Caem** o `funding extreme` e o
+  `bot_war plus violent tape`; `bot_war` sozinho **não** é hostil.
+- **`act`**: `buy` pede **`flow=lift`** ou **`tape=pumping`**; `sell` pede **`flow=dump`** ou **`tape=dumping`**;
+  `hold` = **`tape=flat`**, inventário já expressa a vista, ou livro hostil. **Sai** o "without chasing a violent
+  tape". `grinding` fica declarado como **sem direcção** — não é sinal de lado sozinho.
+
+### 18.3 O que **não** muda
+
+`last20`, `GRIND`/`MOVE`/`VIOLENT`, `dumb`, `JEV_CONF_ACT=0,80`, `NOUL_HOSTILE_TH=0,65`, venue, Laya, Fase D,
+mainnet. Dry-run, sem signer.
+
+### 18.4 Como se julga (não é `n_lados ≥ 20`)
+
+Sessão **datada** — fronteira no log no arranque do v2 —, **≥ 2 h ou ≥ 8 janelas de 15 min**, tabela v1 × v2 **no
+mesmo encoder**. `n_lados ≥ 20` continua **fora** de meta; se aparecer, mede-se.
+
+**PASS (um chega):**
+
+1. `sidesAny > 0` — aparece `buy` ou `sell` a **qualquer** confiança; o gate pode continuar a cortar.
+2. O `noul` **sobe** com `unfillable`/`tape=violent` e **não** com `bot_war` isolado — as perguntas passaram a ler
+   o vocabulário.
+
+**FAIL:** 100 % `hold` **e** o `noul` continua a seguir `bot_war`/`funding`. Então o texto também não era a
+alavanca: **para-se**, sem abrir a Fase D e sem baixar θ.

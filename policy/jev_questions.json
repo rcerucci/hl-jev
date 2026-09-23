@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "updated_at": "2026-09-23T00:00:00Z",
   "source": "human",
   "questions": {
@@ -13,9 +13,9 @@
         "context": "size, price, time in force and leverage are chosen by the code, never by you."
       },
       "criteria": {
-        "buy": "Maker edge to lift or cover a short without chasing a violent tape.",
-        "sell": "Maker edge to hit or reduce a long without chasing a dump.",
-        "hold": "No edge, hostile book, or inventory already expresses the view."
+        "buy": "Maker edge to buy: flow is lift, meaning aggression is on the buy side. Or tape is pumping, meaning the short window moved up hard. flow two_way, or tape grinding or flat, is not a direction by itself.",
+        "sell": "Maker edge to sell: flow is dump, meaning aggression is on the sell side. Or tape is dumping, meaning the short window moved down hard. flow two_way, or tape grinding or flat, is not a direction by itself.",
+        "hold": "No edge: tape is flat, or inventory already expresses the view, or the book is too hostile to send any non-reduce order."
       }
     },
     "too_hostile": {
@@ -23,11 +23,11 @@
       "instructions": {
         "question": "Is this book too hostile to send any non-reduce order?",
         "inputs": "state is the same short line of adjectives. inventory is {{stance}}.",
-        "context": "Answer yes only for a book where a resting quote would be obvious food."
+        "context": "Answer yes only for a book where a resting quote would be obvious food. The spread bucket and the tape bucket decide this. The flow bucket on its own does not."
       },
       "criteria": {
-        "true": "Unfillable book, bot_war plus violent tape, or funding extreme against the would-be add.",
-        "false": "A resting post-only quote can be placed without being obvious food."
+        "true": "spread is unfillable, or tape is violent.",
+        "false": "spread is tight, normal or wide, and tape is not violent. flow bot_war on its own does not make a book hostile."
       }
     }
   }
