@@ -251,8 +251,9 @@ TIF da saída reduce-only continua no `plan.ts`). As restantes seguem como inter
 
 - `outcome` +15 min, tabela confiança × acerto e `select_disagreements` são **Fase C**: não existem.
 - O turno da noite é **Fase D**: não existe, e o `accept` continua manual.
-- A prova de testnet com chave (T018: "hold produz Noop e buy produz uma ALO") **exige chave de testnet** e
-  ainda não foi feita — o que correu foi dry-run (`wallet null`), que prova o caminho todo menos o ack do venue.
+- T018 tem **duas metades**. A do Jev está provada acima (13/13 `raw_ok` com chave real e sem signer). A do
+  venue ("hold produz Noop e buy produz uma ALO") exige `PRIVATE_KEY` / `.wallets.json` de testnet no clone e
+  continua pendente: o que correu foi dry-run (`wallet null`), que prova o caminho todo menos o ack do venue.
 - **O `main` público não passa `tsc --noEmit`**: 7 erros de tipo, todos pré-existentes (medido num worktree de
   `a3f2f83`). O CI só corre `bun test`, por isso passam despercebidos. O meu patch não acrescenta nenhum
   (comparado erro a erro). Consertar os 7 é PR próprio, não este.
@@ -260,9 +261,33 @@ TIF da saída reduce-only continua no `plan.ts`). As restantes seguem como inter
 ### Evidência medida desta ronda
 
 ```
-bun test test          → 124 pass / 0 fail  (64 do repo + 60 novos)
-tsc --noEmit           → 7 erros, exactamente os 7 do baseline
-POLICY=dumb (dry-run)  → arranca, ticks a 2000 ms, ledger 20260923-BTC.jsonl,
-                         state real: "tight deep dump flat flat extreme mid"
-alarme do mapa         → 5 corrupções reprovam; o caso legítimo passa
+bun test test            → 135 pass / 0 fail  (64 do repo + 71 novos)
+tsc --noEmit             → 7 erros, exactamente os 7 do baseline (nenhum novo)
+alarme do mapa           → 5 corrupções reprovam; o caso legítimo passa
+CI (GitHub, f828ae2)     → 135 pass / 0 fail nos dois runs (push e pull_request)
+POLICY=dumb (dry-run)    → arranca, ticks a 2000 ms, ledger escrito por ciclo
+POLICY=jev  (dry-run)    → 13 ciclos, 13/13 raw_ok, model jev-1.13.0
 ```
+
+**Passo 2 do consultor (o Jev a falar, sem signer), medido** em 23 set 2026: uma sleeve (BTC),
+`DRY_RUN=true` e `PRIVATE_KEY` vazio, livro real de testnet.
+
+| Medida | Valor |
+|---|---|
+| ciclos / respostas válidas | 13 / **13** |
+| latência do Jev (ms) | min 277 · mediana **316** · max 442 |
+| `JEV_TIMEOUT_MS` | 800, cerca de 2,5× a mediana desta amostra |
+| `act` | sempre `hold`; `act_conf` 0,31–0,45 |
+| `too_hostile` | 0,45–0,50 (limiar 0,65) |
+| veredicto típico | `model: jev-1.13.0`, `act_probs: {buy 0,28, sell 0,15, hold 0,57}` |
+| estados distintos | **1** — o livro de testnet ficou parado: mede a canalização, não a política |
+| custo pelo contador do repo | US$ 0,000319 em 13 chamadas (7 592 input tokens) |
+
+O que isto **prova**: o parse de `choice` + `noul` contra a API real (a forma do SDK 0.6.0, com
+`confidence` distinto de `probabilities`), o gate a recusar por `low_conf` (0,35 < 0,80) com stand-down, o
+estado de 7 palavras sem dígitos a atravessar 13 ciclos, e a latência a caber no tick de 2 s.
+O que **não** prova: que o venue assina. Essa metade do T018 exige chave de testnet da Hyperliquid.
+
+**Defeito que os testes desta ronda apanharam** (corrigido em `58fe256`): `Number(null) === 0`, logo um `noul`
+ausente ou nulo era lido como P(sim)=0, ou seja "livro não hostil". Era fail-open no campo que existe para
+travar; passou a exigir número real em `noul`, em cada probabilidade e em `confidence`.
