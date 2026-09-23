@@ -1,0 +1,739 @@
+{
+ "checkpoint": "ingles publicado (receptron/laya-onnx) — PRE-ENSAIO, nao e o checkpoint do vivo",
+ "ambito": {
+  "decisoes": 3144,
+  "estados": 44
+ },
+ "carga_ms": 2876,
+ "latencia_ms": {
+  "p50": 1969,
+  "p95": 2102,
+  "max": 2119
+ },
+ "act_por_ciclo": {
+  "buy": 3142,
+  "hold": 2
+ },
+ "act_por_estado": {
+  "buy": 43,
+  "hold": 1
+ },
+ "lados": {
+  "ponderados_por_ciclo": 3142,
+  "estados": 43
+ },
+ "noul_por_ciclo": {
+  ">= 0.65": 0,
+  "< 0.65": 3144
+ },
+ "neutro_por_ciclo": {
+  "A": 2970,
+  "B": 174
+ },
+ "por_estado": [
+  {
+   "estado": "normal deep bot_war flat flat extreme mid",
+   "ciclos": 5,
+   "act": "buy",
+   "act_conf": 0.3891,
+   "act_probs": {
+    "buy": 0.3891,
+    "sell": 0.2852,
+    "hold": 0.3258
+   },
+   "noul": 0.4386,
+   "neutro_A": 0.5676,
+   "neutro_choice": "A",
+   "tokens": 378,
+   "dumb": null
+  },
+  {
+   "estado": "normal deep bot_war grinding flat extreme mid",
+   "ciclos": 2,
+   "act": "buy",
+   "act_conf": 0.414,
+   "act_probs": {
+    "buy": 0.414,
+    "sell": 0.309,
+    "hold": 0.277
+   },
+   "noul": 0.4782,
+   "neutro_A": 0.5759,
+   "neutro_choice": "A",
+   "tokens": 378,
+   "dumb": null
+  },
+  {
+   "estado": "normal deep dump flat flat extreme funding_window",
+   "ciclos": 1,
+   "act": "buy",
+   "act_conf": 0.3942,
+   "act_probs": {
+    "buy": 0.3942,
+    "sell": 0.2962,
+    "hold": 0.3097
+   },
+   "noul": 0.5397,
+   "neutro_A": 0.6337,
+   "neutro_choice": "A",
+   "tokens": 378,
+   "dumb": null
+  },
+  {
+   "estado": "normal deep dump flat flat extreme mid",
+   "ciclos": 4,
+   "act": "buy",
+   "act_conf": 0.3943,
+   "act_probs": {
+    "buy": 0.3943,
+    "sell": 0.304,
+    "hold": 0.3017
+   },
+   "noul": 0.4554,
+   "neutro_A": 0.6044,
+   "neutro_choice": "A",
+   "tokens": 372,
+   "dumb": null
+  },
+  {
+   "estado": "normal deep dump grinding flat extreme mid",
+   "ciclos": 1,
+   "act": "buy",
+   "act_conf": 0.407,
+   "act_probs": {
+    "buy": 0.407,
+    "sell": 0.3256,
+    "hold": 0.2674
+   },
+   "noul": 0.5251,
+   "neutro_A": 0.6347,
+   "neutro_choice": "A",
+   "tokens": 372,
+   "dumb": null
+  },
+  {
+   "estado": "normal deep dump grinding flat extreme open_liq",
+   "ciclos": 1,
+   "act": "buy",
+   "act_conf": 0.4198,
+   "act_probs": {
+    "buy": 0.4198,
+    "sell": 0.3136,
+    "hold": 0.2666
+   },
+   "noul": 0.5389,
+   "neutro_A": 0.6558,
+   "neutro_choice": "A",
+   "tokens": 381,
+   "dumb": null
+  },
+  {
+   "estado": "normal deep lift flat flat extreme mid",
+   "ciclos": 3,
+   "act": "buy",
+   "act_conf": 0.4208,
+   "act_probs": {
+    "buy": 0.4208,
+    "sell": 0.3044,
+    "hold": 0.2748
+   },
+   "noul": 0.4407,
+   "neutro_A": 0.5539,
+   "neutro_choice": "A",
+   "tokens": 372,
+   "dumb": null
+  },
+  {
+   "estado": "normal deep two_way flat flat extreme funding_window",
+   "ciclos": 1,
+   "act": "buy",
+   "act_conf": 0.4157,
+   "act_probs": {
+    "buy": 0.4157,
+    "sell": 0.3018,
+    "hold": 0.2825
+   },
+   "noul": 0.4969,
+   "neutro_A": 0.5835,
+   "neutro_choice": "A",
+   "tokens": 384,
+   "dumb": null
+  },
+  {
+   "estado": "normal deep two_way flat flat extreme mid",
+   "ciclos": 4,
+   "act": "buy",
+   "act_conf": 0.3966,
+   "act_probs": {
+    "buy": 0.3966,
+    "sell": 0.2975,
+    "hold": 0.3059
+   },
+   "noul": 0.4464,
+   "neutro_A": 0.5561,
+   "neutro_choice": "A",
+   "tokens": 378,
+   "dumb": null
+  },
+  {
+   "estado": "normal deep two_way grinding flat extreme mid",
+   "ciclos": 1,
+   "act": "buy",
+   "act_conf": 0.4228,
+   "act_probs": {
+    "buy": 0.4228,
+    "sell": 0.3159,
+    "hold": 0.2613
+   },
+   "noul": 0.4838,
+   "neutro_A": 0.5799,
+   "neutro_choice": "A",
+   "tokens": 378,
+   "dumb": null
+  },
+  {
+   "estado": "normal thin dump flat flat extreme mid",
+   "ciclos": 2,
+   "act": "buy",
+   "act_conf": 0.3961,
+   "act_probs": {
+    "buy": 0.3961,
+    "sell": 0.2878,
+    "hold": 0.3161
+   },
+   "noul": 0.4549,
+   "neutro_A": 0.5803,
+   "neutro_choice": "A",
+   "tokens": 372,
+   "dumb": null
+  },
+  {
+   "estado": "tight deep bot_war flat flat extreme mid",
+   "ciclos": 415,
+   "act": "buy",
+   "act_conf": 0.3789,
+   "act_probs": {
+    "buy": 0.3789,
+    "sell": 0.2809,
+    "hold": 0.3402
+   },
+   "noul": 0.4579,
+   "neutro_A": 0.5692,
+   "neutro_choice": "A",
+   "tokens": 378,
+   "dumb": null
+  },
+  {
+   "estado": "tight deep bot_war grinding flat extreme mid",
+   "ciclos": 36,
+   "act": "buy",
+   "act_conf": 0.4229,
+   "act_probs": {
+    "buy": 0.4229,
+    "sell": 0.3041,
+    "hold": 0.273
+   },
+   "noul": 0.4976,
+   "neutro_A": 0.5958,
+   "neutro_choice": "A",
+   "tokens": 378,
+   "dumb": null
+  },
+  {
+   "estado": "tight deep bot_war pumping flat extreme mid",
+   "ciclos": 1,
+   "act": "buy",
+   "act_conf": 0.417,
+   "act_probs": {
+    "buy": 0.417,
+    "sell": 0.3146,
+    "hold": 0.2684
+   },
+   "noul": 0.4836,
+   "neutro_A": 0.5864,
+   "neutro_choice": "A",
+   "tokens": 378,
+   "dumb": "buy"
+  },
+  {
+   "estado": "tight deep dump dumping flat extreme mid",
+   "ciclos": 4,
+   "act": "buy",
+   "act_conf": 0.4109,
+   "act_probs": {
+    "buy": 0.4109,
+    "sell": 0.3228,
+    "hold": 0.2664
+   },
+   "noul": 0.5026,
+   "neutro_A": 0.6626,
+   "neutro_choice": "A",
+   "tokens": 372,
+   "dumb": "sell"
+  },
+  {
+   "estado": "tight deep dump flat flat extreme funding_window",
+   "ciclos": 46,
+   "act": "buy",
+   "act_conf": 0.3967,
+   "act_probs": {
+    "buy": 0.3967,
+    "sell": 0.2989,
+    "hold": 0.3044
+   },
+   "noul": 0.5419,
+   "neutro_A": 0.6671,
+   "neutro_choice": "A",
+   "tokens": 378,
+   "dumb": null
+  },
+  {
+   "estado": "tight deep dump flat flat extreme mid",
+   "ciclos": 939,
+   "act": "buy",
+   "act_conf": 0.3917,
+   "act_probs": {
+    "buy": 0.3917,
+    "sell": 0.3055,
+    "hold": 0.3028
+   },
+   "noul": 0.4651,
+   "neutro_A": 0.5937,
+   "neutro_choice": "A",
+   "tokens": 372,
+   "dumb": null
+  },
+  {
+   "estado": "tight deep dump flat flat extreme open_liq",
+   "ciclos": 55,
+   "act": "buy",
+   "act_conf": 0.4167,
+   "act_probs": {
+    "buy": 0.4167,
+    "sell": 0.3029,
+    "hold": 0.2804
+   },
+   "noul": 0.5033,
+   "neutro_A": 0.6517,
+   "neutro_choice": "A",
+   "tokens": 381,
+   "dumb": null
+  },
+  {
+   "estado": "tight deep dump grinding flat extreme funding_window",
+   "ciclos": 1,
+   "act": "buy",
+   "act_conf": 0.4172,
+   "act_probs": {
+    "buy": 0.4172,
+    "sell": 0.3189,
+    "hold": 0.2639
+   },
+   "noul": 0.5845,
+   "neutro_A": 0.7285,
+   "neutro_choice": "A",
+   "tokens": 378,
+   "dumb": null
+  },
+  {
+   "estado": "tight deep dump grinding flat extreme mid",
+   "ciclos": 41,
+   "act": "buy",
+   "act_conf": 0.408,
+   "act_probs": {
+    "buy": 0.408,
+    "sell": 0.3265,
+    "hold": 0.2654
+   },
+   "noul": 0.5607,
+   "neutro_A": 0.6967,
+   "neutro_choice": "A",
+   "tokens": 372,
+   "dumb": null
+  },
+  {
+   "estado": "tight deep dump grinding flat extreme open_liq",
+   "ciclos": 4,
+   "act": "buy",
+   "act_conf": 0.4288,
+   "act_probs": {
+    "buy": 0.4288,
+    "sell": 0.3157,
+    "hold": 0.2556
+   },
+   "noul": 0.5507,
+   "neutro_A": 0.7064,
+   "neutro_choice": "A",
+   "tokens": 381,
+   "dumb": null
+  },
+  {
+   "estado": "tight deep lift flat flat extreme funding_window",
+   "ciclos": 4,
+   "act": "buy",
+   "act_conf": 0.4161,
+   "act_probs": {
+    "buy": 0.4161,
+    "sell": 0.2959,
+    "hold": 0.288
+   },
+   "noul": 0.5585,
+   "neutro_A": 0.6424,
+   "neutro_choice": "A",
+   "tokens": 378,
+   "dumb": null
+  },
+  {
+   "estado": "tight deep lift flat flat extreme mid",
+   "ciclos": 453,
+   "act": "buy",
+   "act_conf": 0.4099,
+   "act_probs": {
+    "buy": 0.4099,
+    "sell": 0.3077,
+    "hold": 0.2824
+   },
+   "noul": 0.4828,
+   "neutro_A": 0.5956,
+   "neutro_choice": "A",
+   "tokens": 372,
+   "dumb": null
+  },
+  {
+   "estado": "tight deep lift grinding flat extreme mid",
+   "ciclos": 14,
+   "act": "buy",
+   "act_conf": 0.4314,
+   "act_probs": {
+    "buy": 0.4314,
+    "sell": 0.3267,
+    "hold": 0.2418
+   },
+   "noul": 0.5483,
+   "neutro_A": 0.7051,
+   "neutro_choice": "A",
+   "tokens": 372,
+   "dumb": null
+  },
+  {
+   "estado": "tight deep quiet flat flat extreme mid",
+   "ciclos": 170,
+   "act": "buy",
+   "act_conf": 0.3826,
+   "act_probs": {
+    "buy": 0.3826,
+    "sell": 0.2931,
+    "hold": 0.3243
+   },
+   "noul": 0.4294,
+   "neutro_A": 0.483,
+   "neutro_choice": "B",
+   "tokens": 372,
+   "dumb": null
+  },
+  {
+   "estado": "tight deep two_way flat flat extreme funding_window",
+   "ciclos": 93,
+   "act": "buy",
+   "act_conf": 0.4163,
+   "act_probs": {
+    "buy": 0.4163,
+    "sell": 0.2981,
+    "hold": 0.2857
+   },
+   "noul": 0.5007,
+   "neutro_A": 0.6107,
+   "neutro_choice": "A",
+   "tokens": 384,
+   "dumb": null
+  },
+  {
+   "estado": "tight deep two_way flat flat extreme mid",
+   "ciclos": 682,
+   "act": "buy",
+   "act_conf": 0.3863,
+   "act_probs": {
+    "buy": 0.3863,
+    "sell": 0.2941,
+    "hold": 0.3196
+   },
+   "noul": 0.4646,
+   "neutro_A": 0.542,
+   "neutro_choice": "A",
+   "tokens": 378,
+   "dumb": null
+  },
+  {
+   "estado": "tight deep two_way flat flat extreme open_liq",
+   "ciclos": 89,
+   "act": "buy",
+   "act_conf": 0.4303,
+   "act_probs": {
+    "buy": 0.4303,
+    "sell": 0.3058,
+    "hold": 0.2639
+   },
+   "noul": 0.5048,
+   "neutro_A": 0.6026,
+   "neutro_choice": "A",
+   "tokens": 387,
+   "dumb": null
+  },
+  {
+   "estado": "tight deep two_way grinding flat extreme mid",
+   "ciclos": 27,
+   "act": "buy",
+   "act_conf": 0.4201,
+   "act_probs": {
+    "buy": 0.4201,
+    "sell": 0.309,
+    "hold": 0.2708
+   },
+   "noul": 0.5097,
+   "neutro_A": 0.6262,
+   "neutro_choice": "A",
+   "tokens": 378,
+   "dumb": null
+  },
+  {
+   "estado": "tight ok bot_war flat flat extreme mid",
+   "ciclos": 2,
+   "act": "buy",
+   "act_conf": 0.3774,
+   "act_probs": {
+    "buy": 0.3774,
+    "sell": 0.2803,
+    "hold": 0.3424
+   },
+   "noul": 0.3816,
+   "neutro_A": 0.4662,
+   "neutro_choice": "B",
+   "tokens": 378,
+   "dumb": null
+  },
+  {
+   "estado": "tight ok quiet flat flat extreme mid",
+   "ciclos": 2,
+   "act": "buy",
+   "act_conf": 0.3875,
+   "act_probs": {
+    "buy": 0.3875,
+    "sell": 0.2984,
+    "hold": 0.3141
+   },
+   "noul": 0.3495,
+   "neutro_A": 0.405,
+   "neutro_choice": "B",
+   "tokens": 372,
+   "dumb": null
+  },
+  {
+   "estado": "tight thin bot_war flat flat extreme mid",
+   "ciclos": 2,
+   "act": "hold",
+   "act_conf": 0.3706,
+   "act_probs": {
+    "buy": 0.3618,
+    "sell": 0.2676,
+    "hold": 0.3706
+   },
+   "noul": 0.4369,
+   "neutro_A": 0.5569,
+   "neutro_choice": "A",
+   "tokens": 378,
+   "dumb": null
+  },
+  {
+   "estado": "tight thin dump flat flat extreme mid",
+   "ciclos": 21,
+   "act": "buy",
+   "act_conf": 0.3808,
+   "act_probs": {
+    "buy": 0.3808,
+    "sell": 0.2903,
+    "hold": 0.3289
+   },
+   "noul": 0.4699,
+   "neutro_A": 0.5939,
+   "neutro_choice": "A",
+   "tokens": 372,
+   "dumb": null
+  },
+  {
+   "estado": "tight thin lift flat flat extreme mid",
+   "ciclos": 2,
+   "act": "buy",
+   "act_conf": 0.3973,
+   "act_probs": {
+    "buy": 0.3973,
+    "sell": 0.2842,
+    "hold": 0.3185
+   },
+   "noul": 0.4719,
+   "neutro_A": 0.5578,
+   "neutro_choice": "A",
+   "tokens": 372,
+   "dumb": null
+  },
+  {
+   "estado": "tight thin lift grinding flat extreme mid",
+   "ciclos": 1,
+   "act": "buy",
+   "act_conf": 0.4255,
+   "act_probs": {
+    "buy": 0.4255,
+    "sell": 0.3231,
+    "hold": 0.2514
+   },
+   "noul": 0.5391,
+   "neutro_A": 0.6384,
+   "neutro_choice": "A",
+   "tokens": 372,
+   "dumb": null
+  },
+  {
+   "estado": "tight thin two_way flat flat extreme funding_window",
+   "ciclos": 4,
+   "act": "buy",
+   "act_conf": 0.4062,
+   "act_probs": {
+    "buy": 0.4062,
+    "sell": 0.3057,
+    "hold": 0.2881
+   },
+   "noul": 0.5162,
+   "neutro_A": 0.5872,
+   "neutro_choice": "A",
+   "tokens": 384,
+   "dumb": null
+  },
+  {
+   "estado": "tight thin two_way flat flat extreme mid",
+   "ciclos": 1,
+   "act": "buy",
+   "act_conf": 0.3703,
+   "act_probs": {
+    "buy": 0.3703,
+    "sell": 0.2969,
+    "hold": 0.3328
+   },
+   "noul": 0.4518,
+   "neutro_A": 0.5183,
+   "neutro_choice": "A",
+   "tokens": 378,
+   "dumb": null
+  },
+  {
+   "estado": "unfillable empty bot_war dumping flat extreme mid",
+   "ciclos": 1,
+   "act": "buy",
+   "act_conf": 0.4108,
+   "act_probs": {
+    "buy": 0.4108,
+    "sell": 0.2997,
+    "hold": 0.2895
+   },
+   "noul": 0.5281,
+   "neutro_A": 0.6755,
+   "neutro_choice": "A",
+   "tokens": 384,
+   "dumb": "sell"
+  },
+  {
+   "estado": "wide deep bot_war flat flat extreme mid",
+   "ciclos": 2,
+   "act": "buy",
+   "act_conf": 0.3813,
+   "act_probs": {
+    "buy": 0.3813,
+    "sell": 0.2823,
+    "hold": 0.3364
+   },
+   "noul": 0.4749,
+   "neutro_A": 0.5927,
+   "neutro_choice": "A",
+   "tokens": 378,
+   "dumb": null
+  },
+  {
+   "estado": "wide deep dump flat flat extreme mid",
+   "ciclos": 2,
+   "act": "buy",
+   "act_conf": 0.3951,
+   "act_probs": {
+    "buy": 0.3951,
+    "sell": 0.2987,
+    "hold": 0.3062
+   },
+   "noul": 0.5111,
+   "neutro_A": 0.6339,
+   "neutro_choice": "A",
+   "tokens": 372,
+   "dumb": null
+  },
+  {
+   "estado": "wide deep dump grinding flat extreme mid",
+   "ciclos": 2,
+   "act": "buy",
+   "act_conf": 0.4105,
+   "act_probs": {
+    "buy": 0.4105,
+    "sell": 0.3221,
+    "hold": 0.2675
+   },
+   "noul": 0.6455,
+   "neutro_A": 0.712,
+   "neutro_choice": "A",
+   "tokens": 372,
+   "dumb": null
+  },
+  {
+   "estado": "wide deep dump grinding flat extreme open_liq",
+   "ciclos": 1,
+   "act": "buy",
+   "act_conf": 0.4316,
+   "act_probs": {
+    "buy": 0.4316,
+    "sell": 0.3093,
+    "hold": 0.2591
+   },
+   "noul": 0.6159,
+   "neutro_A": 0.7014,
+   "neutro_choice": "A",
+   "tokens": 381,
+   "dumb": null
+  },
+  {
+   "estado": "wide thin bot_war grinding flat extreme mid",
+   "ciclos": 1,
+   "act": "buy",
+   "act_conf": 0.3884,
+   "act_probs": {
+    "buy": 0.3884,
+    "sell": 0.2999,
+    "hold": 0.3117
+   },
+   "noul": 0.4965,
+   "neutro_A": 0.5716,
+   "neutro_choice": "A",
+   "tokens": 378,
+   "dumb": null
+  },
+  {
+   "estado": "wide thin two_way flat flat extreme mid",
+   "ciclos": 1,
+   "act": "buy",
+   "act_conf": 0.3724,
+   "act_probs": {
+    "buy": 0.3724,
+    "sell": 0.2969,
+    "hold": 0.3307
+   },
+   "noul": 0.4788,
+   "neutro_A": 0.5519,
+   "neutro_choice": "A",
+   "tokens": 378,
+   "dumb": null
+  }
+ ]
+}

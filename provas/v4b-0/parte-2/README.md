@@ -2,11 +2,36 @@
 
 | ficheiro | o que é |
 |---|---|
-| `PLANO.md` | o plano, fixado **antes** de baixar pesos (checkpoint, caminho, censo, limites) |
-| `censo-laya.mjs` | o censo |
-| `censo-laya.json` | o resultado (snapshot: as primeiras 3144 decisões válidas do ledger) |
+| `PLANO.md` | o plano, fixado **antes** de baixar pesos (checkpoint, caminho, censo, regras da 2b, limites) |
+| `censo-laya.mjs` | o censo (aceita `LAYA_MODEL_DIR` para apontar a um bundle exportado) |
+| `censo-laya.json` | censo **2a** — inglês publicado |
+| `censo-2b.json` | censo **2b** — `typed-decisions` exportado, mesmo snapshot |
+| `exportar-2b.sh` | o export da 2b (uv + torch CPU + `export/export_onnx.py`) |
 
-Resultados no `PLANO-FUSAO.md` §15.
+Resultados no `PLANO-FUSAO.md` §15 (2a) e §16 (2b — recusa).
+
+## 2b — `typed-decisions` (export próprio): **recusa declarada**
+
+O export corre bem e é fiel: `max |dlogits| = 1,16e-06`, `max |dact| = 0,0` contra a referência PyTorch,
+bundle de 1,6 GB em 2 min 30 s. O que recusa é o **uso**, pelas regras fixadas antes.
+
+| | 2a inglês | **2b `typed-decisions`** |
+|---|---|---|
+| `act` por ciclo | `buy` 2530 · `hold` 614 | **`buy` 3142 · `hold` 2** |
+| `conf` min–max | 0,381 – 0,501 | **0,370 – 0,432** |
+| `noul` min–max | 0,816 – 0,944 | **0,349 – 0,645** |
+| `noul` ≥ 0,65 | 3144/3144 | **0/3144** |
+| par neutro A/B | A 3144 | **A 2970 · B 174** |
+| p95 por estado | 2119 ms | **2102 ms** |
+
+- **Regra 1** (mesmo snapshot de 3144 / 44 estados): cumprida — o JSON da 2a não foi tocado.
+- **Regra 2** (sem baixar o θ): cumprida — `conf` máximo 0,432 < 0,80, a coluna §9.4 continua **zero**.
+- **Regra 3** (recusa): **accionada** — p95 **2102 ms ≥ 2 s** → **não nasce `laya.ts`**; Laya fica hipótese de
+  paper, não caminho do motor.
+
+E o achado que sobrevive à recusa: nos **dois** checkpoints, o `noul` médio é **mais baixo** com `bot_war` do
+que sem ele (2a 0,861 vs 0,881; 2b 0,467 vs 0,504) — a primitiva não lê o critério que lhe demos, mexe ao
+contrário. A saturação tem dois sentidos (2a prende no alto, 2b em baixo) e nenhum serve.
 
 ## Como se reproduz
 
