@@ -892,3 +892,64 @@ que o encoder responde; falta tempo de sessão, não outro ajuste.)*
 **Nota de método para a próxima leitura:** a unidade certa é a **janela**, não o ciclo — agrupar os ciclos *de
 dentro* de cada janela de 15 min pela palavra dominante e comparar o movimento **entre** janelas. Usa todos os
 dados sem contar a mesma observação duas vezes, o que escolher um ciclo por janela (4 âncoras em 68 min) não faz.
+
+### 17.8 Decisão do dono (23 set 2026): **manter `last20`**; a próxima medição muda de unidade
+
+| | |
+|---|---|
+| `last20` no encoder | **Mantém-se.** Não se reverte. A janela de 40 s é a direcção certa (regra 8: longe dos 900 s do rótulo, longe dos 10 s que não nomeavam nada), e a amostra densa mostra o encoder a falar. Reverter voltaria a um adjectivo que, medido, não nomeava o movimento. |
+| Regra 4 | **Amostra insuficiente.** n=1 a favor e n=1 contra não estabelecem nada; a única âncora com `≥ 10 bps` foi `flat`. |
+| `GRIND` / `MOVE` / `dumb` / θ / JSON | **Intocados.** Nenhum segundo patch de limiar. |
+| Jev 100 % `hold` e `n_lados` | Fora de meta. Laya e Fase D: fechadas. |
+
+**Próxima medição — palavra dominante por janela de 15 min.** Não é encoder novo: é o mesmo
+`antes-depois.py` com agrupamento por janela (`--janelas`). Por janela de 900 s ancorada no início da sessão:
+a palavra do `tape` **dominante** (moda sobre todos os ciclos de dentro da janela) e o `|mov|` do outcome da
+âncora dessa janela — movimento independente, palavra sem ruído de um só ciclo.
+
+**Meta de sessão: horas, não mais um commit.** 20 janelas ≈ **5 h**; até lá o veredicto da regra 4 continua
+"amostra insuficiente". O motor em dry-run pode acumular.
+
+### 17.9 Primeira leitura por janelas (23 set 2026) — `flat` dominante em **100 %** das janelas, nos dois encoders
+
+Método novo (`--janelas` no mesmo script): por janela de 900 s, a palavra do `tape` **dominante** (moda sobre
+todos os ciclos de dentro da janela) e o `|mov|` da âncora da janela.
+
+| janela | ciclos | dominante | % dominante | \|mov 15 min\| |
+|---|---|---|---|---|
+| 18:37 | 450 | `flat` | 77,3 % | **18,9 bps** |
+| 18:52 | 450 | `flat` | 93,8 % | 3,8 bps |
+| 19:07 | 450 | `flat` | 80,7 % | 9,7 bps |
+| 19:22 | 450 | `flat` | 74,7 % | 0,8 bps |
+| 19:37 | 450 | `flat` | 94,4 % | **31,0 bps** |
+| 19:52 | 92 | `flat` | 71,7 % | *por graduar* |
+
+O lado "antes" (`last5`, 11 janelas) é igual: **`flat` dominante em todas**, 90,4 %–100 %.
+
+Com a âncora das 19:37 graduada, a amostra dobra e **vai contra**: **2 janelas com `|mov| ≥ 10 bps` — e as
+duas com `flat` dominante**. Numa delas o livro andou **31,0 bps em 15 min** e o adjectivo do bucket foi
+`flat` em 94,4 % dos ciclos dessa janela.
+
+**As duas leituras que isto dá — e que a leitura por âncora não dava:**
+
+1. **Não há variância nenhuma para ordenar.** Com `flat` dominante em **100 %** das janelas, do encoder de 10 s
+   e do de 40 s, a regra 4 não é "amostra insuficiente": é **não aplicável nesta condição** — não existe par de
+   janelas com palavras diferentes para comparar.
+2. **E sabe-se porquê, medido:** o corte `MOVE 15 bps` dentro de 40 s é raro por construção. No corpus novo,
+   `pumping` + `dumping` = **16 de 1192 ciclos (1,3 %)**; `violent`, 40 (3,4 %). Para uma janela de ~450 ciclos
+   ter palavra dominante ≠ `flat` seria preciso que **mais de metade** dos seus ciclos passasse o corte.
+
+**Consequência para a meta das 5 h:** acumular horas **não** muda a palavra dominante — com 1,3 % de ciclos
+acima do corte, a probabilidade de uma janela virar é desprezável. As 20 janelas continuam a valer como amostra
+de *movimentos*; o que elas não resolvem é a ausência de variância do adjectivo. Mudar isso exige mexer no
+**corte** ou na **janela do bucket** — `GRIND`/`MOVE` estão fora do meu alcance por decisão do dono (§17.4.2) e
+o ensaio não lhes toca sem autorização nova.
+
+**Nada se altera neste passo:** `last20` fica, limiares ficam, `dumb`/θ/JSON intactos, `n_lados` fora de meta.
+
+**Nota de método — uma reserva minha à estatística escolhida.** A palavra **dominante** é enviesada para `flat`
+por construção: `flat` é o *default* do bucket, e basta o livro não andar 4 bps em 40 s para lá cair. Na janela
+das 18:37, **23 % dos ciclos não eram `flat`** (`grinding` 51, `violent` 40, `pumping` 11) e a dominante é `flat`
+à mesma. O complemento — a palavra **mais extrema** vista dentro da janela (ou o `max |last20|`) — responderia a
+outra pergunta: *"o bucket chegou a captar o movimento?"* em vez de *"o que o estado diz na maior parte do
+tempo?"*. Fica como proposta; não a implemento sem o dono pedir, para não multiplicar estatísticas a meio do ensaio.

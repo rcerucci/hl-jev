@@ -1,0 +1,134 @@
+{
+ "cru": {
+  "n_outcomes": 84,
+  "n_cruzados": 84,
+  "n_ge_10bps": 81,
+  "pct_ge_10bps": 96.4,
+  "ge_10bps_com_tape_flat": 41,
+  "pct_dos_grandes_com_tape_flat": 50.6,
+  "flat_n": 43,
+  "flat_mediana_bps": 26.5
+ },
+ "por_bucket": {
+  "tape": [
+   {
+    "palavra": "violent",
+    "n": 18,
+    "mediana_bps": 27.4,
+    "p90_bps": 27.4,
+    "pct_ge_10bps": 100.0
+   },
+   {
+    "palavra": "flat",
+    "n": 43,
+    "mediana_bps": 26.5,
+    "p90_bps": 27.4,
+    "pct_ge_10bps": 95.3
+   },
+   {
+    "palavra": "grinding",
+    "n": 23,
+    "mediana_bps": 26.5,
+    "p90_bps": 26.5,
+    "pct_ge_10bps": 95.7
+   }
+  ],
+  "flow": [
+   {
+    "palavra": "bot_war",
+    "n": 7,
+    "mediana_bps": 27.4,
+    "p90_bps": 27.4,
+    "pct_ge_10bps": 100.0
+   },
+   {
+    "palavra": "lift",
+    "n": 12,
+    "mediana_bps": 27.4,
+    "p90_bps": 27.4,
+    "pct_ge_10bps": 91.7
+   },
+   {
+    "palavra": "two_way",
+    "n": 63,
+    "mediana_bps": 26.5,
+    "p90_bps": 27.4,
+    "pct_ge_10bps": 98.4
+   },
+   {
+    "palavra": "dump",
+    "n": 2,
+    "mediana_bps": 17.4,
+    "p90_bps": 3.8,
+    "pct_ge_10bps": 50.0
+   }
+  ],
+  "spread": [
+   {
+    "palavra": "wide",
+    "n": 2,
+    "mediana_bps": 27.0,
+    "p90_bps": 26.5,
+    "pct_ge_10bps": 100.0
+   },
+   {
+    "palavra": "tight",
+    "n": 82,
+    "mediana_bps": 26.5,
+    "p90_bps": 27.4,
+    "pct_ge_10bps": 96.3
+   }
+  ],
+  "depth": [
+   {
+    "palavra": "deep",
+    "n": 83,
+    "mediana_bps": 26.5,
+    "p90_bps": 27.4,
+    "pct_ge_10bps": 96.4
+   },
+   {
+    "palavra": "thin",
+    "n": 1,
+    "mediana_bps": 26.5,
+    "p90_bps": 26.5,
+    "pct_ge_10bps": 100.0
+   }
+  ],
+  "funding": [
+   {
+    "palavra": "extreme",
+    "n": 84,
+    "mediana_bps": 26.5,
+    "p90_bps": 27.4,
+    "pct_ge_10bps": 96.4
+   }
+  ],
+  "clock": [
+   {
+    "palavra": "mid",
+    "n": 83,
+    "mediana_bps": 26.5,
+    "p90_bps": 27.4,
+    "pct_ge_10bps": 97.6
+   },
+   {
+    "palavra": "funding_window",
+    "n": 1,
+    "mediana_bps": 3.8,
+    "p90_bps": 3.8,
+    "pct_ge_10bps": 0.0
+   }
+  ],
+  "inventory": [
+   {
+    "palavra": "flat",
+    "n": 84,
+    "mediana_bps": 26.5,
+    "p90_bps": 27.4,
+    "pct_ge_10bps": 96.4
+   }
+  ]
+ },
+ "ledger": "data/ledger"
+}

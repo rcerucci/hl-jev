@@ -1,0 +1,88 @@
+{
+ "janelas": [
+  {
+   "janela": 0,
+   "de": "18:37",
+   "ciclos": 450,
+   "dominante": "flat",
+   "pct_dominante": 77.3,
+   "composicao": {
+    "flat": 348,
+    "grinding": 51,
+    "violent": 40,
+    "pumping": 11
+   },
+   "mov_bps": 18.9,
+   "ancora": "20260923T183725Z-BTC"
+  },
+  {
+   "janela": 1,
+   "de": "18:52",
+   "ciclos": 450,
+   "dominante": "flat",
+   "pct_dominante": 93.8,
+   "composicao": {
+    "flat": 422,
+    "grinding": 28
+   },
+   "mov_bps": 3.8,
+   "ancora": "20260923T185503Z-BTC"
+  },
+  {
+   "janela": 2,
+   "de": "19:07",
+   "ciclos": 450,
+   "dominante": "flat",
+   "pct_dominante": 80.7,
+   "composicao": {
+    "flat": 363,
+    "grinding": 69,
+    "dumping": 17,
+    "pumping": 1
+   },
+   "mov_bps": 9.7,
+   "ancora": "20260923T191003Z-BTC"
+  },
+  {
+   "janela": 3,
+   "de": "19:22",
+   "ciclos": 450,
+   "dominante": "flat",
+   "pct_dominante": 74.7,
+   "composicao": {
+    "flat": 336,
+    "grinding": 114
+   },
+   "mov_bps": 0.8,
+   "ancora": "20260923T192503Z-BTC"
+  },
+  {
+   "janela": 4,
+   "de": "19:37",
+   "ciclos": 450,
+   "dominante": "flat",
+   "pct_dominante": 94.4,
+   "composicao": {
+    "flat": 425,
+    "grinding": 25
+   },
+   "mov_bps": 31.0,
+   "ancora": "20260923T194003Z-BTC"
+  },
+  {
+   "janela": 5,
+   "de": "19:52",
+   "ciclos": 92,
+   "dominante": "flat",
+   "pct_dominante": 71.7,
+   "composicao": {
+    "flat": 66,
+    "grinding": 21,
+    "dumping": 5
+   },
+   "mov_bps": null,
+   "ancora": null
+  }
+ ],
+ "n_com_movimento": 5
+}

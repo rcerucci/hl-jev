@@ -14,12 +14,13 @@ Critério (regra 4): em janelas com |mov 15 min| >= 10 bps, o `tape` deve passar
 {pumping,dumping,grinding} de forma MONÓTONA com |mov|. Sem monotonia, é cosmética.
 """
 import argparse
+import datetime
 import glob
 import json
 import os
 import statistics
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 
 # ordem fixa do state: spread depth flow tape inventory funding clock
 POS = {"spread": 0, "depth": 1, "flow": 2, "tape": 3, "inventory": 4, "funding": 5, "clock": 6}
@@ -39,6 +40,83 @@ def _ms(cid: str) -> int:
     return int(_dt.datetime.strptime(d, "%Y%m%dT%H%M%SZ").replace(tzinfo=_dt.timezone.utc).timestamp() * 1000)
 
 
+def relatorio_janelas(dec: dict, outs: list, args) -> int:
+    """Palavra DOMINANTE do `tape` por janela de 900 s x |mov| da ancora da janela.
+
+    Porque assim e nao por ciclo: dentro de uma janela de 15 min o movemento do outcome
+    e UM so (as janelas dos ciclos vizinhos sobrepoem-se); a palavra, essa, varia de ciclo
+    para ciclo e a moda resume-a sem ruido de um unico tick. Uma linha por janela = uma
+    observacao por janela, sem contar nada duas vezes.
+    """
+    ciclos = sorted(((cid, d) for cid, d in dec.items() if d.get("state")), key=lambda kv: kv[0])
+    if not ciclos:
+        print("sem ciclos com estado")
+        return 1
+    omap = {o["cycle_id"]: o for o in outs}
+    t0 = _ms(ciclos[0][0])
+    janelas: dict = {}
+    for cid, d in ciclos:
+        w = (_ms(cid) - t0) // 900_000
+        janelas.setdefault(w, []).append((cid, d))
+
+    linhas = []
+    for w in sorted(janelas):
+        membros = janelas[w]
+        palavras = Counter(linha(POS["tape"], d["state"]) for _, d in membros)
+        dom, n_dom = palavras.most_common(1)[0]
+        cand = [(abs(_ms(cid) - (t0 + w * 900_000)), cid) for cid, _ in membros if cid in omap]
+        mov = None
+        ancora = None
+        if cand:
+            ancora = min(cand)[1]
+            o = omap[ancora]
+            mov = abs((o["mark_plus_15m"] - o["mark_then"]) / o["mark_then"]) * 1e4
+        linhas.append(
+            {
+                "janela": w,
+                "de": datetime.datetime.fromtimestamp((t0 + w * 900_000) / 1000, datetime.timezone.utc).strftime("%H:%M"),
+                "ciclos": len(membros),
+                "dominante": dom,
+                "pct_dominante": round(100 * n_dom / len(membros), 1),
+                "composicao": dict(palavras.most_common()),
+                "mov_bps": round(mov, 1) if mov is not None else None,
+                "ancora": ancora,
+            }
+        )
+
+    com = [l for l in linhas if l["mov_bps"] is not None]
+    if args.json:
+        with open(args.json, "w") as fh:
+            json.dump({"janelas": linhas, "n_com_movimento": len(com)}, fh, indent=1)
+        print(f"  json: {args.json}")
+    print(f"  JANELAS de 900 s: {len(linhas)} | com movimento graduado: {len(com)}")
+    print(f"  {'inicio':7s} {'ciclos':6s} {'dominante':10s} {'%dom':6s} {'|mov|':8s} composicao")
+    for l in linhas:
+        mov = f"{l['mov_bps']:7.1f}" if l["mov_bps"] is not None else "   --  "
+        print(f"  {l['de']:7s} {l['ciclos']:6d} {l['dominante']:10s} {l['pct_dominante']:5.1f}% {mov} {l['composicao']}")
+    if not com:
+        print("\n  sem janela com movimento graduado: nao ha o que ordenar")
+        return 0
+
+    por_palavra: dict = {}
+    for l in com:
+        por_palavra.setdefault(l["dominante"], []).append(l["mov_bps"])
+    ordem = ["flat", "grinding", "pumping", "dumping", "violent"]
+    seq = [(w, sorted(v)[len(v) // 2], len(v)) for w in ordem if (v := por_palavra.get(w))]
+    print("\n  POR PALAVRA DOMINANTE (mediana de |mov| entre JANELAS)")
+    for w, med, n in seq:
+        print(f"    {w:10s} janelas={n:2d} | mediana {med:6.1f} bps")
+    cresce = len(seq) >= 2 and all(b[1] > a[1] for a, b in zip(seq, seq[1:]))
+    print(f"\n  monotonia na ordem semantica {ordem}: {[(w, m) for w, m, _ in seq]}")
+    print(f"  as medianas crescem? {'SIM' if cresce else 'NAO'}"
+          + ("" if len(seq) >= 2 else "  (amostra insuficiente: falta variar a palavra entre janelas)"))
+    grandes = [l for l in com if l["mov_bps"] >= LIMIAR_BPS]
+    flat_grandes = [l for l in grandes if l["dominante"] == "flat"]
+    if grandes:
+        print(f"  janelas com |mov| >= {LIMIAR_BPS} bps: {len(grandes)} | dominante `flat`: {len(flat_grandes)}")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--ledger", default="data/ledger")
@@ -47,6 +125,9 @@ def main() -> int:
     ap.add_argument("--independentes", action="store_true",
                     help="guarda so ciclos espacados >= 900 s entre si: as janelas de 15 min deixam de ser "
                          "a MESMA observacao repetida (os primeiros 224 outcomes cabiam em 23,6 min = 2 janelas)")
+    ap.add_argument("--janelas", action="store_true",
+                    help="agrega por JANELA de 900 s: palavra do tape DOMINANTE dentro da janela x |mov| da "
+                         "ancora da janela — uma observacao por janela, sem ruido de um so ciclo (regra 4)")
     ap.add_argument("--json", default=None)
     args = ap.parse_args()
 
@@ -78,6 +159,9 @@ def main() -> int:
             else:
                 descartados_sobrepostos += 1
         outs = kept
+
+    if args.janelas:
+        return relatorio_janelas(dec, outs, args)
     if not outs:
         print("sem outcomes no ledger")
         return 1
