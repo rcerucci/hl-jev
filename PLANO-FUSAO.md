@@ -291,3 +291,36 @@ O que **não** prova: que o venue assina. Essa metade do T018 exige chave de tes
 **Defeito que os testes desta ronda apanharam** (corrigido em `58fe256`): `Number(null) === 0`, logo um `noul`
 ausente ou nulo era lido como P(sim)=0, ou seja "livro não hostil". Era fail-open no campo que existe para
 travar; passou a exigir número real em `noul`, em cada probabilidade e em `confidence`.
+
+## 10. Sonda da Fase D (API DeepSeek) — 23 set 2026
+
+A Fase D **não** está implementada. O dono configurou `NIGHT_API_KEY` e indicou a API
+(`https://api.deepseek.com`, `deepseek-flash`, `reasoning_effort=high`, thinking enabled), por isso a sonda
+descartável respondeu, com **uma** chamada real e o system prompt da §7.4, o que a Fase D precisa de saber
+antes de ser escrita. A sonda viveu fora do repo (scratch) e não entra em nenhum commit.
+
+| Pergunta | Resposta medida |
+|---|---|
+| `deepseek-flash` é model id válido neste endpoint? | **sim** (HTTP 200, `model` devolvido igual) |
+| `reasoning_effort=high` + `thinking={type:enabled}` são aceites? | **sim**, sem erro |
+| devolve JSON estrito? | **sim**, parseia direto (sem cerca de código) |
+| mantém `hold` e as chaves? | **sim**: `act.criteria = [buy, hold, sell]`, `too_hostile` com true/false |
+| mete números no texto? | **não**: zero dígitos nos criteria reescritos |
+| latência | **38,1 s** |
+| tokens | 547 in / **8 802 out** (8 309 deles de raciocínio) |
+| custo | não calculado: não tenho a tarifa do vendor; ficam os tokens medidos |
+
+Três consequências para a Fase D, todas accionáveis antes de escrever código:
+
+1. **Timeout próprio, largo.** 38 s é aceitável numa cron das 01:00 e é proibido no tick — a spec já o diz.
+   O cliente da noite não pode herdar o `JEV_TIMEOUT_MS=800` do path quente.
+2. **O raciocínio domina o custo.** 94% dos tokens de saída são de raciocínio, e a resposta útil tem ~2 000
+   caracteres. O orçamento da noite ("poucos mil tokens") vale para a **entrada**; a saída é quase 9 mil.
+3. **O modelo desvia o schema nas versões.** Devolveu `"base_version": "v1"` e `"proposed_version": "v2"`
+   — **texto**, onde a §7.3 mostra inteiros. É deriva real, apanhada pela sonda. Decisão a tomar no parser
+   da noite: rejeitar (e ficar sem proposta aquela noite) ou coagir para inteiro **com nota registada** no
+   ficheiro da proposta, visível ao humano. Recomendo coagir com nota: a cron é das 01:00 e não há ninguém
+   para responder a um reject.
+
+A proposta reescrita foi substantiva (moveu "Pumping flow means hold" para dentro do critério de `buy`), o que
+está dentro do papel da editora e é precisamente por isso que o gate humano não é opcional.
