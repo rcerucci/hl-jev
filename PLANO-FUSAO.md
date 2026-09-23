@@ -254,8 +254,8 @@ TIF da saída reduce-only continua no `plan.ts`). As restantes seguem como inter
   `select_disagreements` é **Fase D** e não existe.
 - O turno da noite é **Fase D**: não existe, e o `accept` continua manual.
 - T018 tem **duas metades**. A do Jev está provada acima (13/13 `raw_ok` com chave real e sem signer). A do
-  venue ("hold produz Noop e buy produz uma ALO") exige `PRIVATE_KEY` / `.wallets.json` de testnet no clone e
-  continua pendente: o que correu foi dry-run (`wallet null`), que prova o caminho todo menos o ack do venue.
+  venue foi provada depois, com signer real: `hold` não mexe na book e `buy` sai como **ALO resting** no
+  venue (ver §11). O que continua a faltar é um **fill**, que exige saldo — e isso não bloqueia o PR.
 - **O `main` público não passa `tsc --noEmit`**: 7 erros de tipo, todos pré-existentes (medido num worktree de
   `a3f2f83`). O CI só corre `bun test`, por isso passam despercebidos. O meu patch não acrescenta nenhum
   (comparado erro a erro). Consertar os 7 é PR próprio, não este.
@@ -326,3 +326,90 @@ Três consequências para a Fase D, todas accionáveis antes de escrever código
 
 A proposta reescrita foi substantiva (moveu "Pumping flow means hold" para dentro do critério de `buy`), o que
 está dentro do papel da editora e é precisamente por isso que o gate humano não é opcional.
+
+## 11. Fase C e a metade de venue do T018 — 23 set 2026
+
+### O que passou a existir
+
+| Ficheiro | Caixa | Papel |
+|---|---|---|
+| `src/ledger/outcome.ts` | LEDGER | a linha `+15 min` e o worker, separado do tick |
+| `src/ledger/marks_source.ts` | VENUE → LEDGER | marcas: candles de 1m públicos + funding, sem chave, injectáveis |
+| `src/ledger/attribution.ts` | LEDGER | a tabela confiança × acerto e o veredicto da §9.4 |
+| `src/tools/prova-venue.ts` | sonda | T018; fala com a testnet a sério e recusa correr fora dela |
+
+```sh
+bun run src/ledger/outcome.ts       # preenche o que já venceu (idempotente, reconstrói do ledger)
+bun run src/ledger/attribution.ts   # a tabela
+```
+
+Três decisões que evitam modos clássicos de mentir no log: o tick não espera o futuro (worker separado); o
+horizonte vai **gravado na linha** (`horizon_secs`), para que mudá-lo amanhã não reinterprete as linhas de
+ontem; e **não se inventa marca** — sem vela para a hora pedida, o ciclo fica pendente para a passagem
+seguinte.
+
+### Ensaio 100+100 (mesmo livro, testnet, dry-run, uma sleeve, `TICK_MS=2000`)
+
+Tabela crua, sem resumo:
+
+```
+limiar de confianca: 0.8
+politica    ciclos  c/outcome decididos falhas  %hold   %conf>=limiar  acuerto  n    nulos  hits_altaconf  funding
+jev         119     119       117       2       100.0%  0.0%             --     0    119    0              0.00e+0
+dumb        105     105       105       0       100.0%  0.0%             --     0    105    0              0.00e+0
+
+veredicto: amostra insuficiente (Jev n=0, controle n=0, minimo 20) — nao se conclui nada daqui.
+```
+
+Leitura, na ordem combinada com o consultor:
+
+1. `c/outcome` = `ciclos` nas duas colunas (224/224) — o worker não salta velas.
+2. `%hold` 100% nas duas políticas: **neste livro o Jev é travão, não oráculo**.
+3. `n` em `conf ≥ 0,80` = **0** nas duas colunas. Nos 117 ciclos válidos o Jev ficou em 0,12–**0,78**
+   (mediana 0,30) e nunca cruzou o limiar.
+4. Logo, sem acerto e sem veredicto §9.4: **amostra insuficiente**.
+
+Hipótese registada e **não** accionada: o P(0,8) de fábrica do modelo não se transfere automaticamente para
+este vocabulário de sete adjectivos. É problema de limiar, de buckets — e sobretudo de **livro**: um estado
+distinto em 224 ciclos significa que este testnet parado não gera experimento. Baixar o `JEV_CONF_ACT` para
+a coluna deixar de estar vazia está proibido por decisão do consultor, e é a decisão certa: afinar o
+instrumento até o número aparecer não é medir. O próximo ensaio é **outro livro ou outro horizonte**.
+
+### Prova do venue (T018), com signer real
+
+```
+bun run src/tools/prova-venue.ts estado  → wallet 0xF871…5621, accountValue 0, withdrawable 0, 0 ordens
+bun run src/tools/prova-venue.ts hold    → ordens abertas 0 → 0  (hold não mexe na book)
+bun run src/tools/prova-venue.ts buy     → QUOTE buy 0.00046 @ 85560 status=placed taker=false oid=60855824109
+                                           ordens abertas 1 (BTC#60855824109) → cancelada na limpeza
+```
+
+`taker=false` prova que o submit continua post-only: nada caiu para market. O intent é scriptado de
+propósito — em prova está o **executor**, não a política, e nenhum limiar do RISK foi tocado. Da §9.3 fica
+por exercitar apenas a recuperação de queda de WS (não se induz uma queda de rede sem mexer no host).
+
+**Nota que muda a expectativa do bloqueio:** uma ALO **descansa sem margem**; o que exige saldo é o *fill*.
+Com `withdrawable $0.00` a carteira aceita a ordem e não a enche. O faucet só paga quem já depositou na
+mainnet ("Users who have deposited on mainnet may receive 1000 mock USDC for testnet use"), por isso o
+caminho barato para ver um fill é reutilizar as carteiras de testnet já financiadas do clone antigo — cópia
+à mão, como a spec manda. Não é bloqueio do PR.
+
+### Dois defeitos que esta ronda apanhou
+
+1. **Parser do Jev fail-open** (`58fe256`): `noul` ausente virava `Number(null) === 0` → "livro não
+   hostil" → seguia. Agora exige número real em `noul`, em cada probabilidade e em `confidence`.
+2. **Coluna falsa na tabela** (`02c5808`): as falhas do Jev saem com o id de configuração (`jev-latest`)
+   no campo `model`, e o agrupamento pelo id cru abria uma **terceira coluna** no meio da comparação — como
+   se fosse outra política. Passou a agrupar por família (`jev` | `dumb`), com coluna `falhas` própria; e um
+   ciclo congelado deixou de contar como `hold` decidido no denominador das partilhas.
+
+### Evidência medida desta ronda
+
+```
+bun test test    → 155 pass / 0 fail / 574 expect()   (64 do repo + 91 novos)
+tsc --noEmit     → 7 erros, exactamente os 7 do baseline (nenhum novo)
+alarme do mapa   → 5 corrupções reprovam; o caso legítimo passa
+CI               → verde nos dois runs em 00fd5f3, 02c5808 e 634a3a4
+ensaio           → 224/224 outcomes, `horizon_secs: 900` gravado em todas as linhas
+T018 venue       → ALO resting real (oid 60855824109, `taker=false`), cancelada na limpeza
+```
