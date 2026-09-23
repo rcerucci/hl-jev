@@ -50,7 +50,7 @@ Cada item tem um **sim/não** e um número. Sem o número, não se sobe de degra
 
 ### V3 — Tape que mexe (sem mainnet de execução)
 
-O testnet parado não gera `directional_hit`. Duas fases, nesta ordem:
+**Medido em 23 set 2026 — o testnet não estava parado.** O que faltava não era tape, era **lado**: 211/224 outcomes com ≥ 10 bps nos 15 min seguintes, e `hold` em 2923/2923 decisões. Duas fases, nesta ordem:
 
 **V3-0 (offline, antes de qualquer código novo).** Graduar os ciclos que **já existem** (2434 decisões, 38 estados distintos) contra as velas públicas das **duas** fitas e medir quanto elas discordam naqueles intervalos. Não produz `n_lados` (os `act` gravados são `hold`); produz a pergunta que decide se o V3 vivo é interpretável, e é a medição mais barata do plano.
 
@@ -58,15 +58,16 @@ O testnet parado não gera `directional_hit`. Duas fases, nesta ordem:
   "testnet parado" está **falsificada**: 211 dos 224 outcomes têm movimento ≥ 10 bps nos 15 min seguintes, e
   o livro mexe em 63 de 86 minutos na sonda. Os `directional_hit` nulos vêm de `jev_side: hold`, **não** da
   fita — é facto de política, não de venue. As fitas divergem em **nível** (~1,65 % de desvio sistemático) e
-  concordaram em **sinal** nas 5 janelas independentes. Consequência para a linha das marcas (`MARKS_VENUE`):
-  o motivo do desenho misto caiu — **espera decisão do dono** (§13).
+  concordaram em **sinal** nas 5 janelas independentes. O motivo do desenho misto caiu.
 
-**V3 vivo.**
+**V3 vivo — decisão das marcas tomada (23 set 2026): marcar no mesmo livro do estado.**
 
-- `marks_source` com flag `MARKS_VENUE=mainnet|testnet` (default **testnet**).
-- Gravar **as duas mids** por ciclo: a que a decisão viu (venue de execução) e a que gradua (venue das marcas).
-- Se o V3-0 mostrar divergência entre fitas, os **inputs de preço do estado** também vão a mainnet, mantendo a execução em testnet/dry-run.
-- **Nenhuma ordem sai de um livro misto.** Decisão de um venue, ordem no mesmo venue; em ensaio misto, sem signer.
+- `marks_source` com flag `MARKS_VENUE=mainnet|testnet`, **default `testnet`**. Mainnet deixa de ser
+  obrigatório para "haver movimento".
+- As **duas mids por ciclo** passam a **diagnóstico opcional** — já não são precisas para desenho misto nenhum.
+- **Não** se muda o input de preço do estado para mainnet. O 5/5 é ausência de inversão **nesta** janela, não
+  prova de equivalência entre fitas — não se lê como autorização para cruzar rótulos.
+- **Nenhuma ordem sai de um livro misto.** Decisão de um venue, ordem no mesmo venue; em ensaio misto, sem signer. **Esta regra não caiu.**
 - Alvo: `n_lados ≥ 20` **por** política (`jev` e `dumb`) **ou** declaração escrita de recusa.
 
 **Pronto quando:** tabela com `c/outcome` ≈ ciclos, `n_lados ≥ 20` ou o veredicto de recusa, e a **concordância entre as duas fitas publicada** no mesmo bloco.
@@ -251,12 +252,15 @@ V3-0   — offline, script descartável (não é PR de produto):
          x velas públicas das DUAS fitas. Publicar a discordância.
          Não produz n_lados (os act gravados são hold). Decide se o V3 vivo serve.
 
-V4b-0  — offline: jev vs dumb vs laya sobre os MESMOS estados gravados.
+V4b-0  — offline: jev vs dumb vs laya sobre os MESMOS estados gravados (43 distintos hoje).
          Inclui: ler o cliente (baseURL), confirmar o shape (confidence),
          medir a distribuição do noul, e o par noul vs choice-neutro.
+         Imprime dir_after POR HORA: o corpus actual tem 224/224 down em 23,6 min
+         (= 2 janelas independentes). Se persistir noutro dia, é o cálculo, não o mercado.
          Checkpoint do replay = o que for ao vivo. Decide se há wiring.
 
-PR-V3  — MARKS_VENUE=mainnet no worker de outcome apenas + as duas mids por ciclo.
+PR-V3  — marcas no MESMO livro: default MARKS_VENUE=testnet (decidido 23 set 2026).
+         Sem mainnet no worker de outcome; as duas mids por ciclo = diagnóstico opcional.
          Ensaio: POLICY=jev e POLICY=dumb, uma sleeve, dry-run.
          Parar com n_lados>=20 por coluna OU 4-6 h de sessão viva.
          Não mexer no gate. Nenhuma ordem sai de livro misto.
@@ -309,6 +313,7 @@ thresholds or the dumb policy to invent sides.
 - [ ] PLANO §12 com os 30 min crus — **feito**
 - [ ] Frase do PLANO §11 corrigida com medição — **feito**
 - [x] V3-0 corrido e publicado (discordância entre fitas), ou recusa escrita
+- [x] Decisão das marcas escrita: **mesmo livro**, `MARKS_VENUE=testnet` (23 set 2026)
 - [ ] V4b-0 corrido (jev / dumb / laya nos mesmos estados + distribuição do noul)
 - [ ] V3 corrido com `n_lados ≥ 20` por coluna, ou recusado por escrito
 - [ ] Laya, se existir, é **linha da tabela** e não substituto silencioso; linha declara "sem refit"
