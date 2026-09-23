@@ -857,3 +857,38 @@ de amostra:
 **Veredicto: nem PASS nem FAIL.** O critério da regra 4 não é julgável com uma janela de cada lado. O que se
 faz: **não se toca em `GRIND`/`MOVE`**, deixa-se a sessão correr e volta-se a ler quando houver **≥ 3–5 janelas
 independentes** no "depois" (≈45–75 min de sessão). `n_lados ≥ 20` continua a não ser meta.
+
+### 17.7 Conclusão do teste (23 set 2026, leitura das 19:46Z) — o critério **não** fica estabelecido
+
+Sessão em curso: 68 min, 1192 ciclos, encoder `last20`, dry-run. Âncoras graduadas com `--independentes` — uma
+por janela de 900 s, que é a única amostra em que a regra 4 pode ser lida sem repetir a mesma observação:
+
+| âncora | `tape` | estado | \|mov 15 min\| |
+|---|---|---|---|
+| 18:37:25Z | `flat` | `tight deep two_way flat flat extreme mid` | **18,9 bps** |
+| 18:55:03Z | `flat` | `tight deep dump flat flat extreme funding_window` | 3,8 bps |
+| 19:10:03Z | **`grinding`** | `tight deep lift grinding flat extreme mid` | 9,7 bps |
+| 19:25:03Z | `flat` | `tight deep two_way flat flat extreme mid` | 0,8 bps |
+| *antes* (3 âncoras) | todas `flat` | — | mediana 4,4 bps |
+
+1. **A única âncora com `|mov| ≥ 10 bps` foi `flat`** — exactamente a falha que o critério aponta. n=1 não
+   decide, mas é o único ponto que existe, e aponta ao contrário do pretendido.
+2. **A monotonia "cresce"** (`flat` 3,8 → `grinding` 9,7) **assenta em n=1** para a palavra positiva: um ponto
+   favorável não é um resultado.
+3. **O lado "antes" nem é julgável:** 3 âncoras, todas `flat` — sem variância para ordenar. A comparação
+   antes/depois por janelas independentes é, com este corpus, impossível.
+4. **O alargamento de janela é real e visível** (amostra densa: `%flat` 96,2 % → 51,2 %; as cinco palavras do
+   `tape` passam a aparecer, `violent` 0 → 40, `pumping` 1 → 11). Mas *"o vocabulário ficou mais rico"* não é
+   *"o vocabulário ordena o movimento"*.
+
+**Quantas âncoras seriam precisas:** a 1 por 15 min, 20 âncoras são **5 h** de sessão, e a amostra só serve
+com as palavras todas representadas. Em 68 min há 4. **O teste não fecha numa sessão.**
+
+**Conclusão: nem PASS nem FAIL — e o único ponto que existe aponta ao contrário.** Nada se altera: `GRIND`/`MOVE`
+intocados, nenhum segundo patch, `n_lados ≥ 20` fora de meta. Manter `last20` a acumular ou reverter é decisão
+do dono. *(Recomendação: manter e acumular — a janela mais longa é a direcção certa e a amostra densa mostra
+que o encoder responde; falta tempo de sessão, não outro ajuste.)*
+
+**Nota de método para a próxima leitura:** a unidade certa é a **janela**, não o ciclo — agrupar os ciclos *de
+dentro* de cada janela de 15 min pela palavra dominante e comparar o movimento **entre** janelas. Usa todos os
+dados sem contar a mesma observação duas vezes, o que escolher um ciclo por janela (4 âncoras em 68 min) não faz.

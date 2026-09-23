@@ -1,0 +1,106 @@
+{
+ "cru": {
+  "n_outcomes": 4,
+  "n_cruzados": 4,
+  "n_ge_10bps": 1,
+  "pct_ge_10bps": 25.0,
+  "ge_10bps_com_tape_flat": 1,
+  "pct_dos_grandes_com_tape_flat": 100.0,
+  "flat_n": 3,
+  "flat_mediana_bps": 3.8
+ },
+ "por_bucket": {
+  "tape": [
+   {
+    "palavra": "grinding",
+    "n": 1,
+    "mediana_bps": 9.7,
+    "p90_bps": 9.7,
+    "pct_ge_10bps": 0.0
+   },
+   {
+    "palavra": "flat",
+    "n": 3,
+    "mediana_bps": 3.8,
+    "p90_bps": 3.8,
+    "pct_ge_10bps": 33.3
+   }
+  ],
+  "flow": [
+   {
+    "palavra": "two_way",
+    "n": 2,
+    "mediana_bps": 9.9,
+    "p90_bps": 0.8,
+    "pct_ge_10bps": 50.0
+   },
+   {
+    "palavra": "lift",
+    "n": 1,
+    "mediana_bps": 9.7,
+    "p90_bps": 9.7,
+    "pct_ge_10bps": 0.0
+   },
+   {
+    "palavra": "dump",
+    "n": 1,
+    "mediana_bps": 3.8,
+    "p90_bps": 3.8,
+    "pct_ge_10bps": 0.0
+   }
+  ],
+  "spread": [
+   {
+    "palavra": "tight",
+    "n": 4,
+    "mediana_bps": 6.8,
+    "p90_bps": 9.7,
+    "pct_ge_10bps": 25.0
+   }
+  ],
+  "depth": [
+   {
+    "palavra": "deep",
+    "n": 4,
+    "mediana_bps": 6.8,
+    "p90_bps": 9.7,
+    "pct_ge_10bps": 25.0
+   }
+  ],
+  "funding": [
+   {
+    "palavra": "extreme",
+    "n": 4,
+    "mediana_bps": 6.8,
+    "p90_bps": 9.7,
+    "pct_ge_10bps": 25.0
+   }
+  ],
+  "clock": [
+   {
+    "palavra": "mid",
+    "n": 3,
+    "mediana_bps": 9.7,
+    "p90_bps": 9.7,
+    "pct_ge_10bps": 33.3
+   },
+   {
+    "palavra": "funding_window",
+    "n": 1,
+    "mediana_bps": 3.8,
+    "p90_bps": 3.8,
+    "pct_ge_10bps": 0.0
+   }
+  ],
+  "inventory": [
+   {
+    "palavra": "flat",
+    "n": 4,
+    "mediana_bps": 6.8,
+    "p90_bps": 9.7,
+    "pct_ge_10bps": 25.0
+   }
+  ]
+ },
+ "ledger": "data/ledger"
+}
