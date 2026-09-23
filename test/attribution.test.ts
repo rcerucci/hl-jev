@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import type { DecisionLine, OutcomeLine } from "../src/ledger/jsonl";
-import { MIN_HIGH_CONF, formatTable, summarise, verdictOf, winrate } from "../src/ledger/attribution";
+import { MIN_HIGH_CONF, formatTable, summarise, verdictOf, winrate, winrateAt050 } from "../src/ledger/attribution";
 
 const CONF = 0.8;
 /** Amostra suficiente para o veredicto concluir (o minimo declarado + folga). */
@@ -133,7 +133,60 @@ test("a tabela imprime o limiar e as colunas da spec 9.4", () => {
   const stats = summarise([ciclo("jev-1.13.0", "buy", 0.9, outcome(true, 0.9))], CONF);
   const out = formatTable(stats).join("\n");
   expect(out).toContain("limiar de confianca: 0.8");
-  for (const col of ["ciclos", "c/outcome", "%hold", "%conf>=limiar", "acuerto", "funding"]) {
+  for (const col of ["ciclos", "c/outcome", "%hold", "n_altaconf", "n_lados", "graduados", "acuerto", "diag@0.50", "funding"]) {
     expect(out).toContain(col);
   }
+  // A regra do V1 tem de estar impressa, nao so no comentario do codigo.
+  expect(out).toContain("NUNCA promove");
+  expect(out).toContain("a amostra da spec 9.4");
+});
+
+test("o hold de alta confianca conta em n_altaconf e nao em n_lados", () => {
+  // O run de 30 min deu 7 ciclos a conf>=0,80, todos hold: sao decisao, nao lado.
+  const stats = summarise(
+    [
+      ciclo("jev-1.13.0", "hold", 0.91, outcome(null, 0.91)),
+      ciclo("jev-1.13.0", "hold", 0.87, outcome(null, 0.87)),
+      ciclo("jev-1.13.0", "buy", 0.9, outcome(true, 0.9)),
+    ],
+    CONF,
+  )[0]!;
+  expect(stats.highConf).toBe(3);
+  expect(stats.highConfSides).toBe(1);
+  expect(stats.highConfHits + stats.highConfMisses).toBe(1);
+  expect(winrate(stats)).toBe(1);
+});
+
+test("a coluna diag@0.50 ve o lado que o gate bloqueia — e nunca promove", () => {
+  // 50 lados a 0,60: o gate de 0,80 nao deixa passar nenhum, o diagnostico
+  // mostra-os. O veredicto tem de continuar a recusar, e nao pode ler este acerto.
+  const amostra: ReturnType<typeof ciclo>[] = [];
+  for (let i = 0; i < 50; i++) amostra.push(ciclo("jev-1.13.0", "buy", 0.6, outcome(true, 0.6)));
+  for (let i = 0; i < 25; i++) amostra.push(ciclo("dumb", "buy", 0.6, outcome(true, 0.6)));
+  const stats = summarise(amostra, CONF);
+  const jev = stats.find((s) => s.policy === "jev")!;
+  expect(jev.highConfSides).toBe(0);
+  expect(jev.sidesAt050).toBe(50);
+  expect(winrateAt050(jev)).toBe(1);
+  expect(winrate(jev)).toBe(null);
+  const linhas = verdictOf(stats).join(" ");
+  expect(linhas).toContain("amostra insuficiente");
+  expect(linhas).toContain("diag@0.50");
+  expect(linhas).toContain("nao conta para este veredicto");
+  expect(linhas).not.toContain("bate o controle");
+  // Ha lados abaixo do limiar: a causa de n_lados=0 e o GATE, e o veredicto diz isso.
+  expect(linhas).toContain("o gate e que trava");
+});
+
+test("sem lado nenhum, o veredicto diz que o gate nao e a causa", () => {
+  // O cenario real da sessao viva (2559 decisoes, todas hold): se nao ha lado
+  // nem abaixo de 0,50, baixar o limiar nao muda nada — e isso tem de estar dito.
+  const amostra: ReturnType<typeof ciclo>[] = [];
+  for (let i = 0; i < 30; i++) amostra.push(ciclo("jev-1.13.0", "hold", 0.9, outcome(null, 0.9)));
+  for (let i = 0; i < 30; i++) amostra.push(ciclo("dumb", "hold", 0.5, outcome(null, 0.5)));
+  const stats = summarise(amostra, CONF);
+  expect(stats.find((s) => s.policy === "jev")!.sidesAny).toBe(0);
+  const linhas = verdictOf(stats).join(" ");
+  expect(linhas).toContain("nao escolheu um lado NEM abaixo de 0,50");
+  expect(linhas).toContain("o gate nao e o que trava");
 });
