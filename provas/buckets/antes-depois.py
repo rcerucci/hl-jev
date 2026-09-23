@@ -34,6 +34,8 @@ def linha(pos: int, state: str) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--ledger", default="data/ledger")
+    ap.add_argument("--desde", default=None, help="cycle_id minimo (ex. 20260923T1830) — o 'depois' comeca aqui")
+    ap.add_argument("--ate", default=None, help="cycle_id maximo")
     ap.add_argument("--json", default=None)
     args = ap.parse_args()
 
@@ -43,8 +45,13 @@ def main() -> int:
             if not l.strip():
                 continue
             r = json.loads(l)
+            cid = r.get("cycle_id", "")
+            if args.desde and cid < args.desde:
+                continue
+            if args.ate and cid > args.ate:
+                continue
             if r.get("kind") == "decision":
-                dec[r["cycle_id"]] = r
+                dec[cid] = r
             elif r.get("kind") == "outcome":
                 outs.append(r)
     if not outs:
