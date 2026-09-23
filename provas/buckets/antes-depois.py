@@ -85,6 +85,10 @@ def relatorio_janelas(dec: dict, outs: list, args) -> int:
         )
 
     com = [l for l in linhas if l["mov_bps"] is not None]
+    if args.json:
+        with open(args.json, "w") as fh:
+            json.dump({"janelas": linhas, "n_com_movimento": len(com)}, fh, indent=1)
+        print(f"  json: {args.json}")
     print(f"  JANELAS de 900 s: {len(linhas)} | com movimento graduado: {len(com)}")
     print(f"  {'inicio':7s} {'ciclos':6s} {'dominante':10s} {'%dom':6s} {'|mov|':8s} composicao")
     for l in linhas:
