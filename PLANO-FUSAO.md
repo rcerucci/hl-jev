@@ -1295,3 +1295,67 @@ não apareceu uma única vez — a mesma tabela pode dizer outra coisa.
 de 4 770, com as **mesmas 100 contagens** — `alinhou` 3 · `inverteu` 17 · `sem_relacao` 80 · 13 estados com os dois
 sentidos — e a mesma leitura. O total de ticks move-se com a partição dos episódios (uma fronteira a deslizar um
 tick muda de que lado fica); os veredictos não. Os dois números ficam ditos, cada um com a sua hora.
+
+## 19. Ensaio N1 — `sign(last20)` × rótulo de 300 s, **sem Jev**
+
+**Hipótese (uma):** o sinal de `returns_bps.last20` (40 s = 20 ticks de 2 s) separa `up`/`down` num horizonte
+de **300 s** melhor que o acaso, na unidade **episódio**. Não é JSON, Laya, θ, `dumb` de adjectivos, mainnet nem
+signer; o Jev e o encoder do `tape` ficam intocados.
+
+### 19.1 A conta que reprovou o desenho inicial — e as correcções aceites antes da sessão
+
+Medido na sessão v2 (marcas públicas, 35 janelas de 300 s): `|mov|` a 300 s tem **mediana 4,2 bps** e só
+**22,9 %** das janelas passam os 10 bps; na âncora do segundo zero só **5,7 %** têm `tape ≠ flat` (proxy de
+`|last20| ≥ 4`). Como os dois cortes **se multiplicam**, o desenho com âncora dava **~0,2 pontos elegíveis por
+hora** — 16 episódios pediriam **~80 h**, não 2–3. Correcções congeladas:
+
+1. **Ponto = janela de 300 s se ALGUM tick lá dentro tiver `|last20| ≥ 4`.** A âncora no tick 0 descartava 99 %
+   do sinal. Mesma hipótese ("rajada de 40 s continua 5 min"). Medido: **57,1 %** das janelas têm alguma palavra
+   ≠ `flat` (contra 5,7 % das âncoras).
+2. **Rótulo primário a 300 s = 5 bps** — não 10 (é o corte de 15 min) nem 2 (está na folga do ruído do mid).
+   `|mov| ≥ 2` e `≥ 10` ficam como **diagnóstico, e nunca promovem**.
+3. **`EPS = 4` bps intocado** — é o `GRIND` do produto, escolhido antes de ver o rótulo.
+
+### 19.2 Regras, escritas antes de a sessão correr
+
+- O `last20_bps` do episódio é o do **primeiro** tick com `|last20| ≥ EPS` — não o máximo, não o que melhor
+  alinha.
+- Janela com ticks `> +EPS` **e** `< −EPS` → episódio `sem_relacao` (sinal contraditório): não se escolhe lado.
+- **O rótulo corre do tick do sinal** (`t_sig → t_sig + 300 s`). Do início da janela seria olhar para a frente —
+  com o sinal a meio, o movimento medido já conteria a rajada que o sinal mede. (Interpretação minha da letra do
+  desenho, declarada aqui.)
+- Episódios não se sobrepõem: guarda-se uma âncora apenas se estiver ≥ 300 s depois da anterior guardada.
+- **`OUTCOME_HORIZON_SECS=300`** no `.env` da sessão e na linha de fronteira do log. Worker a 900 s **proibido**
+  neste ledger: a idempotência é por `cycle_id`, logo um desfecho a 900 s não é substituído por um a 300 s — os
+  horizontes misturavam-se. (O campo do desfecho chama-se `mark_plus_15m` por legado; a 300 s é a marca a 300 s.)
+- `POLICY=numeric`, `DRY_RUN=true`, sem signer, sem chamada TypeSafe.
+
+### 19.3 PASS / FAIL / insuficiente — a tabela do binomial (não "65 %")
+
+Mínimo de `alinhou` para p < 0,05 unilateral com p₀ = 0,5:
+
+| n elegíveis | mínimo `alinhou` |
+|---|---|
+| 16 | **12/16 (75 %)** |
+| 24 | **17/24 (71 %)** |
+| 36 | **24/36 (67 %)** |
+
+- **Elegível** = episódio com `|mov| ≥ 5 bps`, `act ≠ hold` e sem sinal contraditório.
+- **Abaixo de 16 elegíveis → insuficiente**, e não se alonga a sessão para chegar lá.
+- **Um só sentido de preço em toda a sessão → amostra enviesada**, não PASS, mesmo com o mínimo.
+- **Proibido:** baixar `EPS`, voltar ao Jev neste PR, chamar PnL ao dry-run, misturar o rótulo de 15 min com o
+  de 5, promover as colunas de diagnóstico.
+
+### 19.4 O que o produto leva (diff mínimo)
+
+- `src/policy/numeric.ts` — a regra, sem rede, sem estado, determinista.
+- **`PolicyCtx`** na porta `Policy` (contexto **opcional**): a porta só recebia as palavras do estado, e o
+  número não está entre elas — `grinding` cobre 4–15 bps **sem dizer o sentido**, logo o sinal não se reconstrói
+  do texto. Jev e `dumb` ignoram o contexto: nada do que já decide mudou.
+- **`DecisionLine.returns_bps`** (opcional, composto `{last1,last5,last20}`), gravado no tick da fusão: é o que
+  torna a regra reproduzível. As marcas públicas vêm de velas de **1 min** e uma janela de 40 s cai dentro da
+  mesma vela — de fora, o `last20` não se reconstrói.
+- `POLICY=numeric` em `config`/`createPolicy`. RISK, portão, plano, JSON das perguntas, θ e encoder: intocados.
+
+Artefactos: `provas/n1/pre-medicao.ts` (o censo que ditou as correcções, read-only) e
+`provas/n1/episodios-300.py` (a tabela por episódio e a leitura, uma só).

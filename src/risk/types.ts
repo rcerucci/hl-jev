@@ -97,5 +97,15 @@ export interface RiskIntent {
 /** Porta da camada POLICY: recebe a linha curta e devolve o veredicto. */
 export interface Policy {
   readonly name: string;
-  decide(state: string, cycleId: string): Promise<Verdict>;
+  decide(state: string, cycleId: string, ctx?: PolicyCtx): Promise<Verdict>;
+}
+
+/**
+ * Contexto numerico opcional. A porta nasceu com as palavras do `state` apenas, o que chega
+ * ao Jev e ao `dumb`; uma regra **numerica** (ensaio N1: `sign(last20)`) precisa do numero, e
+ * o adjectivo do `tape` nao o substitui — `grinding` cobre 4–15 bps sem dizer o sentido.
+ * Opcional para nao mexer em nada do que ja decide.
+ */
+export interface PolicyCtx {
+  returns_bps: { last1: number; last5: number; last20: number };
 }

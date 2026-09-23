@@ -4,6 +4,7 @@ import type { Questions } from "@typesafe-ai/sdk";
 import { assertJevCredentials, config } from "./config";
 import { leverageRungs, liveIntent, parseLeverage, quoteAction, type Bias, type Intent } from "./plan";
 import { DumbPolicy } from "./policy/dumb";
+import { NumericPolicy } from "./policy/numeric";
 import { askQuestions, loadPolicyFile, type PolicyFile } from "./policy/load";
 import { stanceFromState } from "./risk/buckets";
 import type { Act, Policy, Verdict } from "./risk/types";
@@ -563,6 +564,7 @@ export class JevPolicy implements Policy {
 /** `null` = sem `POLICY`: o tick segue o caminho legado. */
 export function createPolicy(): Policy | null {
   if (config.policy === "dumb") return new DumbPolicy();
+  if (config.policy === "numeric") return new NumericPolicy();
   if (config.policy === "jev") {
     assertJevCredentials(
       "jev",

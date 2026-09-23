@@ -23,7 +23,7 @@ export function resolveJevModelId(e: { JEV_MODEL_ID?: string }, provider: JevPro
   return provider === "gateway" ? "typesafe-ai/jev" : "jev-latest";
 }
 
-export type PolicyMode = "" | "jev" | "dumb";
+export type PolicyMode = "" | "jev" | "dumb" | "numeric";
 
 /**
  * `POLICY` escolhe o caminho da fusao. Sem `POLICY`, o repo corre como sempre
@@ -33,8 +33,8 @@ export type PolicyMode = "" | "jev" | "dumb";
 export function resolvePolicy(e: { POLICY?: string }): PolicyMode {
   const v = e.POLICY?.trim().toLowerCase();
   if (!v) return "";
-  if (v === "jev" || v === "dumb") return v;
-  throw new Error("POLICY must be jev or dumb");
+  if (v === "jev" || v === "dumb" || v === "numeric") return v;
+  throw new Error("POLICY must be jev, dumb or numeric");
 }
 
 export function assertJevCredentials(

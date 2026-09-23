@@ -174,7 +174,7 @@ export class Trader {
     const snap = this.buildSnapshot(now, book);
     const state = toState(snap);
     const cid = cycleId(new Date(now), this.market.coin);
-    const verdict = await fusion.policy.decide(state, cid);
+    const verdict = await fusion.policy.decide(state, cid, { returns_bps: snap.returns_bps });
     this.totals.decisions++;
     this.totals.jevUsd += ((verdict.input_tokens ?? 0) / 1e6) * config.jevUsdPerMTok;
     const intent = riskIntent({ cycleId: cid, sleeve: this.market.coin, verdict, snap });
@@ -189,6 +189,7 @@ export class Trader {
       ts: now,
       sleeve: this.market.coin,
       state,
+      returns_bps: snap.returns_bps,
       verdict,
       intent,
       // O fill chega assincrono (userFills/dry-run): a linha do fill e escrita
