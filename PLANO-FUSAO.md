@@ -1290,3 +1290,8 @@ não apareceu uma única vez — a mesma tabela pode dizer outra coisa.
 </details>
 
 *(`|mov|` pela fórmula do produto, `src/ledger/outcome.ts`: `((plus - then) / then) * 10000`.)*
+
+**Nota de auditoria.** A leitura foi re-corrida no fecho (o motor v2 continuava a acumular): **4 768 ciclos** em vez
+de 4 770, com as **mesmas 100 contagens** — `alinhou` 3 · `inverteu` 17 · `sem_relacao` 80 · 13 estados com os dois
+sentidos — e a mesma leitura. O total de ticks move-se com a partição dos episódios (uma fronteira a deslizar um
+tick muda de que lado fica); os veredictos não. Os dois números ficam ditos, cada um com a sua hora.
