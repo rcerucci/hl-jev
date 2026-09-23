@@ -1,0 +1,202 @@
+{
+ "janelas": [
+  {
+   "janela": 0,
+   "de": "15:12",
+   "ciclos": 13,
+   "dominante": "flat",
+   "pct_dominante": 100.0,
+   "extrema": "flat",
+   "pct_extrema": 100.0,
+   "composicao": {
+    "flat": 13
+   },
+   "mov_bps": 2.2,
+   "ancora": "20260923T151253Z-BTC"
+  },
+  {
+   "janela": 1,
+   "de": "15:27",
+   "ciclos": 211,
+   "dominante": "flat",
+   "pct_dominante": 96.2,
+   "extrema": "dumping",
+   "pct_extrema": 1.9,
+   "composicao": {
+    "flat": 203,
+    "grinding": 4,
+    "dumping": 4
+   },
+   "mov_bps": 45.7,
+   "ancora": "20260923T152926Z-BTC"
+  },
+  {
+   "janela": 3,
+   "de": "15:57",
+   "ciclos": 24,
+   "dominante": "flat",
+   "pct_dominante": 100.0,
+   "extrema": "flat",
+   "pct_extrema": 100.0,
+   "composicao": {
+    "flat": 24
+   },
+   "mov_bps": 4.4,
+   "ancora": "20260923T161205Z-BTC"
+  },
+  {
+   "janela": 4,
+   "de": "16:12",
+   "ciclos": 429,
+   "dominante": "flat",
+   "pct_dominante": 90.4,
+   "extrema": "dumping",
+   "pct_extrema": 0.2,
+   "composicao": {
+    "flat": 388,
+    "grinding": 39,
+    "dumping": 1,
+    "pumping": 1
+   },
+   "mov_bps": 4.4,
+   "ancora": "20260923T161254Z-BTC"
+  },
+  {
+   "janela": 5,
+   "de": "16:27",
+   "ciclos": 450,
+   "dominante": "flat",
+   "pct_dominante": 95.8,
+   "extrema": "grinding",
+   "pct_extrema": 4.2,
+   "composicao": {
+    "flat": 431,
+    "grinding": 19
+   },
+   "mov_bps": null,
+   "ancora": null
+  },
+  {
+   "janela": 6,
+   "de": "16:42",
+   "ciclos": 404,
+   "dominante": "flat",
+   "pct_dominante": 98.5,
+   "extrema": "grinding",
+   "pct_extrema": 1.5,
+   "composicao": {
+    "flat": 398,
+    "grinding": 6
+   },
+   "mov_bps": null,
+   "ancora": null
+  },
+  {
+   "janela": 7,
+   "de": "16:57",
+   "ciclos": 450,
+   "dominante": "flat",
+   "pct_dominante": 96.4,
+   "extrema": "grinding",
+   "pct_extrema": 3.6,
+   "composicao": {
+    "flat": 434,
+    "grinding": 16
+   },
+   "mov_bps": null,
+   "ancora": null
+  },
+  {
+   "janela": 8,
+   "de": "17:12",
+   "ciclos": 450,
+   "dominante": "flat",
+   "pct_dominante": 98.4,
+   "extrema": "grinding",
+   "pct_extrema": 1.6,
+   "composicao": {
+    "flat": 443,
+    "grinding": 7
+   },
+   "mov_bps": null,
+   "ancora": null
+  },
+  {
+   "janela": 9,
+   "de": "17:27",
+   "ciclos": 450,
+   "dominante": "flat",
+   "pct_dominante": 94.2,
+   "extrema": "grinding",
+   "pct_extrema": 5.8,
+   "composicao": {
+    "flat": 424,
+    "grinding": 26
+   },
+   "mov_bps": null,
+   "ancora": null
+  },
+  {
+   "janela": 10,
+   "de": "17:42",
+   "ciclos": 450,
+   "dominante": "flat",
+   "pct_dominante": 96.4,
+   "extrema": "grinding",
+   "pct_extrema": 3.6,
+   "composicao": {
+    "flat": 434,
+    "grinding": 16
+   },
+   "mov_bps": null,
+   "ancora": null
+  },
+  {
+   "janela": 11,
+   "de": "17:57",
+   "ciclos": 449,
+   "dominante": "flat",
+   "pct_dominante": 96.4,
+   "extrema": "grinding",
+   "pct_extrema": 3.6,
+   "composicao": {
+    "flat": 433,
+    "grinding": 16
+   },
+   "mov_bps": null,
+   "ancora": null
+  },
+  {
+   "janela": 12,
+   "de": "18:12",
+   "ciclos": 450,
+   "dominante": "flat",
+   "pct_dominante": 96.9,
+   "extrema": "grinding",
+   "pct_extrema": 3.1,
+   "composicao": {
+    "flat": 436,
+    "grinding": 14
+   },
+   "mov_bps": null,
+   "ancora": null
+  },
+  {
+   "janela": 13,
+   "de": "18:27",
+   "ciclos": 250,
+   "dominante": "flat",
+   "pct_dominante": 95.6,
+   "extrema": "pumping",
+   "pct_extrema": 1.6,
+   "composicao": {
+    "flat": 239,
+    "grinding": 7,
+    "pumping": 4
+   },
+   "mov_bps": null,
+   "ancora": null
+  }
+ ],
+ "n_com_movimento": 4
+}

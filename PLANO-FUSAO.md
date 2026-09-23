@@ -572,7 +572,7 @@ Os seis estados onde a `dumb` escolhe lado — e o Jev fez `hold` nos seis:
 "tight deep bot_war pumping flat extreme mid"       -> dumb buy  | jev hold | 16:15:08Z
 ```
 
-**O vocabulário, medido** (7 posições, por decisões):
+**O vocabulário, medido** (7 posições, por decisões — a ordem é a do `toState`: `spread depth flow tape inventory funding clock`):
 
 | pos | bucket | palavras |
 |---|---|---|
@@ -580,9 +580,13 @@ Os seis estados onde a `dumb` escolhe lado — e o Jev fez `hold` nos seis:
 | 1 | depth | `deep` 3104 · `thin` 35 · `ok` 4 · `empty` 1 |
 | 2 | flow | `dump` 1125 · `two_way` 903 · `lift` 477 · `bot_war` 467 · `quiet` 172 |
 | 3 | tape | `flat` 3005 · `grinding` 133 · `dumping` 5 · `pumping` 1 |
-| 4 | tape-2 | `flat` 3144 |
-| 5 | move | `extreme` 3144 |
-| 6 | funding | `mid` 2844 · `funding_window` 150 · `open_liq` 150 |
+| 4 | inventory | `flat` 3144 |
+| 5 | funding | `extreme` 3144 |
+| 6 | clock | `mid` 2844 · `funding_window` 150 · `open_liq` 150 |
+
+*(Correcção de rótulos: uma versão anterior desta tabela chamava `tape-2`/`move`/`funding` às posições 4/5/6. Os
+**valores** estavam certos; os nomes não. A posição 4 é `inventory` — por isso `flat` em 100 %, não há posição
+aberta — a 5 é `funding` e a 6 é `clock`.)*
 
 Três leituras que isto dá de graça:
 
@@ -953,3 +957,341 @@ das 18:37, **23 % dos ciclos não eram `flat`** (`grinding` 51, `violent` 40, `p
 à mesma. O complemento — a palavra **mais extrema** vista dentro da janela (ou o `max |last20|`) — responderia a
 outra pergunta: *"o bucket chegou a captar o movimento?"* em vez de *"o que o estado diz na maior parte do
 tempo?"*. Fica como proposta; não a implemento sem o dono pedir, para não multiplicar estatísticas a meio do ensaio.
+
+### 17.10 O ensaio de buckets do `tape`, nesta letra, fica **encerrado** (23 set 2026)
+
+**Decisão do dono.** `MOVE`/`GRIND` **não se abrem**: baixar o corte para a dominante deixar de ser `flat` seria
+caçar variância — primo de alargar o `dumb`. `last20` **fica** (vocabulário mais rico, regra 8 respeitada). A
+palavra **extrema** entra só como **diagnóstico** e **nunca promove**.
+
+**O diagnóstico — primeiro e único uso autorizado** (`--janelas`, coluna `extrema`):
+
+| janela | \|mov 15 min\| | dominante | extrema | % dos ciclos na extrema |
+|---|---|---|---|---|
+| 18:37 | 18,9 bps | `flat` | **`violent`** | 8,9 % |
+| 18:52 | 3,8 bps | `flat` | `grinding` | 6,2 % |
+| 19:07 | 9,7 bps | `flat` | **`dumping`** | 3,8 % |
+| 19:22 | 0,8 bps | `flat` | `grinding` | 25,3 % |
+| 19:37 | **31,0 bps** | `flat` | `grinding` | 5,6 % |
+
+- **O bucket dispara onde o movimento é rápido:** na janela das 18:37 chegou a `violent` em 8,9 % dos ciclos, e
+  na das 19:07 a `dumping`. No encoder antigo o máximo por janela nunca passava de `dumping` a 1,9 %. **O
+  encoder novo fala mais, e mais alto.**
+- **E a janela de 31,0 bps não teve um único disparo:** o movimento de 15 min foi **gradual** — nenhum intervalo
+  de 40 s passou 15 bps. Nenhuma janela de 40 s veria isto, por construção.
+
+**O que o ensaio passou a significar.** O `tape` a 40 s descreve **microestrutura**; o `outcome` descreve
+**15 minutos**. Não se ordenam pela palavra que ocupa 75–94 % da janela, e a correcção não é o corte nem a
+janela — é reconhecer que são **dois relógios**. **O ensaio de buckets do `tape`, nesta letra, está encerrado.**
+
+**O que continua aberto, e não foi respondido por isto:** o Jev escolhe `hold` em 100 % dos ciclos também com o
+estado novo. Essa é a pergunta das **perguntas/modelo**, não do `tape` — a mesma que já estava em cima da mesa
+antes deste ensaio. Sem Laya, sem Fase D, sem segundo patch de limiar.
+
+## 18. Ensaio das perguntas (v2) — 23 set 2026
+
+O ensaio de buckets fechou com uma conclusão incómoda: **100 % `hold` mesmo com o estado novo**. Fica uma
+hipótese que o `tape` não pode responder — o Jev pode estar a recusar **o livro** ou a recusar um **enunciado
+incoerente** com o vocabulário que recebe. É isso que este ensaio separa.
+
+### 18.1 As incoerências medidas entre o texto (v1) e o vocabulário real
+
+| o v1 pedia | o encoder emite, neste livro |
+|---|---|
+| `too_hostile=true` se "funding extreme against the would-be add" | a posição do funding é **`extreme` em 100 %** dos ciclos — e o adjectivo **não diz a direcção**, logo "against the add" é impossível de avaliar |
+| `too_hostile=true` se "bot_war plus violent tape" | `flow=bot_war` **sozinho** é 46 % dos ciclos — e é o fluxo com **menor** movimento (mediana 4,1 bps) |
+| `buy` "without chasing a violent tape"; `sell` "without chasing a dump" | `violent` (tape) é **raro** (3,4 %) e pode estar a anular qualquer lado; e "dump" é palavra do **flow** enquanto a do **tape** é `dumping` — dois buckets citados com o mesmo nome |
+
+*(A tabela do §17.2 tinha as posições 4/5/6 mal rotuladas — `tape-2`/`move`/`funding`; os valores estavam
+certos, os nomes não. Corrigido: 4 = `inventory`, 5 = `funding`, 6 = `clock`.)*
+
+### 18.2 O que muda — só o texto (`policy/jev_questions.json`, `version: 2`)
+
+Mesmas duas perguntas, mesmo schema (`act` = choice com buy/sell/hold; `too_hostile` = noul com true/false).
+O enunciado passa a citar **palavras que o encoder emite**, com o **bucket certo**:
+
+- **`too_hostile=true`** = `spread` é **`unfillable`** ou `tape` é **`violent`**. **Caem** o `funding extreme` e o
+  `bot_war plus violent tape`; `bot_war` sozinho **não** é hostil.
+- **`act`**: `buy` pede **`flow=lift`** ou **`tape=pumping`**; `sell` pede **`flow=dump`** ou **`tape=dumping`**;
+  `hold` = **`tape=flat`**, inventário já expressa a vista, ou livro hostil. **Sai** o "without chasing a violent
+  tape". `grinding` fica declarado como **sem direcção** — não é sinal de lado sozinho.
+
+### 18.3 O que **não** muda
+
+`last20`, `GRIND`/`MOVE`/`VIOLENT`, `dumb`, `JEV_CONF_ACT=0,80`, `NOUL_HOSTILE_TH=0,65`, venue, Laya, Fase D,
+mainnet. Dry-run, sem signer.
+
+### 18.4 Como se julga (não é `n_lados ≥ 20`)
+
+Sessão **datada** — fronteira no log no arranque do v2 —, **≥ 2 h ou ≥ 8 janelas de 15 min**, tabela v1 × v2 **no
+mesmo encoder**. `n_lados ≥ 20` continua **fora** de meta; se aparecer, mede-se.
+
+**PASS (um chega):**
+
+1. `sidesAny > 0` — aparece `buy` ou `sell` a **qualquer** confiança; o gate pode continuar a cortar.
+2. O `noul` **sobe** com `unfillable`/`tape=violent` e **não** com `bot_war` isolado — as perguntas passaram a ler
+   o vocabulário.
+
+**FAIL:** 100 % `hold` **e** o `noul` continua a seguir `bot_war`/`funding`. Então o texto também não era a
+alavanca: **para-se**, sem abrir a Fase D e sem baixar θ.
+
+### 18.5 Leitura interina (23 set 2026, ~20:09Z) — **PASS 1**, e vê-se a incoerência do v1
+
+Fronteira `20260923T200827Z`, motor com o texto v2 em dry-run. Ao fim de ~30 ciclos:
+
+| | v1 (7 059 ciclos válidos) | **v2 (30 ciclos)** |
+|---|---|---|
+| `act` | `hold` **7059 / 7059** | **`sell` 29 · `hold` 1** |
+| `sidesAny` | 0 | **29** |
+| `act_probs` médios | — | `sell` **0,814** · `hold` 0,158 · `buy` 0,028 |
+| `act_conf` | mediana 0,420 | 0,73 – **0,80** |
+| `noul` | mediana 0,520 | **0,28 – 0,31** |
+| intents | `none` | `none` 28 · **`maker` 2** |
+| ordens no ledger | nenhuma | nenhuma (`fill: null` — dry-run) |
+
+**O estado destes ciclos é `tight deep dump flat flat extreme mid`** — contém **`flow=dump`**. É aqui que a
+incoerência do v1 fica à vista: o critério de `sell` no v1 dizia *"hit or reduce a long **without chasing a
+dump**"* — o texto **mandava não vender exactamente o adjectivo que o estado estava a mostrar**. O v2 diz o
+contrário (*"flow is dump … or tape is dumping"*) e o modelo passou a `sell` com convicção média 0,81.
+
+**PASS 1 cumprido** (`sidesAny > 0`). Efeito lateral medido e declarado: **`n_lados` deixou de ser zero** — dois
+ciclos com `conf ≥ 0,80` geraram intent **`maker`** e o gate deixou passar. Continua **fora** de meta, como
+combinado: mede-se, não se caça. Nada saiu para o venue — dry-run, sem signer, `fill: null` nos 30 ciclos.
+
+**O que falta para fechar:** a sessão das 2 h (≥ 8 janelas), para ver se o lado se mantém noutros estados e se o
+critério 2 se confirma. No v1, os grupos do `noul` eram: `tape=violent` **0,84** · `flow=bot_war` 0,79 · resto
+0,51 — o violento já subia mais, mas por pouco.
+
+### 18.6 Leitura completa (2 h, 13 janelas de 15 min, 22:09Z) — **PASS 1 estabelecido**
+
+| | v1 | **v2 (3 501 válidos, 55 estados)** |
+|---|---|---|
+| `act` | `hold` 7 059 / 7 059 | **`sell` 1 803 · `hold` 918 · `buy` 780** |
+| `sidesAny` | 0 | **2 583** |
+| `act_conf` | mediana 0,420 | 0,27 – **0,96**, mediana 0,53 |
+| `noul` | mediana 0,520 | 0,15 – 0,53, mediana **0,280** |
+| `noul` por grupo | `violent` 0,84 · `bot_war` 0,79 · resto 0,51 | `bot_war` 0,25 (n=181) · resto 0,28 — **`unfillable`/`violent`: n = 0** |
+
+Pelo **gate real** (`MIN_HIGH_CONF` 0,80 · `NOUL_HOSTILE_TH` 0,65), nas duas sessões:
+
+| | válidas | `conf ≥ 0,80` | `noul ≥ 0,65` | **`n_lados`** | intents |
+|---|---|---|---|---|---|
+| v1 | 7 059 | 773 | 1 253 | **0** | `none` 7 240 |
+| **v2** | 3 508 | **415** | **0** | **48** | `none` 3 592 · **`maker` 48** |
+
+**`n_lados` deixou de ser zero: 48 intents `maker`, todos `sell`.** Zero `fill` não-nulo em toda a sessão — 48
+ordens simuladas, nenhuma no venue (dry-run, sem signer). Continua **fora** de meta: medido, não caçado.
+
+#### O modelo passou a ler o vocabulário (diagnóstico, `act` × `flow`)
+
+| `flow` | n | resposta |
+|---|---|---|
+| `dump` | 1 810 | **`sell` 100,0 %** |
+| `lift` | 761 | **`buy` 100,0 %** |
+| `two_way` | 587 | **`hold` 100,0 %** |
+| `bot_war` | 181 | `hold` 89,5 % · `buy` 10,5 % |
+| `quiet` | 169 | **`hold` 100,0 %** |
+
+E o `tape` quando é a única palavra com direcção: `tape=pumping` (n=19) → **`buy` 100,0 %**; `tape=grinding`
+(n=269) → `hold` 53,9 % (a palavra declarada **sem direcção** no v2) — onde não há palavra de direcção no `flow`,
+o modelo não inventa lado. **A leitura é literal e coerente com o enunciado.**
+
+#### Veredicto
+
+- **PASS 1 (estabelecido):** `sidesAny = 2 583` em 3 501 ciclos válidos e 13 janelas; 48 lados passaram o gate.
+- **Critério 2 (não avaliável):** a sessão **não teve um único ciclo** com `spread=unfillable` ou `tape=violent`
+  (n = 0 em ambos), logo o teste "o `noul` sobe com violento e não com `bot_war`" não se pode fazer. Não é FAIL do
+  modelo — é ausência do caso. O que se viu em vez disso foi o `noul` a **descer** (mediana 0,52 → 0,28) e a
+  **nunca** cruzar 0,65.
+- **O que continua por medir:** a **regra 4** e o PnL. O ensaio das perguntas passou; o que ele conquistou foi
+  tornar a regra 4 **medível** — passaram a existir lados. Não é PASS da política, nem de PnL.
+
+***Linha para ele:** PR #16 merge. Ensaio v2 passou: `sidesAny` 2583 (v1: 0), 48 intents `maker` pelo gate, zero no
+venue. Modelo lê o vocabulário 1:1 (`dump`→sell 100 %, `lift`→buy 100 %). Critério 2 não avaliável (n=0 de
+violent/unfillable). `n_lados` saiu de zero — medido. Regra 4 e PnL continuam por medir: o ensaio tornou-os
+medíveis.*
+
+### 18.7 Graduação 15 min da sessão v2 — **medição, não ensaio novo** (especificação do dono, colada)
+
+> **Graduação 15 min da sessão v2 (desde `20260923T200827Z`). Medição, não ensaio novo.**
+>
+> `sell` / `buy` / `hold` são **etiquetas do JSON**, não o movimento. A graduação **não** pergunta se "`sell` é
+> sell". Pergunta: neste estado, o preço subiu ou desceu a seguir, e que etiqueta o Jev pôs.
+>
+> **Unidade.** Não é o ciclo. 400 ticks no mesmo estado = **1 caso**, não 400. (1) Agrupar pelas 7 palavras.
+> (2) Partir em episódios cuja janela de 15 min **não se sobrepõe**. (3) Um ponto = (estado × episódio): `act`,
+> `dir_after`, |mov|.
+>
+> **O que publicar.** Tabela por episódio:
+> `estado` · `n_ticks` · `act` · `conf` · `noul` · `dir_after` · `|mov|` · `etiqueta_vs_preço`.
+> `etiqueta_vs_preço` só descritivo, **três valores**: `alinhou` (`sell`+`down` ou `buy`+`up`) · `inverteu`
+> (`sell`+`up` ou `buy`+`down`) · `sem_relacao` (hold, |mov| < 10 bps, ou o mesmo estado com os dois sentidos).
+> **Não** chamar a isto acerto do modelo. É acerto da **convenção que nós escrevemos**. Se o mesmo estado umas
+> vezes sobe e outras desce: o mapa estado→palavra pode ser estável e o estado **não prever** o preço. Escrever
+> isso.
+>
+> **Separar.** `sidesAny` e `n_lados` em colunas distintas. `hold` não entra em alinhou/inverteu. Relatório:
+> quantos **episódios**, não quantos ciclos. Não promover winrate de 1803 `sell`.
+>
+> **Proibido.** Segundo JSON, θ, `dumb`, Laya, D, mainnet, chamar PnL a dry-run, concluir "o Jev acerta" a partir
+> de `alinhou`.
+>
+> **Leitura permitida no fecho.** Convenção alinhou nesta amostra · Convenção invertida (etiqueta estável,
+> sentido económico errado) · Estado sem poder preditivo. **Uma destas. Não duas.**
+
+Implementado em `provas/perguntas/graduar-episodios.py` (unidade = estado × episódio, episódios não sobrepostos
+de 900 s, `|mov|` pela fórmula do produto em `src/ledger/outcome.ts`). Os pontos por graduar são exactamente o
+**ciclo de início de cada episódio** — 93 na primeira contagem — e o graduador
+(`provas/buckets/graduar-desde.ts --ciclos <ficheiro>`) grava só esses, não os 4 481 ciclos da janela.
+
+#### Resultado (sessão de 2,5 h, leitura às 22:5xZ; o motor v2 continua a correr)
+
+| | |
+|---|---|
+| **episódios** (a unidade) | **100** |
+| ciclos na janela | 4 770 — **não** é o denominador |
+| `alinhou` · `inverteu` · `sem_relacao` | **3 · 17 · 80** |
+| `sem_relacao` por **mesmo estado com os dois sentidos** | **39 episódios em 13 estados** |
+| `sem_relacao` por `|mov|` < 10 bps | 33 |
+| `sem_relacao` por `act` hold | 44 |
+| `sidesAny` (coluna própria) | **3 289** |
+| `n_lados` (coluna própria, ≥ 0,80 e `noul` < 0,65) | **48** |
+| pontos por graduar nesta leitura | 7 (pendentes para a passagem seguinte) |
+
+**Leitura (uma das três):** **estado sem poder preditivo.**
+
+O mapa estado→palavra é **estável** — a matriz `act` × `flow` do §18.6 dá uma resposta por palavra a 100 % — e
+mesmo assim **13 estados que levaram `sell`/`buy` moveram-se nos dois sentidos**, em episódios que não se
+sobrepõem. O exemplo mais claro:
+
+| estado | episódios e sentidos |
+|---|---|
+| `tight deep dump flat flat extreme mid` (`sell`) | `up` em 2 episódios · `down` em 2 + 1 |
+| `tight deep lift flat short_small extreme mid` (`buy`) | `up` · `down` · `flat` |
+| `tight deep two_way flat flat extreme mid` (`hold`) | `up` · `down` |
+
+Não é a etiqueta a oscilar: é o **preço** a não seguir a palavra. Por isso as 39 observações do mesmo estado com
+os dois sentidos dominam (39 > 17), e a leitura é a de **ausência de poder preditivo**, não a de convenção
+alinhada nem a de convenção invertida.
+
+**Não é acerto do modelo.** É a convenção que **nós** escrevemos no JSON, comparada com o movimento. Nenhum
+winrate dos 1 803 `sell` é promovido; `hold` (44 episódios) não entra em alinhou/inverteu.
+
+Dois limites desta leitura, declarados: os **movimentos são pequenos** (33 episódios abaixo dos 10 bps, e o maior
+é 13,5 bps), e **7 pontos estavam por graduar**. Com um livro mais movimentado — `tape=violent`, que nesta sessão
+não apareceu uma única vez — a mesma tabela pode dizer outra coisa.
+
+<details>
+<summary><b>Tabela completa por episódio</b> (100 linhas: `estado` · `n_ticks` · `act` · `conf` · `noul` · `dir_after` · `|mov|` · `etiqueta_vs_preço`)</summary>
+
+| estado | n_ticks | act | conf | noul | dir_after | \|mov\| bps | etiqueta_vs_preço |
+|---|---|---|---|---|---|---|---|
+| `tight deep dump flat flat extreme mid` | 152 | sell | 0.76 | 0.28 | up | 47.9 | **sem_relacao** |
+| `normal deep dump grinding flat extreme mid` | 1 | sell | 0.76 | 0.3 | up | 37.0 | **inverteu** |
+| `tight deep bot_war grinding flat extreme mid` | 45 | hold | 0.94 | 0.2 | up | 37.0 | **sem_relacao** |
+| `normal thin dump flat flat extreme mid` | 2 | sell | 0.8 | 0.16 | up | 36.7 | **sem_relacao** |
+| `wide thin dump flat flat extreme mid` | 2 | sell | 0.735 | 0.2 | up | 34.0 | **inverteu** |
+| `tight deep dump grinding flat extreme mid` | 37 | sell | 0.77 | 0.3 | up | 34.0 | **sem_relacao** |
+| `normal deep dump flat flat extreme mid` | 1 | sell | 0.77 | 0.33 | up | 30.5 | **sem_relacao** |
+| `tight thin dump flat short_small extreme open_liq` | 2 | sell | 0.43 | 0.255 | up | 28.3 | **inverteu** |
+| `tight deep lift flat short_small extreme open_liq` | 18 | buy | 0.425 | 0.29 | up | 27.5 | **alinhou** |
+| `tight deep dump flat short_small extreme open_liq` | 130 | sell | 0.42 | 0.35 | up | 27.5 | **inverteu** |
+| `tight deep lift flat short_small extreme funding_window` | 15 | buy | 0.44 | 0.25 | up | 23.6 | **alinhou** |
+| `wide thin lift flat flat extreme mid` | 1 | buy | 0.53 | 0.21 | down | 23.6 | **inverteu** |
+| `tight deep lift flat flat extreme mid` | 71 | buy | 0.52 | 0.23 | down | 23.6 | **sem_relacao** |
+| `normal deep lift flat flat extreme mid` | 1 | buy | 0.39 | 0.33 | down | 23.6 | **sem_relacao** |
+| `tight deep quiet flat flat extreme mid` | 47 | hold | 0.94 | 0.16 | down | 23.4 | **sem_relacao** |
+| `tight deep quiet flat short_small extreme mid` | 64 | hold | 0.73 | 0.18 | up | 20.9 | **sem_relacao** |
+| `normal deep bot_war grinding flat extreme mid` | 2 | hold | 0.86 | 0.19 | up | 20.8 | **sem_relacao** |
+| `tight deep bot_war flat flat extreme mid` | 41 | hold | 0.8 | 0.26 | up | 20.8 | **sem_relacao** |
+| `normal deep bot_war flat flat extreme mid` | 1 | hold | 0.69 | 0.24 | up | 20.8 | **sem_relacao** |
+| `tight deep dump flat short_small extreme open_liq` | 139 | sell | 0.43 | 0.35 | up | 20.8 | **inverteu** |
+| `tight deep quiet flat short_small extreme open_liq` | 5 | hold | 0.57 | 0.18 | up | 20.8 | **sem_relacao** |
+| `normal deep quiet flat short_small extreme mid` | 1 | hold | 0.67 | 0.18 | up | 20.6 | **sem_relacao** |
+| `tight deep lift flat short_small extreme mid` | 150 | buy | 0.4 | 0.24 | up | 20.6 | **sem_relacao** |
+| `normal deep dump flat short_small extreme open_liq` | 1 | sell | 0.41 | 0.43 | up | 20.5 | **inverteu** |
+| `tight deep bot_war pumping flat extreme mid` | 20 | buy | 0.71 | 0.24 | up | 18.6 | **alinhou** |
+| `tight thin dump flat flat extreme mid` | 2 | sell | 0.76 | 0.205 | up | 18.3 | **inverteu** |
+| `normal thin dump flat flat extreme mid` | 2 | hold | 0.41 | 0.09 | down | 18.1 | **sem_relacao** |
+| `tight deep bot_war flat flat extreme mid` | 74 | hold | 0.8 | 0.26 | up | 17.6 | **sem_relacao** |
+| `tight deep two_way flat short_small extreme funding_window` | 2 | hold | 0.58 | 0.235 | up | 16.6 | **sem_relacao** |
+| `tight deep lift flat short_small extreme mid` | 106 | buy | 0.41 | 0.24 | up | 16.2 | **sem_relacao** |
+| `tight deep quiet flat short_small extreme mid` | 33 | hold | 0.72 | 0.18 | up | 15.4 | **sem_relacao** |
+| `normal deep dump grinding short_small extreme open_liq` | 1 | sell | 0.46 | 0.53 | up | 15.0 | **inverteu** |
+| `tight deep dump grinding short_small extreme open_liq` | 4 | sell | 0.32 | 0.345 | up | 15.0 | **inverteu** |
+| `tight deep lift grinding short_small extreme mid` | 44 | buy | 0.525 | 0.29 | up | 15.0 | **sem_relacao** |
+| `tight deep dump grinding flat extreme funding_window` | 3 | sell | 0.74 | 0.3 | up | 14.3 | **inverteu** |
+| `tight deep dump flat short_small extreme funding_window` | 50 | sell | 0.49 | 0.35 | up | 14.3 | **inverteu** |
+| `tight deep dump grinding short_small extreme funding_window` | 1 | sell | 0.31 | 0.3 | up | 14.3 | **inverteu** |
+| `normal deep two_way flat short_small extreme mid` | 1 | hold | 0.54 | 0.28 | up | 14.2 | **sem_relacao** |
+| `tight deep two_way grinding short_small extreme mid` | 15 | hold | 0.5 | 0.3 | up | 14.2 | **sem_relacao** |
+| `tight deep dump grinding short_small extreme mid` | 27 | sell | 0.39 | 0.34 | up | 14.2 | **sem_relacao** |
+| `tight deep dump flat short_small extreme funding_window` | 131 | sell | 0.5 | 0.35 | up | 13.9 | **inverteu** |
+| `tight deep quiet flat short_small extreme funding_window` | 17 | hold | 0.7 | 0.18 | up | 13.9 | **sem_relacao** |
+| `tight deep dump flat flat extreme mid` | 320 | sell | 0.76 | 0.28 | down | 13.6 | **sem_relacao** |
+| `tight thin dump flat short_small extreme mid` | 1 | sell | 0.46 | 0.24 | up | 13.5 | **inverteu** |
+| `tight deep dump flat short_small extreme mid` | 94 | sell | 0.4 | 0.33 | up | 13.1 | **sem_relacao** |
+| `tight ok dump flat short_small extreme mid` | 2 | sell | 0.355 | 0.235 | up | 13.1 | **inverteu** |
+| `normal deep two_way flat flat extreme mid` | 1 | hold | 0.8 | 0.38 | down | 12.7 | **sem_relacao** |
+| `tight deep two_way flat flat extreme mid` | 38 | hold | 0.88 | 0.26 | down | 12.7 | **sem_relacao** |
+| `tight deep two_way grinding flat extreme mid` | 20 | hold | 0.89 | 0.27 | down | 12.7 | **sem_relacao** |
+| `tight deep lift flat short_small extreme mid` | 207 | buy | 0.41 | 0.25 | up | 11.5 | **sem_relacao** |
+| `normal thin bot_war flat flat extreme mid` | 1 | hold | 0.92 | 0.22 | up | 11.3 | **sem_relacao** |
+| `tight deep two_way flat flat extreme funding_window` | 36 | hold | 0.89 | 0.26 | up | 10.5 | **sem_relacao** |
+| `tight deep dump flat short_small extreme mid` | 14 | sell | 0.41 | 0.335 | up | 10.5 | **sem_relacao** |
+| `tight deep two_way flat short_small extreme mid` | 144 | hold | 0.64 | 0.24 | up | 10.5 | **sem_relacao** |
+| `tight deep two_way grinding short_small extreme mid` | 52 | hold | 0.47 | 0.3 | up | 10.5 | **sem_relacao** |
+| `tight thin two_way flat short_small extreme mid` | 1 | hold | 0.69 | 0.21 | down | 10.4 | **sem_relacao** |
+| `tight deep dump flat flat extreme funding_window` | 45 | sell | 0.79 | 0.33 | up | 10.2 | **inverteu** |
+| `tight deep two_way flat short_small extreme mid` | 45 | hold | 0.64 | 0.24 | up | 10.2 | **sem_relacao** |
+| `tight deep two_way grinding short_small extreme mid` | 8 | hold | 0.495 | 0.305 | up | 10.2 | **sem_relacao** |
+| `tight deep dump flat short_small extreme mid` | 317 | sell | 0.41 | 0.33 | up | 10.2 | **sem_relacao** |
+| `tight deep lift grinding short_small extreme mid` | 4 | buy | 0.53 | 0.31 | down | 8.6 | **sem_relacao** |
+| `tight deep dump flat flat extreme mid` | 276 | sell | 0.75 | 0.28 | down | 8.3 | **sem_relacao** |
+| `normal deep lift flat short_small extreme mid` | 4 | buy | 0.37 | 0.24 | up | 8.2 | **sem_relacao** |
+| `tight deep lift flat flat extreme mid` | 84 | buy | 0.52 | 0.23 | up | 7.5 | **sem_relacao** |
+| `normal deep lift flat flat extreme mid` | 2 | buy | 0.405 | 0.305 | up | 7.5 | **sem_relacao** |
+| `tight deep two_way flat flat extreme mid` | 128 | hold | 0.88 | 0.25 | up | 7.5 | **sem_relacao** |
+| `normal deep quiet flat flat extreme mid` | 2 | hold | 0.93 | 0.16 | down | 6.8 | **sem_relacao** |
+| `normal thin quiet flat flat extreme mid` | 1 | hold | 0 | 0 | down | 6.8 | **sem_relacao** |
+| `tight deep quiet grinding flat extreme mid` | 1 | hold | 0.9 | 0.24 | down | 6.8 | **sem_relacao** |
+| `tight deep dump grinding flat extreme mid` | 3 | sell | 0.75 | 0.31 | down | 6.8 | **sem_relacao** |
+| `normal deep dump flat flat extreme mid` | 1 | sell | 0.73 | 0.35 | down | 6.8 | **sem_relacao** |
+| `tight deep dump flat flat extreme mid` | 4 | sell | 0.76 | 0.29 | down | 6.8 | **sem_relacao** |
+| `wide deep lift grinding short_small extreme mid` | 1 | buy | 0.59 | 0.28 | up | 6.3 | **sem_relacao** |
+| `tight deep dump grinding flat extreme mid` | 2 | sell | 0.75 | 0.295 | down | 6.2 | **sem_relacao** |
+| `tight deep dump flat short_small extreme mid` | 78 | sell | 0.42 | 0.32 | down | 5.8 | **sem_relacao** |
+| `tight deep lift flat short_small extreme mid` | 193 | buy | 0.41 | 0.24 | down | 5.2 | **sem_relacao** |
+| `tight ok lift flat short_small extreme mid` | 1 | buy | 0.46 | 0.24 | up | 4.5 | **sem_relacao** |
+| `tight deep two_way flat short_small extreme mid` | 94 | hold | 0.65 | 0.24 | down | 4.2 | **sem_relacao** |
+| `tight deep dump flat short_small extreme mid` | 126 | sell | 0.405 | 0.33 | down | 4.2 | **sem_relacao** |
+| `tight deep dump grinding short_small extreme mid` | 20 | sell | 0.38 | 0.335 | down | 4.2 | **sem_relacao** |
+| `tight deep two_way grinding flat extreme mid` | 4 | hold | 0.885 | 0.285 | down | 3.5 | **sem_relacao** |
+| `tight deep bot_war flat short_small extreme mid` | 9 | hold | 0.55 | 0.28 | down | 1.6 | **sem_relacao** |
+| `tight ok two_way flat short_small extreme mid` | 1 | hold | 0.63 | 0.19 | down | 1.6 | **sem_relacao** |
+| `tight deep two_way flat short_small extreme mid` | 173 | hold | 0.64 | 0.24 | down | 1.6 | **sem_relacao** |
+| `tight thin two_way flat flat extreme mid` | 1 | hold | 0.93 | 0.26 | down | 1.3 | **sem_relacao** |
+| `tight ok two_way flat short_small extreme mid` | 1 | hold | 0.56 | 0.19 | up | 0.9 | **sem_relacao** |
+| `wide deep two_way flat short_small extreme mid` | 1 | hold | 0.53 | 0.28 | up | 0.9 | **sem_relacao** |
+| `tight deep two_way flat short_small extreme mid` | 20 | hold | 0.65 | 0.24 | up | 0.6 | **sem_relacao** |
+| `tight thin two_way grinding short_small extreme mid` | 1 | hold | 0.57 | 0.24 | flat | 0.1 | **sem_relacao** |
+| `tight deep lift flat short_small extreme mid` | 302 | buy | 0.41 | 0.24 | flat | 0.0 | **sem_relacao** |
+| `tight ok lift flat short_small extreme mid` | 1 | buy | 0.52 | 0.22 | flat | 0.0 | **sem_relacao** |
+| `tight thin two_way flat short_small extreme mid` | 1 | hold | 0.67 | 0.23 | flat | 0.0 | **sem_relacao** |
+| `tight deep two_way flat short_small extreme mid` | 135 | hold | 0.64 | 0.24 | flat | 0.0 | **sem_relacao** |
+| `tight deep lift flat short_small extreme mid` | 134 | buy | 0.42 | 0.24 | — | — | **sem_relacao** |
+| `tight deep two_way flat short_small extreme mid` | 83 | hold | 0.64 | 0.24 | — | — | **sem_relacao** |
+| `tight deep two_way grinding short_small extreme mid` | 27 | hold | 0.47 | 0.31 | — | — | **sem_relacao** |
+| `normal deep two_way grinding short_small extreme mid` | 1 | hold | 0.52 | 0.31 | — | — | **sem_relacao** |
+| `tight deep dump flat short_small extreme mid` | 30 | sell | 0.405 | 0.325 | — | — | **sem_relacao** |
+| `normal deep lift grinding short_small extreme mid` | 1 | buy | 0.47 | 0.27 | — | — | **sem_relacao** |
+| `tight deep lift grinding short_small extreme mid` | 11 | buy | 0.54 | 0.28 | — | — | **sem_relacao** |
+
+</details>
+
+*(`|mov|` pela fórmula do produto, `src/ledger/outcome.ts`: `((plus - then) / then) * 10000`.)*
+
+**Nota de auditoria.** A leitura foi re-corrida no fecho (o motor v2 continuava a acumular): **4 768 ciclos** em vez
+de 4 770, com as **mesmas 100 contagens** — `alinhou` 3 · `inverteu` 17 · `sem_relacao` 80 · 13 estados com os dois
+sentidos — e a mesma leitura. O total de ticks move-se com a partição dos episódios (uma fronteira a deslizar um
+tick muda de que lado fica); os veredictos não. Os dois números ficam ditos, cada um com a sua hora.

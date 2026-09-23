@@ -40,6 +40,11 @@ def _ms(cid: str) -> int:
     return int(_dt.datetime.strptime(d, "%Y%m%dT%H%M%SZ").replace(tzinfo=_dt.timezone.utc).timestamp() * 1000)
 
 
+# Severidade da palavra do `tape`, so para o diagnostico da EXTREMA. Nao entra em veredicto
+# nenhum: a regra 4 e julgada pela palavra DOMINANTE (decisao do dono, 23 set 2026).
+SEVERIDADE = {"flat": 0, "grinding": 1, "pumping": 2, "dumping": 2, "violent": 3}
+
+
 def relatorio_janelas(dec: dict, outs: list, args) -> int:
     """Palavra DOMINANTE do `tape` por janela de 900 s x |mov| da ancora da janela.
 
@@ -64,6 +69,9 @@ def relatorio_janelas(dec: dict, outs: list, args) -> int:
         membros = janelas[w]
         palavras = Counter(linha(POS["tape"], d["state"]) for _, d in membros)
         dom, n_dom = palavras.most_common(1)[0]
+        # DIAGNOSTICO (autorizado como coluna extra, NUNCA promove): a palavra mais extrema
+        # vista na janela responde "o bucket chegou a disparar?"— pergunta diferente da dominante.
+        extrema = max(palavras, key=lambda w: SEVERIDADE.get(w, -1))
         cand = [(abs(_ms(cid) - (t0 + w * 900_000)), cid) for cid, _ in membros if cid in omap]
         mov = None
         ancora = None
@@ -78,6 +86,8 @@ def relatorio_janelas(dec: dict, outs: list, args) -> int:
                 "ciclos": len(membros),
                 "dominante": dom,
                 "pct_dominante": round(100 * n_dom / len(membros), 1),
+                "extrema": extrema,
+                "pct_extrema": round(100 * palavras[extrema] / len(membros), 1),
                 "composicao": dict(palavras.most_common()),
                 "mov_bps": round(mov, 1) if mov is not None else None,
                 "ancora": ancora,
@@ -90,10 +100,13 @@ def relatorio_janelas(dec: dict, outs: list, args) -> int:
             json.dump({"janelas": linhas, "n_com_movimento": len(com)}, fh, indent=1)
         print(f"  json: {args.json}")
     print(f"  JANELAS de 900 s: {len(linhas)} | com movimento graduado: {len(com)}")
-    print(f"  {'inicio':7s} {'ciclos':6s} {'dominante':10s} {'%dom':6s} {'|mov|':8s} composicao")
+    print(f"  {'inicio':7s} {'ciclos':6s} {'dominante':10s} {'%dom':6s} {'extrema':10s} {'%ext':6s} {'|mov|':8s} composicao")
     for l in linhas:
         mov = f"{l['mov_bps']:7.1f}" if l["mov_bps"] is not None else "   --  "
-        print(f"  {l['de']:7s} {l['ciclos']:6d} {l['dominante']:10s} {l['pct_dominante']:5.1f}% {mov} {l['composicao']}")
+        print(
+            f"  {l['de']:7s} {l['ciclos']:6d} {l['dominante']:10s} {l['pct_dominante']:5.1f}% "
+            f"{l['extrema']:10s} {l['pct_extrema']:5.1f}% {mov} {l['composicao']}"
+        )
     if not com:
         print("\n  sem janela com movimento graduado: nao ha o que ordenar")
         return 0
@@ -114,6 +127,17 @@ def relatorio_janelas(dec: dict, outs: list, args) -> int:
     flat_grandes = [l for l in grandes if l["dominante"] == "flat"]
     if grandes:
         print(f"  janelas com |mov| >= {LIMIAR_BPS} bps: {len(grandes)} | dominante `flat`: {len(flat_grandes)}")
+
+    # ---- diagnostico autorizado (23 set 2026): NUNCA promove, nao entra no veredicto acima
+    disparou = [l for l in com if l["extrema"] in ("pumping", "dumping", "violent")]
+    print("\n  DIAGNOSTICO (nunca promove) — a palavra MAIS EXTREMA vista na janela")
+    print("  responde 'o bucket chegou a disparar nesta janela?', nao 'o que o estado diz na maior parte do tempo'")
+    for l in com:
+        print(
+            f"    {l['de']}  extrema {l['extrema']:9s} ({l['pct_extrema']:5.1f}% dos ciclos)"
+            f" | dominante {l['dominante']:9s} | |mov| {l['mov_bps']:6.1f} bps"
+        )
+    print(f"  janelas em que o bucket DISPAROU (extrema >= pumping): {len(disparou)}/{len(com)}")
     return 0
 
 

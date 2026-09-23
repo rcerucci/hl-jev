@@ -1,0 +1,1928 @@
+{
+ "fronteira": "20260923T200827",
+ "episodios": 100,
+ "contagens": {
+  "sem_relacao": 80,
+  "inverteu": 17,
+  "alinhou": 3
+ },
+ "leitura": "estado sem poder preditivo",
+ "pontos": [
+  {
+   "estado": "tight deep dump flat flat extreme mid",
+   "de": "20260923T202337Z-BTC",
+   "ate": "20260923T203835Z-BTC",
+   "n_ticks": 152,
+   "act": "sell",
+   "actos": {
+    "sell": 146,
+    "hold": 6
+   },
+   "conf": 0.76,
+   "noul": 0.28,
+   "sidesAny": 146,
+   "n_lados": 2,
+   "dir_after": "up",
+   "mov_bps": 47.854746768631685,
+   "graduado": true,
+   "ciclo_ponto": "20260923T202337Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "normal deep dump grinding flat extreme mid",
+   "de": "20260923T201735Z-BTC",
+   "ate": "20260923T201735Z-BTC",
+   "n_ticks": 1,
+   "act": "sell",
+   "actos": {
+    "sell": 1
+   },
+   "conf": 0.76,
+   "noul": 0.3,
+   "sidesAny": 1,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 37.00970919269644,
+   "graduado": true,
+   "ciclo_ponto": "20260923T201735Z-BTC",
+   "etiqueta": "inverteu"
+  },
+  {
+   "estado": "tight deep bot_war grinding flat extreme mid",
+   "de": "20260923T201745Z-BTC",
+   "ate": "20260923T202753Z-BTC",
+   "n_ticks": 45,
+   "act": "hold",
+   "actos": {
+    "hold": 45
+   },
+   "conf": 0.94,
+   "noul": 0.2,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 37.00970919269644,
+   "graduado": true,
+   "ciclo_ponto": "20260923T201745Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "normal thin dump flat flat extreme mid",
+   "de": "20260923T201405Z-BTC",
+   "ate": "20260923T201603Z-BTC",
+   "n_ticks": 2,
+   "act": "sell",
+   "actos": {
+    "sell": 2
+   },
+   "conf": 0.8,
+   "noul": 0.16,
+   "sidesAny": 2,
+   "n_lados": 1,
+   "dir_after": "up",
+   "mov_bps": 36.670806289101854,
+   "graduado": true,
+   "ciclo_ponto": "20260923T201405Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "wide thin dump flat flat extreme mid",
+   "de": "20260923T201503Z-BTC",
+   "ate": "20260923T201605Z-BTC",
+   "n_ticks": 2,
+   "act": "sell",
+   "actos": {
+    "sell": 2
+   },
+   "conf": 0.735,
+   "noul": 0.2,
+   "sidesAny": 2,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 33.96739130434783,
+   "graduado": true,
+   "ciclo_ponto": "20260923T201503Z-BTC",
+   "etiqueta": "inverteu"
+  },
+  {
+   "estado": "tight deep dump grinding flat extreme mid",
+   "de": "20260923T201507Z-BTC",
+   "ate": "20260923T202025Z-BTC",
+   "n_ticks": 37,
+   "act": "sell",
+   "actos": {
+    "sell": 37
+   },
+   "conf": 0.77,
+   "noul": 0.3,
+   "sidesAny": 37,
+   "n_lados": 4,
+   "dir_after": "up",
+   "mov_bps": 33.96739130434783,
+   "graduado": true,
+   "ciclo_ponto": "20260923T201507Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "normal deep dump flat flat extreme mid",
+   "de": "20260923T201211Z-BTC",
+   "ate": "20260923T201211Z-BTC",
+   "n_ticks": 1,
+   "act": "sell",
+   "actos": {
+    "sell": 1
+   },
+   "conf": 0.77,
+   "noul": 0.33,
+   "sidesAny": 1,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 30.45780422660606,
+   "graduado": true,
+   "ciclo_ponto": "20260923T201211Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight thin dump flat short_small extreme open_liq",
+   "de": "20260923T210204Z-BTC",
+   "ate": "20260923T210244Z-BTC",
+   "n_ticks": 2,
+   "act": "sell",
+   "actos": {
+    "sell": 2
+   },
+   "conf": 0.43,
+   "noul": 0.255,
+   "sidesAny": 2,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 28.298136064922005,
+   "graduado": true,
+   "ciclo_ponto": "20260923T210204Z-BTC",
+   "etiqueta": "inverteu"
+  },
+  {
+   "estado": "tight deep lift flat short_small extreme open_liq",
+   "de": "20260923T210000Z-BTC",
+   "ate": "20260923T210034Z-BTC",
+   "n_ticks": 18,
+   "act": "buy",
+   "actos": {
+    "buy": 18
+   },
+   "conf": 0.425,
+   "noul": 0.29,
+   "sidesAny": 18,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 27.47766708760114,
+   "graduado": true,
+   "ciclo_ponto": "20260923T210000Z-BTC",
+   "etiqueta": "alinhou"
+  },
+  {
+   "estado": "tight deep dump flat short_small extreme open_liq",
+   "de": "20260923T210036Z-BTC",
+   "ate": "20260923T210458Z-BTC",
+   "n_ticks": 130,
+   "act": "sell",
+   "actos": {
+    "sell": 129,
+    "hold": 1
+   },
+   "conf": 0.42,
+   "noul": 0.35,
+   "sidesAny": 129,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 27.47766708760114,
+   "graduado": true,
+   "ciclo_ponto": "20260923T210036Z-BTC",
+   "etiqueta": "inverteu"
+  },
+  {
+   "estado": "tight deep lift flat short_small extreme funding_window",
+   "de": "20260923T205930Z-BTC",
+   "ate": "20260923T205958Z-BTC",
+   "n_ticks": 15,
+   "act": "buy",
+   "actos": {
+    "buy": 15
+   },
+   "conf": 0.44,
+   "noul": 0.25,
+   "sidesAny": 15,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 23.62020579981291,
+   "graduado": true,
+   "ciclo_ponto": "20260923T205930Z-BTC",
+   "etiqueta": "alinhou"
+  },
+  {
+   "estado": "wide thin lift flat flat extreme mid",
+   "de": "20260923T204705Z-BTC",
+   "ate": "20260923T204705Z-BTC",
+   "n_ticks": 1,
+   "act": "buy",
+   "actos": {
+    "buy": 1
+   },
+   "conf": 0.53,
+   "noul": 0.21,
+   "sidesAny": 1,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 23.565095660289312,
+   "graduado": true,
+   "ciclo_ponto": "20260923T204705Z-BTC",
+   "etiqueta": "inverteu"
+  },
+  {
+   "estado": "tight deep lift flat flat extreme mid",
+   "de": "20260923T204707Z-BTC",
+   "ate": "20260923T204929Z-BTC",
+   "n_ticks": 71,
+   "act": "buy",
+   "actos": {
+    "buy": 67,
+    "hold": 4
+   },
+   "conf": 0.52,
+   "noul": 0.23,
+   "sidesAny": 67,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 23.565095660289312,
+   "graduado": true,
+   "ciclo_ponto": "20260923T204707Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "normal deep lift flat flat extreme mid",
+   "de": "20260923T204709Z-BTC",
+   "ate": "20260923T204709Z-BTC",
+   "n_ticks": 1,
+   "act": "buy",
+   "actos": {
+    "buy": 1
+   },
+   "conf": 0.39,
+   "noul": 0.33,
+   "sidesAny": 1,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 23.565095660289312,
+   "graduado": true,
+   "ciclo_ponto": "20260923T204709Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep quiet flat flat extreme mid",
+   "de": "20260923T204243Z-BTC",
+   "ate": "20260923T205342Z-BTC",
+   "n_ticks": 47,
+   "act": "hold",
+   "actos": {
+    "hold": 47
+   },
+   "conf": 0.94,
+   "noul": 0.16,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 23.44816322721387,
+   "graduado": true,
+   "ciclo_ponto": "20260923T204243Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep quiet flat short_small extreme mid",
+   "de": "20260923T220500Z-BTC",
+   "ate": "20260923T220722Z-BTC",
+   "n_ticks": 64,
+   "act": "hold",
+   "actos": {
+    "hold": 64
+   },
+   "conf": 0.73,
+   "noul": 0.18,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 20.88145400247311,
+   "graduado": true,
+   "ciclo_ponto": "20260923T220500Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "normal deep bot_war grinding flat extreme mid",
+   "de": "20260923T202531Z-BTC",
+   "ate": "20260923T202717Z-BTC",
+   "n_ticks": 2,
+   "act": "hold",
+   "actos": {
+    "hold": 2
+   },
+   "conf": 0.86,
+   "noul": 0.19,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 20.808491735054123,
+   "graduado": true,
+   "ciclo_ponto": "20260923T202531Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep bot_war flat flat extreme mid",
+   "de": "20260923T202539Z-BTC",
+   "ate": "20260923T202801Z-BTC",
+   "n_ticks": 41,
+   "act": "hold",
+   "actos": {
+    "hold": 41
+   },
+   "conf": 0.8,
+   "noul": 0.26,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 20.808491735054123,
+   "graduado": true,
+   "ciclo_ponto": "20260923T202539Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "normal deep bot_war flat flat extreme mid",
+   "de": "20260923T202555Z-BTC",
+   "ate": "20260923T202555Z-BTC",
+   "n_ticks": 1,
+   "act": "hold",
+   "actos": {
+    "hold": 1
+   },
+   "conf": 0.69,
+   "noul": 0.24,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 20.808491735054123,
+   "graduado": true,
+   "ciclo_ponto": "20260923T202555Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep dump flat short_small extreme open_liq",
+   "de": "20260923T220000Z-BTC",
+   "ate": "20260923T220448Z-BTC",
+   "n_ticks": 139,
+   "act": "sell",
+   "actos": {
+    "sell": 138,
+    "hold": 1
+   },
+   "conf": 0.43,
+   "noul": 0.35,
+   "sidesAny": 138,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 20.764797834861533,
+   "graduado": true,
+   "ciclo_ponto": "20260923T220000Z-BTC",
+   "etiqueta": "inverteu"
+  },
+  {
+   "estado": "tight deep quiet flat short_small extreme open_liq",
+   "de": "20260923T220450Z-BTC",
+   "ate": "20260923T220458Z-BTC",
+   "n_ticks": 5,
+   "act": "hold",
+   "actos": {
+    "hold": 5
+   },
+   "conf": 0.57,
+   "noul": 0.18,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 20.764555603513642,
+   "graduado": true,
+   "ciclo_ponto": "20260923T220450Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "normal deep quiet flat short_small extreme mid",
+   "de": "20260923T220718Z-BTC",
+   "ate": "20260923T220718Z-BTC",
+   "n_ticks": 1,
+   "act": "hold",
+   "actos": {
+    "hold": 1
+   },
+   "conf": 0.67,
+   "noul": 0.18,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 20.647659931874387,
+   "graduado": true,
+   "ciclo_ponto": "20260923T220718Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep lift flat short_small extreme mid",
+   "de": "20260923T220724Z-BTC",
+   "ate": "20260923T222223Z-BTC",
+   "n_ticks": 150,
+   "act": "buy",
+   "actos": {
+    "buy": 150
+   },
+   "conf": 0.4,
+   "noul": 0.24,
+   "sidesAny": 150,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 20.647659931874387,
+   "graduado": true,
+   "ciclo_ponto": "20260923T220724Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "normal deep dump flat short_small extreme open_liq",
+   "de": "20260923T220320Z-BTC",
+   "ate": "20260923T220320Z-BTC",
+   "n_ticks": 1,
+   "act": "sell",
+   "actos": {
+    "sell": 1
+   },
+   "conf": 0.41,
+   "noul": 0.43,
+   "sidesAny": 1,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 20.5307669874599,
+   "graduado": true,
+   "ciclo_ponto": "20260923T220320Z-BTC",
+   "etiqueta": "inverteu"
+  },
+  {
+   "estado": "tight deep bot_war pumping flat extreme mid",
+   "de": "20260923T202445Z-BTC",
+   "ate": "20260923T202523Z-BTC",
+   "n_ticks": 20,
+   "act": "buy",
+   "actos": {
+    "buy": 19,
+    "hold": 1
+   },
+   "conf": 0.71,
+   "noul": 0.24,
+   "sidesAny": 19,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 18.58996843212908,
+   "graduado": true,
+   "ciclo_ponto": "20260923T202445Z-BTC",
+   "etiqueta": "alinhou"
+  },
+  {
+   "estado": "tight thin dump flat flat extreme mid",
+   "de": "20260923T200927Z-BTC",
+   "ate": "20260923T200939Z-BTC",
+   "n_ticks": 2,
+   "act": "sell",
+   "actos": {
+    "sell": 2
+   },
+   "conf": 0.76,
+   "noul": 0.205,
+   "sidesAny": 2,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 18.272541991707076,
+   "graduado": true,
+   "ciclo_ponto": "20260923T200927Z-BTC",
+   "etiqueta": "inverteu"
+  },
+  {
+   "estado": "normal thin dump flat flat extreme mid",
+   "de": "20260923T204003Z-BTC",
+   "ate": "20260923T204603Z-BTC",
+   "n_ticks": 2,
+   "act": "hold",
+   "actos": {
+    "hold": 1,
+    "sell": 1
+   },
+   "conf": 0.41,
+   "noul": 0.09,
+   "sidesAny": 1,
+   "n_lados": 1,
+   "dir_after": "down",
+   "mov_bps": 18.08212785814279,
+   "graduado": true,
+   "ciclo_ponto": "20260923T204003Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep bot_war flat flat extreme mid",
+   "de": "20260923T201039Z-BTC",
+   "ate": "20260923T202529Z-BTC",
+   "n_ticks": 74,
+   "act": "hold",
+   "actos": {
+    "hold": 74
+   },
+   "conf": 0.8,
+   "noul": 0.26,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 17.566048341765036,
+   "graduado": true,
+   "ciclo_ponto": "20260923T201039Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep two_way flat short_small extreme funding_window",
+   "de": "20260923T215750Z-BTC",
+   "ate": "20260923T215752Z-BTC",
+   "n_ticks": 2,
+   "act": "hold",
+   "actos": {
+    "hold": 2
+   },
+   "conf": 0.58,
+   "noul": 0.235,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 16.55551928368232,
+   "graduado": true,
+   "ciclo_ponto": "20260923T215750Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep lift flat short_small extreme mid",
+   "de": "20260923T212312Z-BTC",
+   "ate": "20260923T213702Z-BTC",
+   "n_ticks": 106,
+   "act": "buy",
+   "actos": {
+    "buy": 106
+   },
+   "conf": 0.41,
+   "noul": 0.24,
+   "sidesAny": 106,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 16.222966585357316,
+   "graduado": true,
+   "ciclo_ponto": "20260923T212312Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep quiet flat short_small extreme mid",
+   "de": "20260923T212732Z-BTC",
+   "ate": "20260923T214130Z-BTC",
+   "n_ticks": 33,
+   "act": "hold",
+   "actos": {
+    "hold": 33
+   },
+   "conf": 0.72,
+   "noul": 0.18,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 15.401848221786615,
+   "graduado": true,
+   "ciclo_ponto": "20260923T212732Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "normal deep dump grinding short_small extreme open_liq",
+   "de": "20260923T220132Z-BTC",
+   "ate": "20260923T220132Z-BTC",
+   "n_ticks": 1,
+   "act": "sell",
+   "actos": {
+    "sell": 1
+   },
+   "conf": 0.46,
+   "noul": 0.53,
+   "sidesAny": 1,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 15.0398731520776,
+   "graduado": true,
+   "ciclo_ponto": "20260923T220132Z-BTC",
+   "etiqueta": "inverteu"
+  },
+  {
+   "estado": "tight deep dump grinding short_small extreme open_liq",
+   "de": "20260923T220134Z-BTC",
+   "ate": "20260923T220140Z-BTC",
+   "n_ticks": 4,
+   "act": "sell",
+   "actos": {
+    "sell": 4
+   },
+   "conf": 0.32,
+   "noul": 0.345,
+   "sidesAny": 4,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 15.0398731520776,
+   "graduado": true,
+   "ciclo_ponto": "20260923T220134Z-BTC",
+   "etiqueta": "inverteu"
+  },
+  {
+   "estado": "tight deep lift grinding short_small extreme mid",
+   "de": "20260923T210956Z-BTC",
+   "ate": "20260923T211952Z-BTC",
+   "n_ticks": 44,
+   "act": "buy",
+   "actos": {
+    "buy": 43,
+    "hold": 1
+   },
+   "conf": 0.525,
+   "noul": 0.29,
+   "sidesAny": 43,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 14.956416068799514,
+   "graduado": true,
+   "ciclo_ponto": "20260923T210956Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep dump grinding flat extreme funding_window",
+   "de": "20260923T205712Z-BTC",
+   "ate": "20260923T205716Z-BTC",
+   "n_ticks": 3,
+   "act": "sell",
+   "actos": {
+    "sell": 3
+   },
+   "conf": 0.74,
+   "noul": 0.3,
+   "sidesAny": 3,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 14.265668849391954,
+   "graduado": true,
+   "ciclo_ponto": "20260923T205712Z-BTC",
+   "etiqueta": "inverteu"
+  },
+  {
+   "estado": "tight deep dump flat short_small extreme funding_window",
+   "de": "20260923T205748Z-BTC",
+   "ate": "20260923T205928Z-BTC",
+   "n_ticks": 50,
+   "act": "sell",
+   "actos": {
+    "sell": 50
+   },
+   "conf": 0.49,
+   "noul": 0.35,
+   "sidesAny": 50,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 14.265668849391954,
+   "graduado": true,
+   "ciclo_ponto": "20260923T205748Z-BTC",
+   "etiqueta": "inverteu"
+  },
+  {
+   "estado": "tight deep dump grinding short_small extreme funding_window",
+   "de": "20260923T205752Z-BTC",
+   "ate": "20260923T205752Z-BTC",
+   "n_ticks": 1,
+   "act": "sell",
+   "actos": {
+    "sell": 1
+   },
+   "conf": 0.31,
+   "noul": 0.3,
+   "sidesAny": 1,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 14.265668849391954,
+   "graduado": true,
+   "ciclo_ponto": "20260923T205752Z-BTC",
+   "etiqueta": "inverteu"
+  },
+  {
+   "estado": "normal deep two_way flat short_small extreme mid",
+   "de": "20260923T220825Z-BTC",
+   "ate": "20260923T220825Z-BTC",
+   "n_ticks": 1,
+   "act": "hold",
+   "actos": {
+    "hold": 1
+   },
+   "conf": 0.54,
+   "noul": 0.28,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 14.222595273901538,
+   "graduado": true,
+   "ciclo_ponto": "20260923T220825Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep two_way grinding short_small extreme mid",
+   "de": "20260923T220827Z-BTC",
+   "ate": "20260923T220855Z-BTC",
+   "n_ticks": 15,
+   "act": "hold",
+   "actos": {
+    "hold": 15
+   },
+   "conf": 0.5,
+   "noul": 0.3,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 14.222595273901538,
+   "graduado": true,
+   "ciclo_ponto": "20260923T220827Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep dump grinding short_small extreme mid",
+   "de": "20260923T220857Z-BTC",
+   "ate": "20260923T221059Z-BTC",
+   "n_ticks": 27,
+   "act": "sell",
+   "actos": {
+    "sell": 27
+   },
+   "conf": 0.39,
+   "noul": 0.34,
+   "sidesAny": 27,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 14.222595273901538,
+   "graduado": true,
+   "ciclo_ponto": "20260923T220857Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep dump flat short_small extreme funding_window",
+   "de": "20260923T215500Z-BTC",
+   "ate": "20260923T215958Z-BTC",
+   "n_ticks": 131,
+   "act": "sell",
+   "actos": {
+    "sell": 131
+   },
+   "conf": 0.5,
+   "noul": 0.35,
+   "sidesAny": 131,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 13.872697598507811,
+   "graduado": true,
+   "ciclo_ponto": "20260923T215500Z-BTC",
+   "etiqueta": "inverteu"
+  },
+  {
+   "estado": "tight deep quiet flat short_small extreme funding_window",
+   "de": "20260923T215540Z-BTC",
+   "ate": "20260923T215612Z-BTC",
+   "n_ticks": 17,
+   "act": "hold",
+   "actos": {
+    "hold": 17
+   },
+   "conf": 0.7,
+   "noul": 0.18,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 13.872697598507811,
+   "graduado": true,
+   "ciclo_ponto": "20260923T215540Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep dump flat flat extreme mid",
+   "de": "20260923T200836Z-BTC",
+   "ate": "20260923T202335Z-BTC",
+   "n_ticks": 320,
+   "act": "sell",
+   "actos": {
+    "hold": 3,
+    "sell": 317
+   },
+   "conf": 0.76,
+   "noul": 0.28,
+   "sidesAny": 317,
+   "n_lados": 12,
+   "dir_after": "down",
+   "mov_bps": 13.587274814346289,
+   "graduado": true,
+   "ciclo_ponto": "20260923T200836Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight thin dump flat short_small extreme mid",
+   "de": "20260923T212514Z-BTC",
+   "ate": "20260923T212514Z-BTC",
+   "n_ticks": 1,
+   "act": "sell",
+   "actos": {
+    "sell": 1
+   },
+   "conf": 0.46,
+   "noul": 0.24,
+   "sidesAny": 1,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 13.534167940356323,
+   "graduado": true,
+   "ciclo_ponto": "20260923T212514Z-BTC",
+   "etiqueta": "inverteu"
+  },
+  {
+   "estado": "tight deep dump flat short_small extreme mid",
+   "de": "20260923T220905Z-BTC",
+   "ate": "20260923T221807Z-BTC",
+   "n_ticks": 94,
+   "act": "sell",
+   "actos": {
+    "sell": 94
+   },
+   "conf": 0.4,
+   "noul": 0.33,
+   "sidesAny": 94,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 13.05528680833207,
+   "graduado": true,
+   "ciclo_ponto": "20260923T220905Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight ok dump flat short_small extreme mid",
+   "de": "20260923T220945Z-BTC",
+   "ate": "20260923T221003Z-BTC",
+   "n_ticks": 2,
+   "act": "sell",
+   "actos": {
+    "sell": 2
+   },
+   "conf": 0.355,
+   "noul": 0.235,
+   "sidesAny": 2,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 13.05528680833207,
+   "graduado": true,
+   "ciclo_ponto": "20260923T220945Z-BTC",
+   "etiqueta": "inverteu"
+  },
+  {
+   "estado": "normal deep two_way flat flat extreme mid",
+   "de": "20260923T204931Z-BTC",
+   "ate": "20260923T204931Z-BTC",
+   "n_ticks": 1,
+   "act": "hold",
+   "actos": {
+    "hold": 1
+   },
+   "conf": 0.8,
+   "noul": 0.38,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 12.728291839880423,
+   "graduado": true,
+   "ciclo_ponto": "20260923T204931Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep two_way flat flat extreme mid",
+   "de": "20260923T204933Z-BTC",
+   "ate": "20260923T205458Z-BTC",
+   "n_ticks": 38,
+   "act": "hold",
+   "actos": {
+    "hold": 38
+   },
+   "conf": 0.88,
+   "noul": 0.26,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 12.728291839880423,
+   "graduado": true,
+   "ciclo_ponto": "20260923T204933Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep two_way grinding flat extreme mid",
+   "de": "20260923T204937Z-BTC",
+   "ate": "20260923T205015Z-BTC",
+   "n_ticks": 20,
+   "act": "hold",
+   "actos": {
+    "hold": 20
+   },
+   "conf": 0.89,
+   "noul": 0.27,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 12.728291839880423,
+   "graduado": true,
+   "ciclo_ponto": "20260923T204937Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep lift flat short_small extreme mid",
+   "de": "20260923T210632Z-BTC",
+   "ate": "20260923T211848Z-BTC",
+   "n_ticks": 207,
+   "act": "buy",
+   "actos": {
+    "buy": 206,
+    "hold": 1
+   },
+   "conf": 0.41,
+   "noul": 0.25,
+   "sidesAny": 206,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 11.455155404378674,
+   "graduado": true,
+   "ciclo_ponto": "20260923T210632Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "normal thin bot_war flat flat extreme mid",
+   "de": "20260923T202711Z-BTC",
+   "ate": "20260923T202711Z-BTC",
+   "n_ticks": 1,
+   "act": "hold",
+   "actos": {
+    "hold": 1
+   },
+   "conf": 0.92,
+   "noul": 0.22,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 11.328599458095862,
+   "graduado": true,
+   "ciclo_ponto": "20260923T202711Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep two_way flat flat extreme funding_window",
+   "de": "20260923T205500Z-BTC",
+   "ate": "20260923T205610Z-BTC",
+   "n_ticks": 36,
+   "act": "hold",
+   "actos": {
+    "hold": 36
+   },
+   "conf": 0.89,
+   "noul": 0.26,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 10.518319406299305,
+   "graduado": true,
+   "ciclo_ponto": "20260923T205500Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep dump flat short_small extreme mid",
+   "de": "20260923T210500Z-BTC",
+   "ate": "20260923T210526Z-BTC",
+   "n_ticks": 14,
+   "act": "sell",
+   "actos": {
+    "sell": 13,
+    "hold": 1
+   },
+   "conf": 0.41,
+   "noul": 0.335,
+   "sidesAny": 13,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 10.517827717981978,
+   "graduado": true,
+   "ciclo_ponto": "20260923T210500Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep two_way flat short_small extreme mid",
+   "de": "20260923T210528Z-BTC",
+   "ate": "20260923T212026Z-BTC",
+   "n_ticks": 144,
+   "act": "hold",
+   "actos": {
+    "hold": 144
+   },
+   "conf": 0.64,
+   "noul": 0.24,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 10.517827717981978,
+   "graduado": true,
+   "ciclo_ponto": "20260923T210528Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep two_way grinding short_small extreme mid",
+   "de": "20260923T210532Z-BTC",
+   "ate": "20260923T212030Z-BTC",
+   "n_ticks": 52,
+   "act": "hold",
+   "actos": {
+    "hold": 52
+   },
+   "conf": 0.47,
+   "noul": 0.3,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 10.517827717981978,
+   "graduado": true,
+   "ciclo_ponto": "20260923T210532Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight thin two_way flat short_small extreme mid",
+   "de": "20260923T214710Z-BTC",
+   "ate": "20260923T214710Z-BTC",
+   "n_ticks": 1,
+   "act": "hold",
+   "actos": {
+    "hold": 1
+   },
+   "conf": 0.69,
+   "noul": 0.21,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 10.368247533172566,
+   "graduado": true,
+   "ciclo_ponto": "20260923T214710Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep dump flat flat extreme funding_window",
+   "de": "20260923T205612Z-BTC",
+   "ate": "20260923T205746Z-BTC",
+   "n_ticks": 45,
+   "act": "sell",
+   "actos": {
+    "sell": 45
+   },
+   "conf": 0.79,
+   "noul": 0.33,
+   "sidesAny": 45,
+   "n_lados": 21,
+   "dir_after": "up",
+   "mov_bps": 10.169134922211962,
+   "graduado": true,
+   "ciclo_ponto": "20260923T205612Z-BTC",
+   "etiqueta": "inverteu"
+  },
+  {
+   "estado": "tight deep two_way flat short_small extreme mid",
+   "de": "20260923T212028Z-BTC",
+   "ate": "20260923T212430Z-BTC",
+   "n_ticks": 45,
+   "act": "hold",
+   "actos": {
+    "hold": 45
+   },
+   "conf": 0.64,
+   "noul": 0.24,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 10.156550975379119,
+   "graduado": true,
+   "ciclo_ponto": "20260923T212028Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep two_way grinding short_small extreme mid",
+   "de": "20260923T212032Z-BTC",
+   "ate": "20260923T212246Z-BTC",
+   "n_ticks": 8,
+   "act": "hold",
+   "actos": {
+    "hold": 8
+   },
+   "conf": 0.495,
+   "noul": 0.305,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 10.156550975379119,
+   "graduado": true,
+   "ciclo_ponto": "20260923T212032Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep dump flat short_small extreme mid",
+   "de": "20260923T212056Z-BTC",
+   "ate": "20260923T213356Z-BTC",
+   "n_ticks": 317,
+   "act": "sell",
+   "actos": {
+    "sell": 315,
+    "hold": 2
+   },
+   "conf": 0.41,
+   "noul": 0.33,
+   "sidesAny": 315,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 10.156550975379119,
+   "graduado": true,
+   "ciclo_ponto": "20260923T212056Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep lift grinding short_small extreme mid",
+   "de": "20260923T214834Z-BTC",
+   "ate": "20260923T214840Z-BTC",
+   "n_ticks": 4,
+   "act": "buy",
+   "actos": {
+    "buy": 4
+   },
+   "conf": 0.53,
+   "noul": 0.31,
+   "sidesAny": 4,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 8.624809146959754,
+   "graduado": true,
+   "ciclo_ponto": "20260923T214834Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep dump flat flat extreme mid",
+   "de": "20260923T203837Z-BTC",
+   "ate": "20260923T205248Z-BTC",
+   "n_ticks": 276,
+   "act": "sell",
+   "actos": {
+    "sell": 204,
+    "hold": 72
+   },
+   "conf": 0.75,
+   "noul": 0.28,
+   "sidesAny": 204,
+   "n_lados": 7,
+   "dir_after": "down",
+   "mov_bps": 8.288002241262578,
+   "graduado": true,
+   "ciclo_ponto": "20260923T203837Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "normal deep lift flat short_small extreme mid",
+   "de": "20260923T213358Z-BTC",
+   "ate": "20260923T214802Z-BTC",
+   "n_ticks": 4,
+   "act": "buy",
+   "actos": {
+    "buy": 4
+   },
+   "conf": 0.37,
+   "noul": 0.24,
+   "sidesAny": 4,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 8.165264962848044,
+   "graduado": true,
+   "ciclo_ponto": "20260923T213358Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep lift flat flat extreme mid",
+   "de": "20260923T202803Z-BTC",
+   "ate": "20260923T203759Z-BTC",
+   "n_ticks": 84,
+   "act": "buy",
+   "actos": {
+    "buy": 78,
+    "hold": 6
+   },
+   "conf": 0.52,
+   "noul": 0.23,
+   "sidesAny": 78,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 7.4716602262512115,
+   "graduado": true,
+   "ciclo_ponto": "20260923T202803Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "normal deep lift flat flat extreme mid",
+   "de": "20260923T202817Z-BTC",
+   "ate": "20260923T203753Z-BTC",
+   "n_ticks": 2,
+   "act": "buy",
+   "actos": {
+    "buy": 2
+   },
+   "conf": 0.405,
+   "noul": 0.305,
+   "sidesAny": 2,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 7.4716602262512115,
+   "graduado": true,
+   "ciclo_ponto": "20260923T202817Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep two_way flat flat extreme mid",
+   "de": "20260923T202845Z-BTC",
+   "ate": "20260923T204209Z-BTC",
+   "n_ticks": 128,
+   "act": "hold",
+   "actos": {
+    "hold": 128
+   },
+   "conf": 0.88,
+   "noul": 0.25,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 7.4716602262512115,
+   "graduado": true,
+   "ciclo_ponto": "20260923T202845Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "normal deep quiet flat flat extreme mid",
+   "de": "20260923T205312Z-BTC",
+   "ate": "20260923T205314Z-BTC",
+   "n_ticks": 2,
+   "act": "hold",
+   "actos": {
+    "hold": 2
+   },
+   "conf": 0.93,
+   "noul": 0.16,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 6.776096734622349,
+   "graduado": true,
+   "ciclo_ponto": "20260923T205312Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "normal thin quiet flat flat extreme mid",
+   "de": "20260923T205316Z-BTC",
+   "ate": "20260923T205316Z-BTC",
+   "n_ticks": 1,
+   "act": "hold",
+   "actos": {
+    "hold": 1
+   },
+   "conf": 0,
+   "noul": 0,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 6.776096734622349,
+   "graduado": true,
+   "ciclo_ponto": "20260923T205316Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep quiet grinding flat extreme mid",
+   "de": "20260923T205344Z-BTC",
+   "ate": "20260923T205344Z-BTC",
+   "n_ticks": 1,
+   "act": "hold",
+   "actos": {
+    "hold": 1
+   },
+   "conf": 0.9,
+   "noul": 0.24,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 6.776096734622349,
+   "graduado": true,
+   "ciclo_ponto": "20260923T205344Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep dump grinding flat extreme mid",
+   "de": "20260923T205346Z-BTC",
+   "ate": "20260923T205350Z-BTC",
+   "n_ticks": 3,
+   "act": "sell",
+   "actos": {
+    "sell": 3
+   },
+   "conf": 0.75,
+   "noul": 0.31,
+   "sidesAny": 3,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 6.776096734622349,
+   "graduado": true,
+   "ciclo_ponto": "20260923T205346Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "normal deep dump flat flat extreme mid",
+   "de": "20260923T205352Z-BTC",
+   "ate": "20260923T205352Z-BTC",
+   "n_ticks": 1,
+   "act": "sell",
+   "actos": {
+    "sell": 1
+   },
+   "conf": 0.73,
+   "noul": 0.35,
+   "sidesAny": 1,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 6.776096734622349,
+   "graduado": true,
+   "ciclo_ponto": "20260923T205352Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep dump flat flat extreme mid",
+   "de": "20260923T205354Z-BTC",
+   "ate": "20260923T205400Z-BTC",
+   "n_ticks": 4,
+   "act": "sell",
+   "actos": {
+    "sell": 3,
+    "hold": 1
+   },
+   "conf": 0.76,
+   "noul": 0.29,
+   "sidesAny": 3,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 6.776096734622349,
+   "graduado": true,
+   "ciclo_ponto": "20260923T205354Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "wide deep lift grinding short_small extreme mid",
+   "de": "20260923T211026Z-BTC",
+   "ate": "20260923T211026Z-BTC",
+   "n_ticks": 1,
+   "act": "buy",
+   "actos": {
+    "buy": 1
+   },
+   "conf": 0.59,
+   "noul": 0.28,
+   "sidesAny": 1,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 6.304360516023583,
+   "graduado": true,
+   "ciclo_ponto": "20260923T211026Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep dump grinding flat extreme mid",
+   "de": "20260923T203617Z-BTC",
+   "ate": "20260923T203927Z-BTC",
+   "n_ticks": 2,
+   "act": "sell",
+   "actos": {
+    "sell": 2
+   },
+   "conf": 0.75,
+   "noul": 0.295,
+   "sidesAny": 2,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 6.186818574463615,
+   "graduado": true,
+   "ciclo_ponto": "20260923T203617Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep dump flat short_small extreme mid",
+   "de": "20260923T215216Z-BTC",
+   "ate": "20260923T220556Z-BTC",
+   "n_ticks": 78,
+   "act": "sell",
+   "actos": {
+    "sell": 77,
+    "hold": 1
+   },
+   "conf": 0.42,
+   "noul": 0.32,
+   "sidesAny": 77,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 5.829272273649358,
+   "graduado": true,
+   "ciclo_ponto": "20260923T215216Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep lift flat short_small extreme mid",
+   "de": "20260923T214022Z-BTC",
+   "ate": "20260923T215026Z-BTC",
+   "n_ticks": 193,
+   "act": "buy",
+   "actos": {
+    "buy": 193
+   },
+   "conf": 0.41,
+   "noul": 0.24,
+   "sidesAny": 193,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 5.2432274978153215,
+   "graduado": true,
+   "ciclo_ponto": "20260923T214022Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight ok lift flat short_small extreme mid",
+   "de": "20260923T213528Z-BTC",
+   "ate": "20260923T213528Z-BTC",
+   "n_ticks": 1,
+   "act": "buy",
+   "actos": {
+    "buy": 1
+   },
+   "conf": 0.46,
+   "noul": 0.24,
+   "sidesAny": 1,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 4.548317122664614,
+   "graduado": true,
+   "ciclo_ponto": "20260923T213528Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep two_way flat short_small extreme mid",
+   "de": "20260923T213704Z-BTC",
+   "ate": "20260923T215110Z-BTC",
+   "n_ticks": 94,
+   "act": "hold",
+   "actos": {
+    "hold": 94
+   },
+   "conf": 0.65,
+   "noul": 0.24,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 4.19531523132502,
+   "graduado": true,
+   "ciclo_ponto": "20260923T213704Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep dump flat short_small extreme mid",
+   "de": "20260923T213716Z-BTC",
+   "ate": "20260923T215214Z-BTC",
+   "n_ticks": 126,
+   "act": "sell",
+   "actos": {
+    "sell": 126
+   },
+   "conf": 0.405,
+   "noul": 0.33,
+   "sidesAny": 126,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 4.19531523132502,
+   "graduado": true,
+   "ciclo_ponto": "20260923T213716Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep dump grinding short_small extreme mid",
+   "de": "20260923T213744Z-BTC",
+   "ate": "20260923T213822Z-BTC",
+   "n_ticks": 20,
+   "act": "sell",
+   "actos": {
+    "sell": 20
+   },
+   "conf": 0.38,
+   "noul": 0.335,
+   "sidesAny": 20,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 4.19531523132502,
+   "graduado": true,
+   "ciclo_ponto": "20260923T213744Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep two_way grinding flat extreme mid",
+   "de": "20260923T203435Z-BTC",
+   "ate": "20260923T203441Z-BTC",
+   "n_ticks": 4,
+   "act": "hold",
+   "actos": {
+    "hold": 4
+   },
+   "conf": 0.885,
+   "noul": 0.285,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 3.501972777998273,
+   "graduado": true,
+   "ciclo_ponto": "20260923T203435Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep bot_war flat short_small extreme mid",
+   "de": "20260923T221113Z-BTC",
+   "ate": "20260923T221129Z-BTC",
+   "n_ticks": 9,
+   "act": "hold",
+   "actos": {
+    "hold": 9
+   },
+   "conf": 0.55,
+   "noul": 0.28,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 1.6295175464121514,
+   "graduado": true,
+   "ciclo_ponto": "20260923T221113Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight ok two_way flat short_small extreme mid",
+   "de": "20260923T221133Z-BTC",
+   "ate": "20260923T221133Z-BTC",
+   "n_ticks": 1,
+   "act": "hold",
+   "actos": {
+    "hold": 1
+   },
+   "conf": 0.63,
+   "noul": 0.19,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 1.6295175464121514,
+   "graduado": true,
+   "ciclo_ponto": "20260923T221133Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep two_way flat short_small extreme mid",
+   "de": "20260923T221135Z-BTC",
+   "ate": "20260923T222559Z-BTC",
+   "n_ticks": 173,
+   "act": "hold",
+   "actos": {
+    "hold": 173
+   },
+   "conf": 0.64,
+   "noul": 0.24,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 1.6295175464121514,
+   "graduado": true,
+   "ciclo_ponto": "20260923T221135Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight thin two_way flat flat extreme mid",
+   "de": "20260923T205404Z-BTC",
+   "ate": "20260923T205404Z-BTC",
+   "n_ticks": 1,
+   "act": "hold",
+   "actos": {
+    "hold": 1
+   },
+   "conf": 0.93,
+   "noul": 0.26,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "down",
+   "mov_bps": 1.2851518231631092,
+   "graduado": true,
+   "ciclo_ponto": "20260923T205404Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight ok two_way flat short_small extreme mid",
+   "de": "20260923T211906Z-BTC",
+   "ate": "20260923T211906Z-BTC",
+   "n_ticks": 1,
+   "act": "hold",
+   "actos": {
+    "hold": 1
+   },
+   "conf": 0.56,
+   "noul": 0.19,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 0.9332602279488106,
+   "graduado": true,
+   "ciclo_ponto": "20260923T211906Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "wide deep two_way flat short_small extreme mid",
+   "de": "20260923T211954Z-BTC",
+   "ate": "20260923T211954Z-BTC",
+   "n_ticks": 1,
+   "act": "hold",
+   "actos": {
+    "hold": 1
+   },
+   "conf": 0.53,
+   "noul": 0.28,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 0.9332602279488106,
+   "graduado": true,
+   "ciclo_ponto": "20260923T211954Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep two_way flat short_small extreme mid",
+   "de": "20260923T215346Z-BTC",
+   "ate": "20260923T220823Z-BTC",
+   "n_ticks": 20,
+   "act": "hold",
+   "actos": {
+    "hold": 20
+   },
+   "conf": 0.65,
+   "noul": 0.24,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "up",
+   "mov_bps": 0.5829272273649357,
+   "graduado": true,
+   "ciclo_ponto": "20260923T215346Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight thin two_way grinding short_small extreme mid",
+   "de": "20260923T211446Z-BTC",
+   "ate": "20260923T211446Z-BTC",
+   "n_ticks": 1,
+   "act": "hold",
+   "actos": {
+    "hold": 1
+   },
+   "conf": 0.57,
+   "noul": 0.24,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "flat",
+   "mov_bps": 0.11665616761158162,
+   "graduado": true,
+   "ciclo_ponto": "20260923T211446Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep lift flat short_small extreme mid",
+   "de": "20260923T222225Z-BTC",
+   "ate": "20260923T223657Z-BTC",
+   "n_ticks": 302,
+   "act": "buy",
+   "actos": {
+    "buy": 302
+   },
+   "conf": 0.41,
+   "noul": 0.24,
+   "sidesAny": 302,
+   "n_lados": 0,
+   "dir_after": "flat",
+   "mov_bps": 0.0,
+   "graduado": true,
+   "ciclo_ponto": "20260923T222225Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight ok lift flat short_small extreme mid",
+   "de": "20260923T222309Z-BTC",
+   "ate": "20260923T222309Z-BTC",
+   "n_ticks": 1,
+   "act": "buy",
+   "actos": {
+    "buy": 1
+   },
+   "conf": 0.52,
+   "noul": 0.22,
+   "sidesAny": 1,
+   "n_lados": 0,
+   "dir_after": "flat",
+   "mov_bps": 0.0,
+   "graduado": true,
+   "ciclo_ponto": "20260923T222309Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight thin two_way flat short_small extreme mid",
+   "de": "20260923T222519Z-BTC",
+   "ate": "20260923T222519Z-BTC",
+   "n_ticks": 1,
+   "act": "hold",
+   "actos": {
+    "hold": 1
+   },
+   "conf": 0.67,
+   "noul": 0.23,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "flat",
+   "mov_bps": 0.0,
+   "graduado": true,
+   "ciclo_ponto": "20260923T222519Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep two_way flat short_small extreme mid",
+   "de": "20260923T222655Z-BTC",
+   "ate": "20260923T223803Z-BTC",
+   "n_ticks": 135,
+   "act": "hold",
+   "actos": {
+    "hold": 135
+   },
+   "conf": 0.64,
+   "noul": 0.24,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": "flat",
+   "mov_bps": 0.0,
+   "graduado": true,
+   "ciclo_ponto": "20260923T222655Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep lift flat short_small extreme mid",
+   "de": "20260923T223805Z-BTC",
+   "ate": "20260923T224231Z-BTC",
+   "n_ticks": 134,
+   "act": "buy",
+   "actos": {
+    "buy": 133,
+    "hold": 1
+   },
+   "conf": 0.42,
+   "noul": 0.24,
+   "sidesAny": 133,
+   "n_lados": 0,
+   "dir_after": null,
+   "mov_bps": null,
+   "graduado": false,
+   "ciclo_ponto": "20260923T223805Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep two_way flat short_small extreme mid",
+   "de": "20260923T224233Z-BTC",
+   "ate": "20260923T224737Z-BTC",
+   "n_ticks": 83,
+   "act": "hold",
+   "actos": {
+    "hold": 83
+   },
+   "conf": 0.64,
+   "noul": 0.24,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": null,
+   "mov_bps": null,
+   "graduado": false,
+   "ciclo_ponto": "20260923T224233Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep two_way grinding short_small extreme mid",
+   "de": "20260923T224235Z-BTC",
+   "ate": "20260923T224629Z-BTC",
+   "n_ticks": 27,
+   "act": "hold",
+   "actos": {
+    "hold": 27
+   },
+   "conf": 0.47,
+   "noul": 0.31,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": null,
+   "mov_bps": null,
+   "graduado": false,
+   "ciclo_ponto": "20260923T224235Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "normal deep two_way grinding short_small extreme mid",
+   "de": "20260923T224239Z-BTC",
+   "ate": "20260923T224239Z-BTC",
+   "n_ticks": 1,
+   "act": "hold",
+   "actos": {
+    "hold": 1
+   },
+   "conf": 0.52,
+   "noul": 0.31,
+   "sidesAny": 0,
+   "n_lados": 0,
+   "dir_after": null,
+   "mov_bps": null,
+   "graduado": false,
+   "ciclo_ponto": "20260923T224239Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep dump flat short_small extreme mid",
+   "de": "20260923T224451Z-BTC",
+   "ate": "20260923T224549Z-BTC",
+   "n_ticks": 30,
+   "act": "sell",
+   "actos": {
+    "sell": 30
+   },
+   "conf": 0.405,
+   "noul": 0.325,
+   "sidesAny": 30,
+   "n_lados": 0,
+   "dir_after": null,
+   "mov_bps": null,
+   "graduado": false,
+   "ciclo_ponto": "20260923T224451Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "normal deep lift grinding short_small extreme mid",
+   "de": "20260923T224551Z-BTC",
+   "ate": "20260923T224551Z-BTC",
+   "n_ticks": 1,
+   "act": "buy",
+   "actos": {
+    "buy": 1
+   },
+   "conf": 0.47,
+   "noul": 0.27,
+   "sidesAny": 1,
+   "n_lados": 0,
+   "dir_after": null,
+   "mov_bps": null,
+   "graduado": false,
+   "ciclo_ponto": "20260923T224551Z-BTC",
+   "etiqueta": "sem_relacao"
+  },
+  {
+   "estado": "tight deep lift grinding short_small extreme mid",
+   "de": "20260923T224553Z-BTC",
+   "ate": "20260923T224613Z-BTC",
+   "n_ticks": 11,
+   "act": "buy",
+   "actos": {
+    "buy": 11
+   },
+   "conf": 0.54,
+   "noul": 0.28,
+   "sidesAny": 11,
+   "n_lados": 0,
+   "dir_after": null,
+   "mov_bps": null,
+   "graduado": false,
+   "ciclo_ponto": "20260923T224553Z-BTC",
+   "etiqueta": "sem_relacao"
+  }
+ ]
+}
