@@ -1,0 +1,125 @@
+#!/usr/bin/env python3
+"""
+Ensaio de buckets — o "antes" e o "depois" (regra 4 do ensaio, PLANO-FUSAO §17).
+
+NÃO altera nada: lê o ledger e publica o cruzamento entre a palavra do estado e o
+movimento que o `outcome` já mede. É o mesmo comando antes e depois do patch do
+`tape`, para a comparação ser entre iguais.
+
+Uso:
+    python3 provas/buckets/antes-depois.py                       # imprime
+    python3 provas/buckets/antes-depois.py --json antes.json      # grava o snapshot
+
+Critério (regra 4): em janelas com |mov 15 min| >= 10 bps, o `tape` deve passar a
+{pumping,dumping,grinding} de forma MONÓTONA com |mov|. Sem monotonia, é cosmética.
+"""
+import argparse
+import glob
+import json
+import os
+import statistics
+import sys
+from collections import defaultdict
+
+# ordem fixa do state: spread depth flow tape inventory funding clock
+POS = {"spread": 0, "depth": 1, "flow": 2, "tape": 3, "inventory": 4, "funding": 5, "clock": 6}
+LIMIAR_BPS = 10
+
+
+def linha(pos: int, state: str) -> str:
+    t = state.split()
+    return t[pos] if pos < len(t) else "?"
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--ledger", default="data/ledger")
+    ap.add_argument("--json", default=None)
+    args = ap.parse_args()
+
+    dec, outs = {}, []
+    for f in sorted(glob.glob(f"{args.ledger}/*.jsonl")):
+        for l in open(f):
+            if not l.strip():
+                continue
+            r = json.loads(l)
+            if r.get("kind") == "decision":
+                dec[r["cycle_id"]] = r
+            elif r.get("kind") == "outcome":
+                outs.append(r)
+    if not outs:
+        print("sem outcomes no ledger")
+        return 1
+
+    # cruza: palavra do estado (no ciclo) x |movimento a 15 min| (no outcome)
+    por_bucket: dict = {b: defaultdict(list) for b in POS}
+    completos = 0
+    for o in outs:
+        d = dec.get(o["cycle_id"])
+        if not d or not d.get("state"):
+            continue
+        mov = abs((o["mark_plus_15m"] - o["mark_then"]) / o["mark_then"]) * 1e4
+        completos += 1
+        for b, i in POS.items():
+            por_bucket[b][linha(i, d["state"])].append(mov)
+
+    resumo = {}
+    print(f"outcomes: {len(outs)} | cruzados com estado: {completos}")
+    for b in ("tape", "flow", "spread", "depth", "funding", "clock", "inventory"):
+        print(f"\n  -- `{b}` vs |movimento a 15 min|")
+        tab = []
+        for w, v in sorted(por_bucket[b].items(), key=lambda kv: -statistics.median(kv[1])):
+            v2 = sorted(v)
+            tab.append(
+                {
+                    "palavra": w,
+                    "n": len(v),
+                    "mediana_bps": round(statistics.median(v), 1),
+                    "p90_bps": round(v2[int(0.9 * (len(v) - 1))], 1),
+                    "pct_ge_10bps": round(100 * sum(1 for x in v if x >= LIMIAR_BPS) / len(v), 1),
+                }
+            )
+            t = tab[-1]
+            print(f"     {w:12s} n={t['n']:4d} | |mov| mediana {t['mediana_bps']:6.1f} bps | p90 {t['p90_bps']:6.1f} | >=10 bps: {t['pct_ge_10bps']:5.1f}%")
+        resumo[b] = tab
+
+    # o número que decide (regra 4)
+    todos = [abs((o["mark_plus_15m"] - o["mark_then"]) / o["mark_then"]) * 1e4 for o in outs if dec.get(o["cycle_id"], {}).get("state")]
+    grandes = [o for o in outs if abs((o["mark_plus_15m"] - o["mark_then"]) / o["mark_then"]) * 1e4 >= LIMIAR_BPS and dec.get(o["cycle_id"], {}).get("state")]
+    flat_grandes = [o for o in grandes if linha(POS["tape"], dec[o["cycle_id"]]["state"]) == "flat"]
+    flat_todos = [o for o in outs if dec.get(o["cycle_id"], {}).get("state") and linha(POS["tape"], dec[o["cycle_id"]]["state"]) == "flat"]
+    cru = {
+        "n_outcomes": len(outs),
+        "n_cruzados": completos,
+        "n_ge_10bps": len(grandes),
+        "pct_ge_10bps": round(100 * len(grandes) / len(todos), 1) if todos else None,
+        "ge_10bps_com_tape_flat": len(flat_grandes),
+        "pct_dos_grandes_com_tape_flat": round(100 * len(flat_grandes) / len(grandes), 1) if grandes else None,
+        "flat_n": len(flat_todos),
+        "flat_mediana_bps": round(statistics.median([abs((o["mark_plus_15m"] - o["mark_then"]) / o["mark_then"]) * 1e4 for o in flat_todos]), 1) if flat_todos else None,
+    }
+    print("\n  == O NÚMERO QUE DECIDE ==")
+    print(f"     |mov 15 min| >= {LIMIAR_BPS} bps em {cru['n_ge_10bps']}/{len(todos)} ciclos ({cru['pct_ge_10bps']}%)")
+    print(f"     desses, com `tape = flat`: {cru['ge_10bps_com_tape_flat']}/{cru['n_ge_10bps']} = {cru['pct_dos_grandes_com_tape_flat']}%")
+    print(f"     `flat` no total: n={cru['flat_n']} com mediana {cru['flat_mediana_bps']} bps")
+    # A ordem SEMÂNTICA que a regra 4 exige: o adjectivo tem de ORDENAR o movimento.
+    # (A primeira versão comparava a lista com ela própria ordenada — passava sempre ✗.)
+    ordem = ["flat", "grinding", "pumping", "dumping"]
+    med = {t["palavra"]: t["mediana_bps"] for t in resumo["tape"]}
+    seq = [(w, med[w]) for w in ordem if w in med]
+    cresce = len(seq) >= 2 and all(b[1] > a[1] for a, b in zip(seq, seq[1:]))
+    print(f"\n     monotonia do `tape` na ordem semantica {ordem}: {seq}")
+    print(f"     as medianas crescem nessa ordem? {'SIM' if cresce else 'NAO'}"
+          + ("" if len(seq) >= 2 else "  (amostra insuficiente para julgar)"))
+    print("     (regra 4 exige que cresçam: sem isso, o adjectivo nao ordena o movimento)")
+
+    if args.json:
+        saida = {"cru": cru, "por_bucket": resumo, "ledger": args.ledger}
+        with open(args.json, "w") as fh:
+            json.dump(saida, fh, indent=1)
+        print(f"\n  json: {args.json}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
