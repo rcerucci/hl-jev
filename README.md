@@ -97,6 +97,16 @@ CI runs the same command on push and pull request.
 
 `POLICY` turns on the policy/risk layer. Without it the bot runs exactly as before and `MODEL` decides.
 
+| Where you are | What decides | Live key OK? |
+| --- | --- | --- |
+| no `POLICY` | the legacy path (`MODEL`) | **no** — the fusion's gates do not exist on that path |
+| `POLICY=jev` | the fusion: typed policy + risk gates | yes, on testnet |
+| `POLICY=dumb` | the control (no API key, no network) | yes |
+
+`HL_TESTNET=true` is mandatory for the fusion. The attribution ensaio of 23 Sep 2026 (100 cycles per
+policy, same book, testnet) closed as **amostra insuficiente**: 100% `hold` on both sides and `n=0` at
+`conf >= 0.80`. Nothing there is evidence of edge — it is evidence that this book produces no experiment.
+
 ```sh
 POLICY=dumb   # the control: a dumb heuristic over the same words the Jev sees. No API key, no network.
 POLICY=jev    # the live Jev: same client, but the state is a short line and the questions come from policy/jev_questions.json.
