@@ -1,0 +1,162 @@
+{
+ "cru": {
+  "n_outcomes": 454,
+  "n_cruzados": 454,
+  "n_ge_10bps": 235,
+  "pct_ge_10bps": 51.8,
+  "ge_10bps_com_tape_flat": 226,
+  "pct_dos_grandes_com_tape_flat": 96.2,
+  "flat_n": 429,
+  "flat_mediana_bps": 15.4
+ },
+ "por_bucket": {
+  "tape": [
+   {
+    "palavra": "dumping",
+    "n": 5,
+    "mediana_bps": 26.7,
+    "p90_bps": 26.7,
+    "pct_ge_10bps": 100.0
+   },
+   {
+    "palavra": "flat",
+    "n": 429,
+    "mediana_bps": 15.4,
+    "p90_bps": 33.1,
+    "pct_ge_10bps": 52.7
+   },
+   {
+    "palavra": "grinding",
+    "n": 19,
+    "mediana_bps": 6.2,
+    "p90_bps": 21.1,
+    "pct_ge_10bps": 21.1
+   },
+   {
+    "palavra": "pumping",
+    "n": 1,
+    "mediana_bps": 4.8,
+    "p90_bps": 4.8,
+    "pct_ge_10bps": 0.0
+   }
+  ],
+  "flow": [
+   {
+    "palavra": "two_way",
+    "n": 30,
+    "mediana_bps": 45.7,
+    "p90_bps": 45.7,
+    "pct_ge_10bps": 100.0
+   },
+   {
+    "palavra": "dump",
+    "n": 187,
+    "mediana_bps": 24.3,
+    "p90_bps": 33.1,
+    "pct_ge_10bps": 94.1
+   },
+   {
+    "palavra": "lift",
+    "n": 27,
+    "mediana_bps": 4.4,
+    "p90_bps": 4.4,
+    "pct_ge_10bps": 0.0
+   },
+   {
+    "palavra": "bot_war",
+    "n": 210,
+    "mediana_bps": 4.1,
+    "p90_bps": 15.4,
+    "pct_ge_10bps": 13.8
+   }
+  ],
+  "spread": [
+   {
+    "palavra": "wide",
+    "n": 2,
+    "mediana_bps": 23.9,
+    "p90_bps": 21.1,
+    "pct_ge_10bps": 100.0
+   },
+   {
+    "palavra": "tight",
+    "n": 443,
+    "mediana_bps": 15.4,
+    "p90_bps": 33.1,
+    "pct_ge_10bps": 51.9
+   },
+   {
+    "palavra": "unfillable",
+    "n": 1,
+    "mediana_bps": 15.4,
+    "p90_bps": 15.4,
+    "pct_ge_10bps": 100.0
+   },
+   {
+    "palavra": "normal",
+    "n": 8,
+    "mediana_bps": 6.2,
+    "p90_bps": 21.1,
+    "pct_ge_10bps": 25.0
+   }
+  ],
+  "depth": [
+   {
+    "palavra": "deep",
+    "n": 449,
+    "mediana_bps": 15.4,
+    "p90_bps": 33.1,
+    "pct_ge_10bps": 51.4
+   },
+   {
+    "palavra": "ok",
+    "n": 2,
+    "mediana_bps": 15.4,
+    "p90_bps": 15.4,
+    "pct_ge_10bps": 100.0
+   },
+   {
+    "palavra": "empty",
+    "n": 1,
+    "mediana_bps": 15.4,
+    "p90_bps": 15.4,
+    "pct_ge_10bps": 100.0
+   },
+   {
+    "palavra": "thin",
+    "n": 2,
+    "mediana_bps": 14.9,
+    "p90_bps": 8.6,
+    "pct_ge_10bps": 50.0
+   }
+  ],
+  "funding": [
+   {
+    "palavra": "extreme",
+    "n": 454,
+    "mediana_bps": 15.4,
+    "p90_bps": 33.1,
+    "pct_ge_10bps": 51.8
+   }
+  ],
+  "clock": [
+   {
+    "palavra": "mid",
+    "n": 454,
+    "mediana_bps": 15.4,
+    "p90_bps": 33.1,
+    "pct_ge_10bps": 51.8
+   }
+  ],
+  "inventory": [
+   {
+    "palavra": "flat",
+    "n": 454,
+    "mediana_bps": 15.4,
+    "p90_bps": 33.1,
+    "pct_ge_10bps": 51.8
+   }
+  ]
+ },
+ "ledger": "data/ledger"
+}

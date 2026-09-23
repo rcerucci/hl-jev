@@ -718,3 +718,84 @@ fica hipótese de paper, não caminho do motor.
 **Consequência:** deixa de existir "era o checkpoint errado" — passa a existir *este encoder + estas 7 palavras
 não são oráculo neste livro*. **A alavanca volta aos buckets** (`tape` = `flat` em 95,6 %, com o livro a mexer
 dezenas de bps), não a mais um modelo. A coluna Laya da tabela §9.4 **não se abre**, e não há wiring.
+
+## 17. Decisões de 23 set 2026: V3 vivo recusado, Laya no motor recusada, **ensaio de buckets autorizado**
+
+| passo | veredicto |
+|---|---|
+| V3 vivo, com estas políticas | **Recusado.** Nenhuma política tem ≥ 20 lados (`jev` 0, `dumb` 6). |
+| Laya no motor | **Recusada** (regra 3 da 2b: p95 ≥ 2 s e `conf` < θ). Coluna §9.4 fechada; paper noutro sítio, nunca no caminho de ordem. |
+| Ensaio de buckets | **Autorizado** — estreito, dry-run, **só no `tape`**. |
+| Campo `gate` no `verdict` | Lateral; não é o experimento. |
+
+**Correcção de leitura do §5 (do dono — e é a certa):** o §5 proíbe usar o `dumb` ou o θ para *inventar* 20
+lados. Com `n_lados = 0` nas políticas e o V3-0 a mostrar fita a mexer, a correcção que o próprio documento
+aponta é **buckets / policy file**, não o modelo. **Ensaio de buckets ≠ alargar o `dumb`.**
+
+### 17.1 Os limiares actuais do encoder, publicados (nada alterado)
+
+Fonte: `src/risk/buckets.ts`, único sítio com cortes (spec §3.2, "sem magia espalhada").
+
+| bucket | limiares | janela que lê |
+|---|---|---|
+| spread | `TIGHT 2` · `NORMAL 6` · `WIDE 15` bps | instantâneo |
+| depth | `THIN 2 000` · `DEEP 20 000` USD a 10 bps | livro actual |
+| flow | `QUIET_PRINTS 8` · `BOT_WAR_PRINTS 60` · `ONE_SIDED 0,25` | impressões da janela do tick |
+| **tape** | **`GRIND 4` · `MOVE 15` · `VIOLENT 40` bps** | **`returns.last5`** e `volBps` |
+| inventory | `FLAT_RATIO 0,005` · `HEAVY_RATIO 0,5` | notional / referência de capital |
+| funding | `NEUTRAL 0,1` · `EXTREME 1` bps | hora corrente |
+| clock | `SETTLE 5` · `FUNDING_FROM 55` · morto 2–5 h | minuto UTC |
+
+### 17.2 O "antes": o adjectivo não nomeia o movimento que o outcome mede
+
+Medido nos outcomes do ledger (`provas/buckets/antes-depois.py`), cruzando a palavra do estado com o
+\|movimento a 15 min\| que o `outcome` **já** grava:
+
+| `tape` | n | \|mov 15 min\| mediana | ≥ 10 bps |
+|---|---|---|---|
+| `dumping` | 5 | 26,7 bps | 100 % |
+| **`flat`** | **429** | **15,4 bps** | **52,7 %** |
+| `grinding` | 19 | 6,2 bps | 21,1 % |
+| `pumping` | 1 | 4,8 bps | 0 % |
+
+| `flow` | n | \|mov 15 min\| mediana | ≥ 10 bps |
+|---|---|---|---|
+| `two_way` | 30 | 45,7 bps | 100 % |
+| `dump` | 187 | 24,3 bps | 94,1 % |
+| `lift` | 27 | 4,4 bps | 0 % |
+| `bot_war` | 210 | 4,1 bps | 13,8 % |
+
+**O número que decide:** `|mov 15 min| ≥ 10 bps` em **235/454** ciclos (51,8 %) e, desses, **226 (96,2 %)
+tinham `tape = flat`**. E `flat` (n = 429, 94,5 % da amostra) tem mediana de **15,4 bps** — **maior** que
+`grinding` (6,2 bps). Na ordem semântica (`flat` → `grinding` → `pumping` → `dumping`) as medianas são
+**15,4 → 6,2 → 4,8 → 26,7**: **não crescem**. O adjectivo não está a ordenar o movimento que o outcome mede.
+
+### 17.3 Três leituras estruturais (só leitura — nada foi alterado)
+
+1. **Mismatch de janela, lido no código:** o `tape` lê **`returns.last5`** — 5 segundos — e o `outcome` mede
+   **900 s**. São 180× de diferença: `flat` fala do instante, não do horizonte.
+2. **O sinal de que se precisa já existe e não é usado:** o `Snapshot` traz `returns_bps { last1, last5, last20 }`
+   e o encoder usa **só `last5`**. Um `tape` que leia `last20` **não inventa sinal nenhum** — passa a ler o que
+   já está calculado. (Proposta para o passo seguinte; **não** aplicada aqui.)
+3. **Dois buckets quase sem informação neste livro:** `funding` = `extreme` em **100 %** dos ciclos (o corte é
+   1 bps e a testnet paga sempre acima) e `flow` = `bot_war` em **210/454 (46 %)** — e é justamente o `bot_war`
+   que tem a **menor** mediana de movimento (4,1 bps). O critério de hostilidade que escrevemos no
+   `jev_questions.json` cita precisamente esses dois.
+
+### 17.4 Regras do ensaio, fixadas pelo dono antes de tocar no encoder
+
+1. **Dry-run**, `HL_TESTNET=true`; sem signer se o caminho fundido o permitir, senão `hold` forçado no venue.
+2. Não se mexe no `dumbHostile`, não se acrescenta `violent`, não se ensina o `dumb` a ler `dump` como `dumping`.
+3. Não se mexe no `jev_questions.json` nem no θ.
+4. **Critério de sucesso do encoder, não da tabela §9.4:** em janelas com `|mov 15 min| ≥ 10 bps`, o `tape` passa
+   a `{pumping, dumping, grinding}` de forma **monótona** com `|mov|` — avaliada na **ordem semântica**
+   (`flat` < `grinding` < `pumping`/`dumping`) por `provas/buckets/antes-depois.py`. Publicar `%flat` vs `|mov|`
+   **antes/depois** com o mesmo comando. Sem isso, é cosmética. *(Nota de método: a primeira versão do script
+   verificava a monotonia comparando a lista com ela própria ordenada — passava sempre. O alarme tem de olhar
+   para a ordem semântica, não para a forma da lista.)*
+5. O Jev no estado **novo** reporta-se à parte. Se continuar 100 % `hold` com `tape` a variar, o problema passou
+   das buckets para as perguntas — **e pára-se**. Não se abre a Fase D.
+6. `n_lados ≥ 20` **não** é meta deste ensaio; se aparecer como efeito, mede-se e não se caça.
+7. **Offline só existe se o ledger tiver o `TradeState` numérico** — e não tem: a linha de decisão guarda as
+   **7 palavras**, não o snapshot. Logo o "depois" é **vivo**, com o encoder novo e snapshot datado; o "antes"
+   é o §17.2, tirado do ledger.

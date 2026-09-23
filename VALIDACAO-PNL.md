@@ -72,6 +72,8 @@ Cada item tem um **sim/não** e um número. Sem o número, não se sobe de degra
 
 **Pronto quando:** tabela com `c/outcome` ≈ ciclos, `n_lados ≥ 20` ou o veredicto de recusa, e a **concordância entre as duas fitas publicada** no mesmo bloco.
 
+**Decisão de 23 set 2026 — V3 vivo recusado por escrito.** Com estas políticas **não existe** `n_lados ≥ 20`: o Jev dá 0 lados a qualquer confiança e a `dumb` dá 6. **A Laya no motor também fica recusada** (regra 3 da 2b: p95 2,1 s ≥ 2 s e `conf` máximo 0,432 < θ) — a coluna Laya da §9.4 **não se abre**. A alavanca autorizada passou a ser o **encoder: ensaio restrito ao `tape`**, dry-run, com regras e leituras publicadas no `PLANO-FUSAO.md` §17.
+
 ### V4 — Controlo no mesmo state
 
 `dumb` decide sobre as **≤12 palavras**, não sobre `returnsBps` nem sobre o mid.
