@@ -1,0 +1,918 @@
+{
+ "ciclos": 2903,
+ "minutos": 101,
+ "minutos_completos": 86,
+ "janela": {
+  "de": "15:12Z",
+  "ate": "17:43Z"
+ },
+ "desacordo_nivel_bps": {
+  "p0": -187.52266532526937,
+  "p25": -172.15822215997292,
+  "p50": -165.2224824355972,
+  "p75": -158.02150032309228,
+  "p90": -142.12280537038777,
+  "p100": -124.63618439583138
+ },
+ "mov15_testnet_bps": {
+  "p0": -45.70086285089658,
+  "p25": -23.630429442111296,
+  "p50": -12.751073312822433,
+  "p75": 3.6224686539607602,
+  "p90": 20.423494060754027,
+  "p100": 25.93653178105342
+ },
+ "mov15_mainnet_bps": {
+  "p0": -39.660863989360436,
+  "p25": -21.661162600759916,
+  "p50": -8.692959893302849,
+  "p75": 1.427483821850019,
+  "p90": 20.03482242946073,
+  "p100": 43.805726972152925
+ },
+ "sinal_concorda_todos_minutos": {
+  "n": 66,
+  "de": 83,
+  "pct": 79.5
+ },
+ "sinal_concorda_janelas_independentes": {
+  "n": 5,
+  "de": 5,
+  "pct": 100.0
+ },
+ "movimento_abaixo_1bps": {
+  "testnet": 3,
+  "mainnet": 5,
+  "total": 86
+ },
+ "movimento_10bps_ou_mais": {
+  "testnet": 63,
+  "mainnet": 56
+ },
+ "validacao_mark_then": {
+  "n": 224,
+  "max_abs": 0.0
+ },
+ "pares": [
+  {
+   "t": 1790176320000,
+   "ciclos": 3,
+   "estado": "tight deep lift flat flat extreme mid",
+   "testnet": 86016.0,
+   "mainnet": 84658.0,
+   "desacordo_nivel_bps": -157.87760416666669,
+   "mov15_testnet_bps": -2.208891369047619,
+   "mov15_mainnet_bps": -2.5986912046114954
+  },
+  {
+   "t": 1790176380000,
+   "ciclos": 10,
+   "estado": "tight deep lift flat flat extreme mid",
+   "testnet": 86015.0,
+   "mainnet": 84669.0,
+   "desacordo_nivel_bps": -156.4843341277684,
+   "mov15_testnet_bps": -2.3251758414230075,
+   "mov15_mainnet_bps": -18.306582102068052
+  },
+  {
+   "t": 1790177340000,
+   "ciclos": 17,
+   "estado": "tight deep two_way flat flat extreme mid",
+   "testnet": 85994.0,
+   "mainnet": 84506.0,
+   "desacordo_nivel_bps": -173.03532804614275,
+   "mov15_testnet_bps": -45.70086285089658,
+   "mov15_mainnet_bps": -27.217002343028895
+  },
+  {
+   "t": 1790177400000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme mid",
+   "testnet": 85830.0,
+   "mainnet": 84483.0,
+   "desacordo_nivel_bps": -156.93813351974836,
+   "mov15_testnet_bps": -26.68064779214727,
+   "mov15_mainnet_bps": -21.661162600759916
+  },
+  {
+   "t": 1790177460000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85780.0,
+   "mainnet": 84421.0,
+   "desacordo_nivel_bps": -158.42853812077405,
+   "mov15_testnet_bps": -21.100489624621122,
+   "mov15_mainnet_bps": -16.465097546818917
+  },
+  {
+   "t": 1790177520000,
+   "ciclos": 29,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85780.0,
+   "mainnet": 84412.0,
+   "desacordo_nivel_bps": -159.47773373746796,
+   "mov15_testnet_bps": -21.100489624621122,
+   "mov15_mainnet_bps": -22.508648059517608
+  },
+  {
+   "t": 1790177580000,
+   "ciclos": 28,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85768.0,
+   "mainnet": 84427.0,
+   "desacordo_nivel_bps": -156.35201940117526,
+   "mov15_testnet_bps": -24.251469079376925,
+   "mov15_mainnet_bps": -24.873559406351053
+  },
+  {
+   "t": 1790177640000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85786.0,
+   "mainnet": 84492.0,
+   "desacordo_nivel_bps": -150.84046347888932,
+   "mov15_testnet_bps": -26.228055859930524,
+   "mov15_mainnet_bps": -28.523410500402406
+  },
+  {
+   "t": 1790177700000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85844.0,
+   "mainnet": 84506.0,
+   "desacordo_nivel_bps": -155.86412562322352,
+   "mov15_testnet_bps": -33.08326732211919,
+   "mov15_mainnet_bps": -31.35872009088112
+  },
+  {
+   "t": 1790177760000,
+   "ciclos": 17,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85826.0,
+   "mainnet": 84426.0,
+   "desacordo_nivel_bps": -163.1207326451192,
+   "mov15_testnet_bps": -30.99293920257265,
+   "mov15_mainnet_bps": -25.110747873877717
+  },
+  {
+   "t": 1790179920000,
+   "ciclos": 27,
+   "estado": "tight deep lift flat flat extreme mid",
+   "testnet": 85688.0,
+   "mainnet": 84259.0,
+   "desacordo_nivel_bps": -166.76780879469703,
+   "mov15_testnet_bps": -4.434693305947157,
+   "mov15_mainnet_bps": -7.0022193474881025
+  },
+  {
+   "t": 1790179980000,
+   "ciclos": 15,
+   "estado": "tight deep bot_war grinding flat extreme mid",
+   "testnet": 85664.0,
+   "mainnet": 84266.0,
+   "desacordo_nivel_bps": -163.195741501681,
+   "mov15_testnet_bps": -6.186963018304072,
+   "mov15_mainnet_bps": -11.511167018726415
+  },
+  {
+   "t": 1790180040000,
+   "ciclos": 24,
+   "estado": "tight deep bot_war flat flat extreme mid",
+   "testnet": 85736.0,
+   "mainnet": 84309.0,
+   "desacordo_nivel_bps": -166.44116823737988,
+   "mov15_testnet_bps": -15.39609965475413,
+   "mov15_mainnet_bps": -12.928631581444447
+  },
+  {
+   "t": 1790180100000,
+   "ciclos": 30,
+   "estado": "tight deep bot_war flat flat extreme mid",
+   "testnet": 85674.0,
+   "mainnet": 84258.0,
+   "desacordo_nivel_bps": -165.27768050983963,
+   "mov15_testnet_bps": 4.785582557135187,
+   "mov15_mainnet_bps": 4.984689881079541
+  },
+  {
+   "t": 1790180160000,
+   "ciclos": 30,
+   "estado": "tight deep bot_war flat flat extreme mid",
+   "testnet": 85681.0,
+   "mainnet": 84271.0,
+   "desacordo_nivel_bps": -164.56390565002744,
+   "mov15_testnet_bps": 4.084919643795007,
+   "mov15_mainnet_bps": -1.067983054668866
+  },
+  {
+   "t": 1790180220000,
+   "ciclos": 30,
+   "estado": "tight deep bot_war flat flat extreme mid",
+   "testnet": 85684.0,
+   "mainnet": 84294.0,
+   "desacordo_nivel_bps": -162.22398580831896,
+   "mov15_testnet_bps": -0.35012371037766676,
+   "mov15_mainnet_bps": -6.28751749827983
+  },
+  {
+   "t": 1790180280000,
+   "ciclos": 30,
+   "estado": "tight deep bot_war flat flat extreme mid",
+   "testnet": 85705.0,
+   "mainnet": 84267.0,
+   "desacordo_nivel_bps": -167.78484335803046,
+   "mov15_testnet_bps": -1.9835482177235866,
+   "mov15_mainnet_bps": -1.8987266664293259
+  },
+  {
+   "t": 1790180340000,
+   "ciclos": 30,
+   "estado": "tight deep bot_war flat flat extreme mid",
+   "testnet": 85674.0,
+   "mainnet": 84264.0,
+   "desacordo_nivel_bps": -164.57735135513693,
+   "mov15_testnet_bps": 1.6341013609729909,
+   "mov15_mainnet_bps": -5.9337320801291185
+  },
+  {
+   "t": 1790180400000,
+   "ciclos": 30,
+   "estado": "tight deep bot_war flat flat extreme mid",
+   "testnet": 85613.0,
+   "mainnet": 84200.0,
+   "desacordo_nivel_bps": -165.04502820833284,
+   "mov15_testnet_bps": 8.643547124852534,
+   "mov15_mainnet_bps": -10.926365795724466
+  },
+  {
+   "t": 1790180460000,
+   "ciclos": 30,
+   "estado": "tight deep bot_war grinding flat extreme mid",
+   "testnet": 85577.0,
+   "mainnet": 84160.0,
+   "desacordo_nivel_bps": -165.5818736342709,
+   "mov15_testnet_bps": 3.6224686539607602,
+   "mov15_mainnet_bps": -0.11882129277566539
+  },
+  {
+   "t": 1790180520000,
+   "ciclos": 30,
+   "estado": "tight deep bot_war flat flat extreme mid",
+   "testnet": 85642.0,
+   "mainnet": 84216.0,
+   "desacordo_nivel_bps": -166.50708764391305,
+   "mov15_testnet_bps": -4.67060554400878,
+   "mov15_mainnet_bps": -4.630948988315759
+  },
+  {
+   "t": 1790180580000,
+   "ciclos": 30,
+   "estado": "tight deep bot_war flat flat extreme mid",
+   "testnet": 85689.0,
+   "mainnet": 84188.0,
+   "desacordo_nivel_bps": -175.16834132735823,
+   "mov15_testnet_bps": -10.152995133564401,
+   "mov15_mainnet_bps": -13.303558701952772
+  },
+  {
+   "t": 1790180640000,
+   "ciclos": 30,
+   "estado": "tight deep bot_war flat flat extreme mid",
+   "testnet": 85684.0,
+   "mainnet": 84192.0,
+   "desacordo_nivel_bps": -174.1281919611596,
+   "mov15_testnet_bps": -15.288735353158117,
+   "mov15_mainnet_bps": -22.80501710376283
+  },
+  {
+   "t": 1790180700000,
+   "ciclos": 30,
+   "estado": "tight deep bot_war flat flat extreme mid",
+   "testnet": 85677.0,
+   "mainnet": 84202.0,
+   "desacordo_nivel_bps": -172.15822215997292,
+   "mov15_testnet_bps": -14.589679844065502,
+   "mov15_mainnet_bps": -26.840217572029168
+  },
+  {
+   "t": 1790180760000,
+   "ciclos": 30,
+   "estado": "tight deep bot_war flat flat extreme mid",
+   "testnet": 85654.0,
+   "mainnet": 84225.0,
+   "desacordo_nivel_bps": -166.8340065846312,
+   "mov15_testnet_bps": -11.908375557475425,
+   "mov15_mainnet_bps": -31.34461264470169
+  },
+  {
+   "t": 1790180820000,
+   "ciclos": 30,
+   "estado": "tight deep bot_war flat flat extreme mid",
+   "testnet": 85650.0,
+   "mainnet": 84200.0,
+   "desacordo_nivel_bps": -169.29363689433742,
+   "mov15_testnet_bps": -11.32516053706947,
+   "mov15_mainnet_bps": -20.902612826603328
+  },
+  {
+   "t": 1790180880000,
+   "ciclos": 30,
+   "estado": "tight deep bot_war flat flat extreme mid",
+   "testnet": 85611.0,
+   "mainnet": 84169.0,
+   "desacordo_nivel_bps": -168.43629907371715,
+   "mov15_testnet_bps": -14.600927450911682,
+   "mov15_mainnet_bps": -8.197792536444535
+  },
+  {
+   "t": 1790180940000,
+   "ciclos": 30,
+   "estado": "tight deep bot_war flat flat extreme mid",
+   "testnet": 85604.0,
+   "mainnet": 84200.0,
+   "desacordo_nivel_bps": -164.01102752207842,
+   "mov15_testnet_bps": -13.667585626839866,
+   "mov15_mainnet_bps": -16.152019002375297
+  },
+  {
+   "t": 1790181000000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85715.0,
+   "mainnet": 84300.0,
+   "desacordo_nivel_bps": -165.0819576503529,
+   "mov15_testnet_bps": -27.066441112990727,
+   "mov15_mainnet_bps": -27.995255041518384
+  },
+  {
+   "t": 1790181060000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85716.0,
+   "mainnet": 84262.0,
+   "desacordo_nivel_bps": -169.62994073451864,
+   "mov15_testnet_bps": -27.182789677539784,
+   "mov15_mainnet_bps": -31.568203935344524
+  },
+  {
+   "t": 1790181120000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85681.0,
+   "mainnet": 84241.0,
+   "desacordo_nivel_bps": -168.06526534470888,
+   "mov15_testnet_bps": -22.992261995074752,
+   "mov15_mainnet_bps": -31.338659322657612
+  },
+  {
+   "t": 1790181180000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85688.0,
+   "mainnet": 84251.0,
+   "desacordo_nivel_bps": -167.70142843805434,
+   "mov15_testnet_bps": -23.924003361030714,
+   "mov15_mainnet_bps": -39.6434463685891
+  },
+  {
+   "t": 1790181240000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85688.0,
+   "mainnet": 84214.0,
+   "desacordo_nivel_bps": -172.01941928858184,
+   "mov15_testnet_bps": -23.924003361030714,
+   "mov15_mainnet_bps": -39.660863989360436
+  },
+  {
+   "t": 1790181300000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85687.0,
+   "mainnet": 84108.0,
+   "desacordo_nivel_bps": -184.2753276459673,
+   "mov15_testnet_bps": -23.69087492851891,
+   "mov15_mainnet_bps": -25.086793170685308
+  },
+  {
+   "t": 1790181360000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85608.0,
+   "mainnet": 84159.0,
+   "desacordo_nivel_bps": -169.25988225399493,
+   "mov15_testnet_bps": -14.484627604896739,
+   "mov15_mainnet_bps": -32.08213025344883
+  },
+  {
+   "t": 1790181420000,
+   "ciclos": 30,
+   "estado": "tight deep lift flat flat extreme mid",
+   "testnet": 85602.0,
+   "mainnet": 84177.0,
+   "desacordo_nivel_bps": -166.46807317586038,
+   "mov15_testnet_bps": -13.901544356440269,
+   "mov15_mainnet_bps": -35.28279696354111
+  },
+  {
+   "t": 1790181480000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme mid",
+   "testnet": 85602.0,
+   "mainnet": 84076.0,
+   "desacordo_nivel_bps": -178.26686292376345,
+   "mov15_testnet_bps": -13.901544356440269,
+   "mov15_mainnet_bps": -20.695561158951428
+  },
+  {
+   "t": 1790181540000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme mid",
+   "testnet": 85553.0,
+   "mainnet": 84000.0,
+   "desacordo_nivel_bps": -181.52490269189857,
+   "mov15_testnet_bps": -8.065175972788797,
+   "mov15_mainnet_bps": -9.642857142857142
+  },
+  {
+   "t": 1790181600000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme mid",
+   "testnet": 85552.0,
+   "mainnet": 83976.0,
+   "desacordo_nivel_bps": -184.21544791471854,
+   "mov15_testnet_bps": -15.429212642603328,
+   "mov15_mainnet_bps": -8.692959893302849
+  },
+  {
+   "t": 1790181660000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85552.0,
+   "mainnet": 83961.0,
+   "desacordo_nivel_bps": -185.96876753319617,
+   "mov15_testnet_bps": -17.766972133906865,
+   "mov15_mainnet_bps": -1.6674408356260646
+  },
+  {
+   "t": 1790181720000,
+   "ciclos": 30,
+   "estado": "tight deep lift flat flat extreme mid",
+   "testnet": 85553.0,
+   "mainnet": 84024.0,
+   "desacordo_nivel_bps": -178.71962409266771,
+   "mov15_testnet_bps": -17.8836510700969,
+   "mov15_mainnet_bps": -9.521089212605922
+  },
+  {
+   "t": 1790181780000,
+   "ciclos": 30,
+   "estado": "tight deep dump grinding flat extreme mid",
+   "testnet": 85486.0,
+   "mainnet": 84100.0,
+   "desacordo_nivel_bps": -162.13181105678123,
+   "mov15_testnet_bps": -10.060126804389022,
+   "mov15_mainnet_bps": -13.198573127229489
+  },
+  {
+   "t": 1790181840000,
+   "ciclos": 28,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85487.0,
+   "mainnet": 84064.0,
+   "desacordo_nivel_bps": -166.45805795033164,
+   "mov15_testnet_bps": -13.218384081790212,
+   "mov15_mainnet_bps": -5.709935287400076
+  },
+  {
+   "t": 1790181960000,
+   "ciclos": 25,
+   "estado": "tight thin dump flat flat extreme mid",
+   "testnet": 85483.0,
+   "mainnet": 83996.0,
+   "desacordo_nivel_bps": -173.952715744651,
+   "mov15_testnet_bps": -12.751073312822433,
+   "mov15_mainnet_bps": 13.691128148959473
+  },
+  {
+   "t": 1790182020000,
+   "ciclos": 22,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85484.0,
+   "mainnet": 83977.0,
+   "desacordo_nivel_bps": -176.29029993916993,
+   "mov15_testnet_bps": -12.867905105048898,
+   "mov15_mainnet_bps": -12.02710265906141
+  },
+  {
+   "t": 1790182080000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85483.0,
+   "mainnet": 83917.0,
+   "desacordo_nivel_bps": -183.19431933834798,
+   "mov15_testnet_bps": -23.630429442111296,
+   "mov15_mainnet_bps": -8.81823706757868
+  },
+  {
+   "t": 1790182140000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85483.0,
+   "mainnet": 83880.0,
+   "desacordo_nivel_bps": -187.52266532526937,
+   "mov15_testnet_bps": -23.630429442111296,
+   "mov15_mainnet_bps": -0.2384358607534573
+  },
+  {
+   "t": 1790182200000,
+   "ciclos": 29,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85484.0,
+   "mainnet": 83897.0,
+   "desacordo_nivel_bps": -185.64877637920546,
+   "mov15_testnet_bps": -30.765991296616914,
+   "mov15_mainnet_bps": -6.794045079085069
+  },
+  {
+   "t": 1790182260000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme mid",
+   "testnet": 85484.0,
+   "mainnet": 83889.0,
+   "desacordo_nivel_bps": -186.58462402320902,
+   "mov15_testnet_bps": -30.882972252117355,
+   "mov15_mainnet_bps": -4.172179904397478
+  },
+  {
+   "t": 1790182320000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme mid",
+   "testnet": 85483.0,
+   "mainnet": 83880.0,
+   "desacordo_nivel_bps": -187.52266532526937,
+   "mov15_testnet_bps": -29.596527964624546,
+   "mov15_mainnet_bps": -4.8879351454458755
+  },
+  {
+   "t": 1790182380000,
+   "ciclos": 30,
+   "estado": "tight deep lift flat flat extreme mid",
+   "testnet": 85483.0,
+   "mainnet": 83902.0,
+   "desacordo_nivel_bps": -184.9490541979107,
+   "mov15_testnet_bps": -22.577588526373663,
+   "mov15_mainnet_bps": -14.659960430025505
+  },
+  {
+   "t": 1790182440000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85484.0,
+   "mainnet": 83919.0,
+   "desacordo_nivel_bps": -183.07519535819566,
+   "mov15_testnet_bps": -32.286743718122686,
+   "mov15_mainnet_bps": -8.10305175228494
+  },
+  {
+   "t": 1790182500000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme funding_window",
+   "testnet": 85420.0,
+   "mainnet": 83903.0,
+   "desacordo_nivel_bps": -177.59306953874972,
+   "mov15_testnet_bps": -24.81854366658862,
+   "mov15_mainnet_bps": -10.369116718114967
+  },
+  {
+   "t": 1790182560000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme funding_window",
+   "testnet": 85400.0,
+   "mainnet": 83947.0,
+   "desacordo_nivel_bps": -170.14051522248243,
+   "mov15_testnet_bps": -27.634660421545668,
+   "mov15_mainnet_bps": -18.464030876624538
+  },
+  {
+   "t": 1790182620000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme funding_window",
+   "testnet": 85400.0,
+   "mainnet": 83944.0,
+   "desacordo_nivel_bps": -170.49180327868854,
+   "mov15_testnet_bps": -25.175644028103047,
+   "mov15_mainnet_bps": -16.558658153054417
+  },
+  {
+   "t": 1790182680000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme funding_window",
+   "testnet": 85400.0,
+   "mainnet": 83989.0,
+   "desacordo_nivel_bps": -165.2224824355972,
+   "mov15_testnet_bps": -32.08430913348946,
+   "mov15_mainnet_bps": -34.29020466965912
+  },
+  {
+   "t": 1790182740000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme funding_window",
+   "testnet": 85374.0,
+   "mainnet": 84016.0,
+   "desacordo_nivel_bps": -159.0648206713988,
+   "mov15_testnet_bps": -30.33710497341111,
+   "mov15_mainnet_bps": -29.28013711673967
+  },
+  {
+   "t": 1790182800000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme open_liq",
+   "testnet": 85374.0,
+   "mainnet": 84069.0,
+   "desacordo_nivel_bps": -152.85684166139572,
+   "mov15_testnet_bps": -20.84943893925551,
+   "mov15_mainnet_bps": -27.239529434155276
+  },
+  {
+   "t": 1790182860000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme open_liq",
+   "testnet": 85374.0,
+   "mainnet": 84111.0,
+   "desacordo_nivel_bps": -147.9373111251669,
+   "mov15_testnet_bps": -20.84943893925551,
+   "mov15_mainnet_bps": -22.708088121648775
+  },
+  {
+   "t": 1790182920000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme open_liq",
+   "testnet": 85374.0,
+   "mainnet": 83876.0,
+   "desacordo_nivel_bps": -175.46325579216156,
+   "mov15_testnet_bps": -19.443858786047276,
+   "mov15_mainnet_bps": 11.6839143497544
+  },
+  {
+   "t": 1790182980000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme open_liq",
+   "testnet": 85281.0,
+   "mainnet": 83843.0,
+   "desacordo_nivel_bps": -168.61903589310631,
+   "mov15_testnet_bps": -8.559937148954633,
+   "mov15_mainnet_bps": 18.36766337082404
+  },
+  {
+   "t": 1790183040000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme open_liq",
+   "testnet": 85281.0,
+   "mainnet": 83878.0,
+   "desacordo_nivel_bps": -164.51495643812808,
+   "mov15_testnet_bps": -8.559937148954633,
+   "mov15_mainnet_bps": 12.875843486969169
+  },
+  {
+   "t": 1790183100000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85221.0,
+   "mainnet": 83840.0,
+   "desacordo_nivel_bps": -162.04926015888103,
+   "mov15_testnet_bps": -1.5254456061299446,
+   "mov15_mainnet_bps": 21.708015267175572
+  },
+  {
+   "t": 1790183160000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85220.0,
+   "mainnet": 83854.0,
+   "desacordo_nivel_bps": -160.291011499648,
+   "mov15_testnet_bps": -1.2907768129547055,
+   "mov15_mainnet_bps": 20.03482242946073
+  },
+  {
+   "t": 1790183220000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme mid",
+   "testnet": 85230.0,
+   "mainnet": 83839.0,
+   "desacordo_nivel_bps": -163.2054440924557,
+   "mov15_testnet_bps": -2.4639211545230553,
+   "mov15_mainnet_bps": 33.51662114290485
+  },
+  {
+   "t": 1790183280000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme mid",
+   "testnet": 85290.0,
+   "mainnet": 83779.0,
+   "desacordo_nivel_bps": -177.16027670301324,
+   "mov15_testnet_bps": -9.61425724000469,
+   "mov15_mainnet_bps": 43.805726972152925
+  },
+  {
+   "t": 1790183340000,
+   "ciclos": 30,
+   "estado": "tight deep lift flat flat extreme mid",
+   "testnet": 85208.0,
+   "mainnet": 83851.0,
+   "desacordo_nivel_bps": -159.25734672800678,
+   "mov15_testnet_bps": 0.0,
+   "mov15_mainnet_bps": 19.55850258196086
+  },
+  {
+   "t": 1790183400000,
+   "ciclos": 30,
+   "estado": "tight deep lift flat flat extreme mid",
+   "testnet": 85208.0,
+   "mainnet": 83816.0,
+   "desacordo_nivel_bps": -163.36494225894282,
+   "mov15_testnet_bps": 0.0,
+   "mov15_mainnet_bps": 29.588622697337023
+  },
+  {
+   "t": 1790183460000,
+   "ciclos": 30,
+   "estado": "tight deep lift flat flat extreme mid",
+   "testnet": 85164.0,
+   "mainnet": 83792.0,
+   "desacordo_nivel_bps": -161.10093466723026,
+   "mov15_testnet_bps": 7.280071391667842,
+   "mov15_mainnet_bps": 32.81936223028451
+  },
+  {
+   "t": 1790183520000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme mid",
+   "testnet": 85185.0,
+   "mainnet": 83805.0,
+   "desacordo_nivel_bps": -162.00035217467865,
+   "mov15_testnet_bps": 5.1652286200622175,
+   "mov15_mainnet_bps": 28.637909432611423
+  },
+  {
+   "t": 1790183580000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme mid",
+   "testnet": 85126.0,
+   "mainnet": 83701.0,
+   "desacordo_nivel_bps": -167.3989145501962,
+   "mov15_testnet_bps": 12.099711016610671,
+   "mov15_mainnet_bps": 41.098672656240666
+  },
+  {
+   "t": 1790183640000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme mid",
+   "testnet": 85115.0,
+   "mainnet": 83770.0,
+   "desacordo_nivel_bps": -158.02150032309228,
+   "mov15_testnet_bps": 21.735299300945776,
+   "mov15_mainnet_bps": 31.514862122478217
+  },
+  {
+   "t": 1790183700000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85196.0,
+   "mainnet": 83840.0,
+   "desacordo_nivel_bps": -159.16240199070378,
+   "mov15_testnet_bps": 16.667449176017655,
+   "mov15_mainnet_bps": 22.78148854961832
+  },
+  {
+   "t": 1790183760000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme mid",
+   "testnet": 85196.0,
+   "mainnet": 83920.0,
+   "desacordo_nivel_bps": -149.77228977886287,
+   "mov15_testnet_bps": 20.423494060754027,
+   "mov15_mainnet_bps": 12.035271687321258
+  },
+  {
+   "t": 1790183820000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme mid",
+   "testnet": 85208.0,
+   "mainnet": 83974.0,
+   "desacordo_nivel_bps": -144.8220824335743,
+   "mov15_testnet_bps": 19.833818420805557,
+   "mov15_mainnet_bps": 9.764927239383619
+  },
+  {
+   "t": 1790183880000,
+   "ciclos": 30,
+   "estado": "tight deep quiet flat flat extreme mid",
+   "testnet": 85208.0,
+   "mainnet": 83997.0,
+   "desacordo_nivel_bps": -142.12280537038777,
+   "mov15_testnet_bps": 22.18101586705474,
+   "mov15_mainnet_bps": 4.762074836006048
+  },
+  {
+   "t": 1790183940000,
+   "ciclos": 30,
+   "estado": "tight deep quiet flat flat extreme mid",
+   "testnet": 85208.0,
+   "mainnet": 83986.0,
+   "desacordo_nivel_bps": -143.41376396582478,
+   "mov15_testnet_bps": 16.195662379119334,
+   "mov15_mainnet_bps": 0.0
+  },
+  {
+   "t": 1790184000000,
+   "ciclos": 30,
+   "estado": "tight deep quiet flat flat extreme mid",
+   "testnet": 85208.0,
+   "mainnet": 84022.0,
+   "desacordo_nivel_bps": -139.1888085625763,
+   "mov15_testnet_bps": 15.491503145244577,
+   "mov15_mainnet_bps": -5.712789507509938
+  },
+  {
+   "t": 1790184060000,
+   "ciclos": 30,
+   "estado": "tight deep quiet flat flat extreme mid",
+   "testnet": 85209.0,
+   "mainnet": 84022.0,
+   "desacordo_nivel_bps": -139.30453355866163,
+   "mov15_testnet_bps": 16.195472309263106,
+   "mov15_mainnet_bps": -1.3091809288043608
+  },
+  {
+   "t": 1790184120000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme mid",
+   "testnet": 85209.0,
+   "mainnet": 84120.0,
+   "desacordo_nivel_bps": -127.80340104918496,
+   "mov15_testnet_bps": 23.94113297891068,
+   "mov15_mainnet_bps": -10.936757013789823
+  },
+  {
+   "t": 1790184180000,
+   "ciclos": 30,
+   "estado": "tight deep quiet flat flat extreme mid",
+   "testnet": 85208.0,
+   "mainnet": 84146.0,
+   "desacordo_nivel_bps": -124.63618439583138,
+   "mov15_testnet_bps": 24.05877382405408,
+   "mov15_mainnet_bps": -15.56817911724859
+  },
+  {
+   "t": 1790184240000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85208.0,
+   "mainnet": 84015.0,
+   "desacordo_nivel_bps": -140.0103276687635,
+   "mov15_testnet_bps": 25.819171908740966,
+   "mov15_mainnet_bps": -0.476105457358805
+  },
+  {
+   "t": 1790184300000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85208.0,
+   "mainnet": 84064.0,
+   "desacordo_nivel_bps": -134.259693925453,
+   "mov15_testnet_bps": 25.93653178105342,
+   "mov15_mainnet_bps": 1.427483821850019
+  },
+  {
+   "t": 1790184360000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85226.0,
+   "mainnet": 84067.0,
+   "desacordo_nivel_bps": -135.99136413770447,
+   "mov15_testnet_bps": 21.472320653321756,
+   "mov15_mainnet_bps": 0.5947637003818382
+  },
+  {
+   "t": 1790184420000,
+   "ciclos": 30,
+   "estado": "tight deep dump flat flat extreme mid",
+   "testnet": 85229.0,
+   "mainnet": 84045.0,
+   "desacordo_nivel_bps": -138.91985122434852,
+   "mov15_testnet_bps": 23.46619108519401,
+   "mov15_mainnet_bps": 8.804806948658456
+  },
+  {
+   "t": 1790184480000,
+   "ciclos": 30,
+   "estado": "tight deep two_way flat flat extreme mid",
+   "testnet": 85229.0,
+   "mainnet": 84045.0,
+   "desacordo_nivel_bps": -138.91985122434852,
+   "mov15_testnet_bps": 22.292881530934306,
+   "mov15_mainnet_bps": 14.63501695520257
+  }
+ ]
+}

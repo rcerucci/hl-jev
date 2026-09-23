@@ -54,6 +54,13 @@ O testnet parado não gera `directional_hit`. Duas fases, nesta ordem:
 
 **V3-0 (offline, antes de qualquer código novo).** Graduar os ciclos que **já existem** (2434 decisões, 38 estados distintos) contra as velas públicas das **duas** fitas e medir quanto elas discordam naqueles intervalos. Não produz `n_lados` (os `act` gravados são `hold`); produz a pergunta que decide se o V3 vivo é interpretável, e é a medição mais barata do plano.
 
+  **Corrido em 23 set 2026 — resultado no `PLANO-FUSAO.md` §13 e em `provas/v3-0-duas-fitas/`.** A premissa
+  "testnet parado" está **falsificada**: 211 dos 224 outcomes têm movimento ≥ 10 bps nos 15 min seguintes, e
+  o livro mexe em 63 de 86 minutos na sonda. Os `directional_hit` nulos vêm de `jev_side: hold`, **não** da
+  fita — é facto de política, não de venue. As fitas divergem em **nível** (~1,65 % de desvio sistemático) e
+  concordaram em **sinal** nas 5 janelas independentes. Consequência para a linha das marcas (`MARKS_VENUE`):
+  o motivo do desenho misto caiu — **espera decisão do dono** (§13).
+
 **V3 vivo.**
 
 - `marks_source` com flag `MARKS_VENUE=mainnet|testnet` (default **testnet**).
@@ -298,10 +305,10 @@ thresholds or the dumb policy to invent sides.
 
 ## 8. Critério de "documento cumprido"
 
-- [ ] V1 no `main` ou PR aberto (`n_lados` + `@0,50` + a regra "nunca promove")
+- [x] V1 no `main` ou PR aberto (`n_lados` + `@0,50` + a regra "nunca promove") — **no `main` (`c2603b5`)**
 - [ ] PLANO §12 com os 30 min crus — **feito**
 - [ ] Frase do PLANO §11 corrigida com medição — **feito**
-- [ ] V3-0 corrido e publicado (discordância entre fitas), ou recusa escrita
+- [x] V3-0 corrido e publicado (discordância entre fitas), ou recusa escrita
 - [ ] V4b-0 corrido (jev / dumb / laya nos mesmos estados + distribuição do noul)
 - [ ] V3 corrido com `n_lados ≥ 20` por coluna, ou recusado por escrito
 - [ ] Laya, se existir, é **linha da tabela** e não substituto silencioso; linha declara "sem refit"
