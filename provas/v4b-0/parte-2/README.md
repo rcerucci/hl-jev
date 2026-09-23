@@ -28,6 +28,8 @@ node censo-laya.mjs <repo>/data/ledger censo-laya.json 3144
 | medida | valor |
 |---|---|
 | carga do modelo | 4,6 s |
+| memória do processo (pico) | **1,81 GB** (RSS) |
+| censo completo | 1 min 31 s |
 | latência por estado (3 perguntas) | p50 1943 ms · **p95 2119 ms** · máx 2210 ms |
 | `act` por ciclo | **`buy` 2530** (80 %) · `hold` 614 |
 | `act` por estado | `buy` 37/44 · `hold` 7/44 |

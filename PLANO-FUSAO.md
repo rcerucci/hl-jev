@@ -609,8 +609,11 @@ Três leituras que isto dá de graça:
 outcomes, com o movimento mediano a **-0,4 bps**: é uma janela quase parada, onde o `dir_after` vira com o
 ruído — que é exactamente o que deve acontecer. O que existe é a **queda** da 15Z (mediana -26,2 bps),
 amostrada 224 vezes em 23,6 min, ou seja duas janelas independentes. O worker de outcome correu outra
-passagem (297 → **454** outcomes) e parou de novo em **429**; é idempotente, outra passagem completa (17Z/18Z
-por graduar). Do lado da Laya isto não bloqueia: o replay usa o **estado**, não o `dir_after`.
+passagem (297 → **454** outcomes) e parou outra vez — mas **não** no mesmo sítio: desta vez foi um **erro de
+CDN** (`x-cache: Error from cloudfront`, corpo de 4 bytes, no pedido `fundingHistory`), enquanto a primeira
+paragem foi mesmo **429**. Duas causas diferentes na mesma ferramenta: o worker não sabe recuar de nenhuma
+delas. É idempotente, outra passagem completa (17Z/18Z por graduar), e do lado da Laya isto não bloqueia: o
+replay usa o **estado**, não o `dir_after`.
 
 **O que falta para o V4b-0 fechar:** a coluna **Laya** (parte 2), que precisa dos pesos locais e do caminho
 de execução. Sem ela, a pergunta do replay — *alguém escolhe lado onde o Jev recusa?* — tem hoje uma
@@ -631,6 +634,8 @@ ponderados pela frequência, com as **mesmas perguntas** do `policy/jev_question
 | medida | valor |
 |---|---|
 | carga do modelo | **4,6 s** |
+| memória do processo (pico) | **1,81 GB** (RSS) |
+| censo completo | **1 min 31 s** (wall clock) |
 | latência por estado (3 perguntas) | p50 **1943 ms** · p95 **2119 ms** · máx 2210 ms |
 | `act` (por ciclo) | **`buy` 2530** (80 %) · `hold` 614 |
 | `act` (por estado) | `buy` **37/44** · `hold` 7/44 |
