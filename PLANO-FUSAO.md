@@ -482,3 +482,60 @@ Contrastes medidos (WCAG, calculados a partir do ficheiro, não estimados):
 A folga mais apertada é `muted` sobre painel (`#6a6961` no claro, `#8d8a81` no escuro), ajustada o mínimo
 necessário para passar AA. **Qualquer cor nova entra em `web/src/app/globals.css`**; um hex fora de lá é uma
 segunda paleta a divergir — foi exactamente esse o defeito que o gráfico tinha.
+
+## 13. V3-0 — as duas fitas, medido (23 set 2026)
+
+O V3 do `VALIDACAO-PNL.md` partia de uma suposição: o livro de testnet está parado, portanto as marcas do
+`outcome` têm de vir de **mainnet** — e daí o desenho misto (estado de testnet, marcas de mainnet), que o
+documento classifica como defeito grave se as fitas divergirem. A medição sobre o corpus que **já existia**
+derruba a suposição, e com ela cai o motivo do desenho misto.
+
+Sonda descartável, fora do código de produto: `provas/v3-0-duas-fitas/`. Lê o ledger (2903 ciclos em 101
+minutos distintos, 15:12Z→17:43Z) e as velas públicas de 1m das duas fitas (uma chamada por fita, sem chave).
+
+| Medida | Valor |
+|---|---|
+| Velas de 1m por fita / cobertura | 152 · 15:12Z→17:43Z |
+| Minutos com as duas fitas e os dois marcos | 86 / 101 |
+| Desacordo de **nível** (mesmo instante) | mediana **-165,2 bps** (p0 -187,5 · p100 -124,6) |
+| Movimento a 15 min, testnet | mediana **-12,8 bps** (p0 -45,7 · p100 +25,9) |
+| Movimento a 15 min, mainnet | mediana -8,7 bps (p0 -39,7 · p100 +43,8) |
+| **Sinal concorda** — janelas independentes | **5 / 5** |
+| Sinal concorda — todos os minutos (sobrepostos) | 66 / 83 = 79,5 % |
+| Minutos com \|mov 15 min\| < 1 bps | testnet **3** · mainnet 5 (de 86) |
+| Minutos com \|mov 15 min\| ≥ 10 bps | testnet **63** · mainnet 56 |
+| Sonda contra o `mark_then` gravado | 224 outcomes, **diferença máxima 0,0 bps** |
+
+E o que o **próprio ledger** já dizia, sem rede:
+
+| Medida | Valor |
+|---|---|
+| `dir_after` nos 224 outcomes | **down em 224/224** |
+| \|movimento a 15 min\| gravado | mediana **26,2 bps** · máximo 45,7 · **211/224 ≥ 10 bps** |
+| `jev_side` nos 224 | `hold` em **224/224** → `directional_hit` `null` por construção |
+| `act_conf` (decisões válidas) | mediana 0,50 · máximo 0,91 · **225** de 2923 ≥ 0,80 |
+| `too_hostile` | mediana 0,52 · **1995** de 2923 ≥ 0,50 |
+| Actos | `hold` em **2923/2923** |
+
+**O que isto decide**
+
+1. **"O testnet parado" está falsificado.** 211 dos 224 outcomes têm movimento ≥ 10 bps nos 15 min seguintes;
+   na sonda, 63 de 86 minutos. Não é um livro morto — anda.
+2. **Os 224 `directional_hit: null` vêm de `jev_side: hold`**, não da fita: um hold não tem lado para
+   graduar. É um facto de **política**, não de venue. É a mesma conclusão do V1 (zero lados a qualquer
+   confiança), agora sem a desculpa da fita.
+3. **As fitas não são a mesma fita em nível** (~1,65 % de desvio sistemático, a testnet acima) — mas não
+   divergiram em **sinal** nas 5 janelas independentes que cabem na janela. Amostra pequena: não demonstra
+   equivalência, também não mostra inversão de rótulo.
+4. Logo, **o desenho misto não é preciso**: era a resposta a uma premissa que a medição derrubou. Marcar no
+   **mesmo livro** do estado evita o desvio de nível sem perder nada. O que trava a V3 viva não é a fita — é
+   a política nunca escolher lado. **V4b-0 (Laya nos mesmos estados) é o experimento decisivo.**
+
+Fica **para o dono**: a linha do V3 no `VALIDACAO-PNL.md` propõe `MARKS_VENUE=mainnet`; a medição tira-lhe o
+motivo. Ou se mantém marcas no mesmo livro (proposta), ou se mantém o misto com o desvio declarado — mas já
+não por causa de um livro parado.
+
+**Achado de instrumentação (não corrigido aqui, é código de produto):** a linha de decisão do ledger **não
+guarda o gate que disparou**. O motivo (`hostile` / `low_conf` / `hold` / `frozen_*`) só existe no SSE; o
+ficheiro fica sem ele. Nos dados actuais ainda se reconstrói a partir de `too_hostile` e `act_conf`, mas um
+corpus antigo não se explica sozinho. Candidato a PR pequeno: um campo `gate` no `verdict`.
