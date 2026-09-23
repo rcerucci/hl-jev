@@ -1,0 +1,79 @@
+{
+ "fronteira": "20260923T200827",
+ "v1": {
+  "nome": "v1 (texto antigo)",
+  "decisoes": 7240,
+  "validas": 7059,
+  "actos": {
+   "hold": 7059
+  },
+  "sidesAny": 0,
+  "conf": {
+   "min": 0.11,
+   "mediana": 0.42,
+   "max": 0.98
+  },
+  "noul": {
+   "min": 0.1,
+   "mediana": 0.52,
+   "max": 0.87
+  },
+  "noul_por_grupo": {
+   "unfillable": {
+    "n": 7,
+    "mediana_noul": 0.68
+   },
+   "tape=violent": {
+    "n": 71,
+    "mediana_noul": 0.84
+   },
+   "flow=bot_war": {
+    "n": 742,
+    "mediana_noul": 0.79
+   },
+   "resto": {
+    "n": 6288,
+    "mediana_noul": 0.51
+   }
+  }
+ },
+ "v2": {
+  "nome": "v2 (texto novo, desde 20260923T200827)",
+  "decisoes": 23,
+  "validas": 22,
+  "actos": {
+   "sell": 22
+  },
+  "sidesAny": 22,
+  "conf": {
+   "min": 0.72,
+   "mediana": 0.76,
+   "max": 0.8
+  },
+  "noul": {
+   "min": 0.26,
+   "mediana": 0.285,
+   "max": 0.31
+  },
+  "noul_por_grupo": {
+   "unfillable": {
+    "n": 0,
+    "mediana_noul": null
+   },
+   "tape=violent": {
+    "n": 0,
+    "mediana_noul": null
+   },
+   "flow=bot_war": {
+    "n": 0,
+    "mediana_noul": null
+   },
+   "resto": {
+    "n": 22,
+    "mediana_noul": 0.285
+   }
+  }
+ },
+ "passa1": true,
+ "passa2": false
+}

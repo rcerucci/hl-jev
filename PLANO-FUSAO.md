@@ -1061,3 +1061,52 @@ combinado: mede-se, não se caça. Nada saiu para o venue — dry-run, sem signe
 **O que falta para fechar:** a sessão das 2 h (≥ 8 janelas), para ver se o lado se mantém noutros estados e se o
 critério 2 se confirma. No v1, os grupos do `noul` eram: `tape=violent` **0,84** · `flow=bot_war` 0,79 · resto
 0,51 — o violento já subia mais, mas por pouco.
+
+### 18.6 Leitura completa (2 h, 13 janelas de 15 min, 22:09Z) — **PASS 1 estabelecido**
+
+| | v1 | **v2 (3 501 válidos, 55 estados)** |
+|---|---|---|
+| `act` | `hold` 7 059 / 7 059 | **`sell` 1 803 · `hold` 918 · `buy` 780** |
+| `sidesAny` | 0 | **2 583** |
+| `act_conf` | mediana 0,420 | 0,27 – **0,96**, mediana 0,53 |
+| `noul` | mediana 0,520 | 0,15 – 0,53, mediana **0,280** |
+| `noul` por grupo | `violent` 0,84 · `bot_war` 0,79 · resto 0,51 | `bot_war` 0,25 (n=181) · resto 0,28 — **`unfillable`/`violent`: n = 0** |
+
+Pelo **gate real** (`MIN_HIGH_CONF` 0,80 · `NOUL_HOSTILE_TH` 0,65), nas duas sessões:
+
+| | válidas | `conf ≥ 0,80` | `noul ≥ 0,65` | **`n_lados`** | intents |
+|---|---|---|---|---|---|
+| v1 | 7 059 | 773 | 1 253 | **0** | `none` 7 240 |
+| **v2** | 3 508 | **415** | **0** | **48** | `none` 3 592 · **`maker` 48** |
+
+**`n_lados` deixou de ser zero: 48 intents `maker`, todos `sell`.** Zero `fill` não-nulo em toda a sessão — 48
+ordens simuladas, nenhuma no venue (dry-run, sem signer). Continua **fora** de meta: medido, não caçado.
+
+#### O modelo passou a ler o vocabulário (diagnóstico, `act` × `flow`)
+
+| `flow` | n | resposta |
+|---|---|---|
+| `dump` | 1 810 | **`sell` 100,0 %** |
+| `lift` | 761 | **`buy` 100,0 %** |
+| `two_way` | 587 | **`hold` 100,0 %** |
+| `bot_war` | 181 | `hold` 89,5 % · `buy` 10,5 % |
+| `quiet` | 169 | **`hold` 100,0 %** |
+
+E o `tape` quando é a única palavra com direcção: `tape=pumping` (n=19) → **`buy` 100,0 %**; `tape=grinding`
+(n=269) → `hold` 53,9 % (a palavra declarada **sem direcção** no v2) — onde não há palavra de direcção no `flow`,
+o modelo não inventa lado. **A leitura é literal e coerente com o enunciado.**
+
+#### Veredicto
+
+- **PASS 1 (estabelecido):** `sidesAny = 2 583` em 3 501 ciclos válidos e 13 janelas; 48 lados passaram o gate.
+- **Critério 2 (não avaliável):** a sessão **não teve um único ciclo** com `spread=unfillable` ou `tape=violent`
+  (n = 0 em ambos), logo o teste "o `noul` sobe com violento e não com `bot_war`" não se pode fazer. Não é FAIL do
+  modelo — é ausência do caso. O que se viu em vez disso foi o `noul` a **descer** (mediana 0,52 → 0,28) e a
+  **nunca** cruzar 0,65.
+- **O que continua por medir:** a **regra 4** e o PnL. O ensaio das perguntas passou; o que ele conquistou foi
+  tornar a regra 4 **medível** — passaram a existir lados. Não é PASS da política, nem de PnL.
+
+***Linha para ele:** PR #16 merge. Ensaio v2 passou: `sidesAny` 2583 (v1: 0), 48 intents `maker` pelo gate, zero no
+venue. Modelo lê o vocabulário 1:1 (`dump`→sell 100 %, `lift`→buy 100 %). Critério 2 não avaliável (n=0 de
+violent/unfillable). `n_lados` saiu de zero — medido. Regra 4 e PnL continuam por medir: o ensaio tornou-os
+medíveis.*
