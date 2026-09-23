@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -86,7 +87,9 @@ export const viewport: Viewport = {
 
 /**
  * Resolve o tema antes da primeira pintura: escolha gravada > preferencia do
- * sistema > claro. Sem isto o escuro pisca a branco a cada navegacao.
+ * sistema > claro. Vai por `next/script` com `beforeInteractive` (o mecanismo
+ * documentado para o App Router): um `<script>` solto dentro da arvore React
+ * nao e executado no cliente e a consola acusa-o.
  */
 const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","light");}})();`;
 
@@ -95,7 +98,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={plex.variable} suppressHydrationWarning>
       <head>
         <link rel="describedby" href="https://www.jev-trade.com/llms.txt" />
-        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
