@@ -818,3 +818,42 @@ os dois campos com o mesmo valor.
 96,2 %.** Medido pelo mesmo `provas/buckets/antes-depois.py`, agora com `--desde` no início da sessão nova para
 não misturar encoder antigo e novo no mesmo número. `n_lados ≥ 20` continua a **não** ser meta. Se `last20`
 ainda der ~95 % `flat`, **pára-se e publica-se** — sem mexer em `GRIND`/`MOVE` no mesmo PR.
+
+**Filac de arranque (descartada na medição).** A janela `last20` precisa de 20 ticks para encher: nos primeiros
+~40 s de sessão o valor é 0 por construção e o `tape` diz `flat` por fila vazia, não por leitura. O bloco do
+"depois" usa `--desde` = **primeiro ciclo real + 60 s** (30 ticks, margem sobre os 20), medido — não o instante
+em que o processo foi lançado. Sem isso, o "depois" mistura artefacto de arranque com leitura.
+
+### 17.6 O "depois", primeira leitura (23 set 2026) — o vocabulário mudou; o veredicto ainda não é legível
+
+Sessão em dry-run com o encoder `last20`, fronteira `20260923T183724Z`. O worker do produto **não tem filtro** e
+morre no 429/CDN antes de chegar aos ciclos novos, por isso a janela foi graduada com
+`provas/buckets/graduar-desde.ts`, que **importa as funções do produto** (`Ledger`, `outcomeFor`,
+`HlMarkSource`) e só acrescenta o filtro por `cycle_id` e um espaçamento de 1,2 s entre pedidos. 80 ciclos
+graduados.
+
+| | antes (`last5`) | depois (`last20`) |
+|---|---|---|
+| amostra graduada | 454 outcomes | 80 |
+| `\|mov 15 min\| ≥ 10 bps` | 51,8 % | 100 % |
+| **desses, com `tape = flat`** | **96,2 %** | **51,2 %** |
+| `tape` no total | `flat` 94,5 % · `grinding` 4,2 % · `dumping` 1,1 % · `pumping` 0,2 % · `violent` **0** | `flat` 51 % · `grinding` 26 % · **`violent` 22,5 %** |
+| mediana de `\|mov\|` por palavra | `flat` 15,4 · `grinding` 6,2 · `dumping` 26,7 · `pumping` 4,8 | `flat` 26,5 · `grinding` 26,5 · `violent` 27,4 |
+
+**O que isto já diz:** a janela mudou o vocabulário, e mudou-o muito — `%flat` entre os ciclos que se movem caiu
+de **96,2 % para 51,2 %**, `grinding` passou de 4,2 % para 26 % e `violent`, que **nunca** aparecia, aparece em
+22,5 %. **A primeira metade do critério da regra 4 passou.**
+
+**O que isto ainda não diz:** se as palavras **ordenam** o movimento — e o número agregado esconde um problema
+de amostra:
+
+- os 80 ciclos graduados cobrem **2,6 minutos** (18:37:25Z→18:40:03Z) e há apenas **4 valores distintos** de
+  `mark_then` e de `\|mov\|`: é **uma** direcção amostrada 80 vezes, não 80 observações. As medianas por palavra
+  (`flat` 26,5 · `grinding` 26,5 · `violent` 27,4) são o mesmo movimento com três nomes;
+- o lado "antes" tem o mesmo defeito (454 outcomes em 23,6 min = 2 janelas). Em **janelas independentes**
+  (≥ 900 s entre amostras, `--independentes`), o corpus reduz-se a **3 janelas no antes e 1 no depois** — e
+  nessa leitura o `%flat` é 1/1 dos dois lados.
+
+**Veredicto: nem PASS nem FAIL.** O critério da regra 4 não é julgável com uma janela de cada lado. O que se
+faz: **não se toca em `GRIND`/`MOVE`**, deixa-se a sessão correr e volta-se a ler quando houver **≥ 3–5 janelas
+independentes** no "depois" (≈45–75 min de sessão). `n_lados ≥ 20` continua a não ser meta.
