@@ -111,7 +111,14 @@ Hold is an answer, and there are two kinds of hold:
 
 Thresholds are env: `JEV_CONF_ACT`, `NOUL_HOSTILE_TH`, `JEV_TIMEOUT_MS`, `BOOK_STALE_MS`. Leverage on this path comes from `LEVERAGE` (default 1) and never from the model. The Jev never sees a price, a size, a time in force or a leverage.
 
-Every cycle appends a `decision` line to `LEDGER_DIR` (`./data/ledger/<YYYYMMDD>-<COIN>.jsonl`), one file per sleeve per UTC day **of the decision**; the outcome line lands in the same file 15 minutes later, joined by `cycle_id`. The confidence against hit table is Fase C and is not built yet.
+Every cycle appends a `decision` line to `LEDGER_DIR` (`./data/ledger/<YYYYMMDD>-<COIN>.jsonl`), one file per sleeve per UTC day **of the decision**; the outcome line lands in the same file 15 minutes later, joined by `cycle_id`. A separate process writes the outcome from public marks (1m candles and funding history, no key), and the attribution table compares policies:
+
+```sh
+bun run src/ledger/outcome.ts       # +15 min outcome for every due cycle. Idempotent and re-runnable: nothing is invented when a candle is missing
+bun run src/ledger/attribution.ts   # confidence against hit, per policy, with the control column and the sample size
+```
+
+The table refuses to conclude below the declared sample size and says out loud when the control ties or wins. That is the spec gate before the night editor or mainnet.
 
 Do not point this path at mainnet. `HL_TESTNET=false` is mainnet, and the fused path has no live equity cap yet.
 

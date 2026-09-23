@@ -249,7 +249,9 @@ TIF da saída reduce-only continua no `plan.ts`). As restantes seguem como inter
 
 ### Lacunas declaradas (não são surpresas)
 
-- `outcome` +15 min, tabela confiança × acerto e `select_disagreements` são **Fase C**: não existem.
+- `outcome` +15 min, tabela confiança × acerto e o controle `dumb` existem desde a Fase C
+  (`src/ledger/outcome.ts`, `src/ledger/marks_source.ts`, `src/ledger/attribution.ts`). O
+  `select_disagreements` é **Fase D** e não existe.
 - O turno da noite é **Fase D**: não existe, e o `accept` continua manual.
 - T018 tem **duas metades**. A do Jev está provada acima (13/13 `raw_ok` com chave real e sem signer). A do
   venue ("hold produz Noop e buy produz uma ALO") exige `PRIVATE_KEY` / `.wallets.json` de testnet no clone e

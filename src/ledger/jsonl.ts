@@ -7,7 +7,7 @@
  * Como o `cycle_id` carrega o instante UTC, o worker do outcome nao precisa de
  * guardar nada alem do id.
  */
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 export interface DecisionLine {
@@ -32,6 +32,8 @@ export interface OutcomeLine {
   directional_hit: boolean | null;
   conf_was: number | null;
   high_conf_miss: boolean;
+  /** Horizonte que produziu esta linha: mudar o de hoje nao reescreve o passado. */
+  horizon_secs: number;
 }
 
 export type LedgerLine = DecisionLine | OutcomeLine;
@@ -89,6 +91,36 @@ export class Ledger {
       .split("\n")
       .filter((l) => l.trim().length > 0)
       .map((l) => JSON.parse(l) as LedgerLine);
+  }
+
+  /** Nomes `<dia>-<SLEEVE>.jsonl` presentes no diretorio, ordenados. */
+  private names(): { day: string; sleeve: string }[] {
+    if (!existsSync(this.dir)) return [];
+    const out: { day: string; sleeve: string }[] = [];
+    for (const name of readdirSync(this.dir)) {
+      const m = /^(\d{8})-([A-Z0-9]+)\.jsonl$/.exec(name);
+      if (m) out.push({ day: m[1]!, sleeve: m[2]! });
+    }
+    return out.sort((a, b) => (a.day === b.day ? a.sleeve.localeCompare(b.sleeve) : a.day.localeCompare(b.day)));
+  }
+
+  /** Dias com ficheiro no ledger. */
+  days(): string[] {
+    return [...new Set(this.names().map((n) => n.day))];
+  }
+
+  /** Sleeves com ficheiro num dia. */
+  sleevesOf(day: string): string[] {
+    return this.names().filter((n) => n.day === day).map((n) => n.sleeve);
+  }
+
+  /** Ciclos de todos os dias e sleeves, com a marca temporal da decisao. */
+  all(): { day: string; sleeve: string; decision: DecisionLine; outcome: OutcomeLine | null }[] {
+    const out: { day: string; sleeve: string; decision: DecisionLine; outcome: OutcomeLine | null }[] = [];
+    for (const { day, sleeve } of this.names()) {
+      for (const cycle of this.cycles(sleeve, day)) out.push({ day, sleeve, ...cycle });
+    }
+    return out;
   }
 
   /** Juncao por `cycle_id`: uma decisao com o seu outcome, se ja existir. */

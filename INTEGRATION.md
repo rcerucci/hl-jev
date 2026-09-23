@@ -132,6 +132,9 @@ trader.onBlock            src/trader.ts
 | `src/risk/buckets.ts` | RISK — cortes numericos -> adjectivos, num so ficheiro |
 | `src/risk/intent.ts` | RISK — os gates |
 | `src/ledger/jsonl.ts` | LEDGER — append-only, ficheiro pelo dia UTC da decisao (D5) |
+| `src/ledger/outcome.ts` | LEDGER — o outcome +15 min e o worker (processo separado, idempotente) |
+| `src/ledger/marks_source.ts` | VENUE -> LEDGER — as marcas (candles 1m publicos + funding), injectaveis |
+| `src/ledger/attribution.ts` | LEDGER — a tabela confianca x acerto e o veredicto da secao 9.4 |
 
 Alteracoes ao venue, todas aditivas e nenhuma na assinatura de submit: `feed.bookAt` (instante do ultimo
 l2Book), `market.bookAt` (getter), campos opcionais do desk `state12`/`act`/`act_conf`/`too_hostile` em
