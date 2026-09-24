@@ -988,7 +988,7 @@ janela — é reconhecer que são **dois relógios**. **O ensaio de buckets do `
 estado novo. Essa é a pergunta das **perguntas/modelo**, não do `tape` — a mesma que já estava em cima da mesa
 antes deste ensaio. Sem Laya, sem Fase D, sem segundo patch de limiar.
 
-## 18. Ensaio das perguntas (v2) — 23 set 2026
+## 18. Ensaio das perguntas (v2) — 23 set 2026 *(FECHADO: estado sem poder preditivo — ver §20)*
 
 O ensaio de buckets fechou com uma conclusão incómoda: **100 % `hold` mesmo com o estado novo**. Fica uma
 hipótese que o `tape` não pode responder — o Jev pode estar a recusar **o livro** ou a recusar um **enunciado
@@ -1296,7 +1296,7 @@ de 4 770, com as **mesmas 100 contagens** — `alinhou` 3 · `inverteu` 17 · `s
 sentidos — e a mesma leitura. O total de ticks move-se com a partição dos episódios (uma fronteira a deslizar um
 tick muda de que lado fica); os veredictos não. Os dois números ficam ditos, cada um com a sua hora.
 
-## 19. Ensaio N1 — `sign(last20)` × rótulo de 300 s, **sem Jev**
+## 19. Ensaio N1 — `sign(last20)` × rótulo de 300 s, **sem Jev** *(FECHADO: insuficiente — ver §20)*
 
 **Hipótese (uma):** o sinal de `returns_bps.last20` (40 s = 20 ticks de 2 s) separa `up`/`down` num horizonte
 de **300 s** melhor que o acaso, na unidade **episódio**. Não é JSON, Laya, θ, `dumb` de adjectivos, mainnet nem
@@ -1435,3 +1435,95 @@ inventa uma a partir das colunas de diagnóstico.
 
 *(Saída crua do guião, com tudo o que ele imprimiu, em `provas/n1/leitura-n1.log`; os pontos em JSON em
 `provas/n1/episodios-n1.json`.)*
+
+## 20. Arquivo — dois ensaios fechados (24 set 2026)
+
+| Ensaio | Veredicto | Não fazer |
+|---|---|---|
+| Jev + 7 palavras (v1/v2) | mapa estável, estado **sem** poder preditivo a 15 min | JSON v3, θ, Laya, Fase D |
+| N1 `sign(last20)` × 300 s | **INSUFICIENTE** (6 elegíveis / 16) | 13 h no mesmo terno, promover 3/3 @ 10 bps, afinar EPS |
+
+PR **#17** fundido (`a7e6a95`): o cano `numeric` / `returns_bps` / `PolicyCtx` **fica** na `main`. Motor N1
+parado. `POLICY=jev` e `POLICY=numeric` (last20) **não** correm na sessão T-5m.
+
+## 21. Ensaio T-5m — preço × volume (especificação do dono, colada)
+
+> **Uma sessão, três leituras offline. Decisão a cada 5 min. Sem Jev. Sem chop.**
+>
+> **0. Arquivo (fazer primeiro).** Merge PR #17. Motor N1 parado. `POLICY=jev` e `POLICY=numeric` (last20) não
+> correm nesta sessão.
+>
+> **1. Hipóteses (escritas antes).**
+> **P.** `sig_p = sign(mid_5m − EMA24_H1_fechada)` separa o movimento **da estadia** melhor que o acaso.
+> **P+V.** Só actuar quando o volume confirma esforço a favor: `sig_p` long (+1) × volume alto (+1) → **buy**;
+> short (−1) × volume alto (+1) → **sell**; qualquer × volume baixo (−1) → **hold** (não promove); `sig_p` 0 → hold.
+> **V.** `sig_v` **não** gera lado — pergunta se, em estadias com volume alto, `|mov|` é maior e/ou o P alinha
+> mais. Se não, o bit de volume sai. Não são três estratégias no venue: é **um** gravador e três tesouras no
+> mesmo banco.
+>
+> **2. Definições congeladas.** TF de decisão **5 min** (relógio de parede). `mid` = `hl2` da barra de 5 min
+> **fechada**. `MA_H1` = EMA 24 de `hl2` no TF **60 min**, só barras H1 **já fechadas** (lookahead/H1 corrente
+> proibidos — senão repinta). `sig_p ∈ {+1,−1,0}`. **Sem chop.** Volume: barra de 5 min do **mesmo** livro;
+> `MA_vol` = EMA 24 do volume no TF 5 min; `sig_v = sign(vol − MA_vol)`; empate → 0 → volume baixo.
+> **Unidade:** estadia **P**, do 5 min em que `sig_p` muda até ao que muda para o contrário (zeros transitórios
+> não partem a estadia; se `sig_p=0`, hold e a estadia anterior fecha). Rótulo = mid no início → mid no fim.
+> `alinhou` = long+`up` ou short+`down`; `inverteu` o contrário; `sem_relacao` se `|mov| < 20 bps` **ou**
+> estadia < 2 barras. P+V sobre as **mesmas** estadias, com coluna própria para as cortadas pelo V.
+> **Proibido** winrate de velas M5. **Duração:** 12 h mínimo, 24 h alvo; às 12 h com < 12 estadias elegíveis,
+> fecha **insuficiente**.
+> **PASS/FAIL:** n < 12 → insuficiente; com n ≥ 12, PASS fraco se `alinhou/(alinhou+inverteu)` ≥ tabela
+> binomial unilateral p<0,05 (12→10/12, 16→12/16, 24→17/24); os **dois** sentidos de preço têm de aparecer.
+> P+V vs P emparelhado. V: se o `|mov|` mediano com `sig_v=+1` ≈ com `sig_v=−1`, **volume não confirma**.
+> Isto **não** é PnL: sem fill, sem taxa, sem signer.
+>
+> **3. Produto (diff mínimo).** `POLICY=trend5` (não chama Jev); a cada 5 min fechados escreve uma linha com
+> `ts`, `mid`, `ma_h1`, `sig_p`, `vol`, `ma_vol`, `sig_v`; **dry-run**, sem ordem; o rótulo das estadias **não**
+> usa o worker de 300 s do N1; encoder de 7 palavras, JSON, θ, `dumb`, Laya intocados; confirmar volume na API
+> **antes** do commit de arranque.
+>
+> **5. Proibido.** Religar Jev · last20 como motor · chop · afinar 24/20 bps/EMA à tabela · três actos no venue ·
+> chamar PnL ao dry-run · promover winrate de M5 · copiar Chop Zone SamX · esperar fecho H1 para o `sig_p`.
+
+### 21.1 Prova de volume — **há fonte** (passo 2 da fila, feito antes do commit de arranque)
+
+A vela de 5 min do cliente HL traz `t, T, s, i, o, c, h, l, v, n` — **`v` e `n` presentes e positivos**
+(última barra: `v = 0,01091`, `n = 22`). A metade V corre. Ressalva do livro: é o **testnet**, com volume fino
+(~0,01 BTC por 5 min, ~20 negócios) — a razão `vol/MA_vol` é utilizável porque compara o livro consigo mesmo,
+mas o sentido de "esforço" é mais fraco do que num livro real.
+
+### 21.2 Censo antes da sessão — a unidade é rara demais para 12–24 h
+
+`provas/t5m/censo.ts` aplica as definições do §2 sobre o **histórico público** (o mesmo livro, mesmas barras
+de 5 min, EMA24 H1 só fechada), sem gastar uma hora de sessão:
+
+| histórico | estadias P | estadias/24 h | **elegíveis** (\|mov\| ≥ 20 bps, ≥ 2 barras) | elegíveis/24 h |
+|---|---|---|---|---|
+| 7 dias | 29 | 4,1 | **12** | 1,7 |
+| 14 dias | 37 | 2,6 | **13** | 0,9 |
+
+**Uma sessão de 12–24 h produziria 1 a 2 estadias elegíveis** — contra o mínimo de **12** que o próprio desenho
+exige. Pelo critério do §2, ela fecharia **insuficiente** por construção. Chegar às 12 elegíveis pediria
+**~7 dias** de gravação (e as duas semanas só somaram 13: a taxa satura).
+
+**A causa é estrutural, não é azar de janela.** `sign(hl2_5m − EMA24_H1)` é um sinal lento: as estadias estão
+dominadas por corridas de horas — 579 barras (48 h), 494 (41 h), 287 (24 h), 137 (11 h) — e só há ~4 mudanças
+de sinal por dia. A unidade "estadia" é um **regime**, e regimes não se repetem 12 vezes numa noite.
+
+### 21.3 As três hipóteses, medidas de graça no histórico de 14 dias (n = 13 ≥ 12)
+
+Com a amostra que a sessão levaria ~7 dias a produzir, o histórico responde já às três perguntas:
+
+| hipótese | medido | critério do §2 | veredicto |
+|---|---|---|---|
+| **P** | **4/13** alinhou (30,8 %) | ≥ 10/13 (binomial) | **FAIL** |
+| **P+V** | 1/4 alinhou · **9 das 13 cortadas pelo V** | n ≥ 12 e ≥ tabela | **insuficiente** (n=4) |
+| **V** | `\|mov\|` mediano **32,8 bps** com `sig_v=+1` (n=4) vs **31,8 bps** com `sig_v≠+1` (n=9) | "≈ ⇒ volume não confirma" | **volume não confirma** |
+
+Os dois sentidos de preço aparecem (guarda satisfeita). P+V não melhorou o P: das 13 elegíveis, o filtro de
+volume à entrada deixou passar **4**, e dessas alinhou **1**.
+
+**Recomendação, e é dela que peço decisão:** **não gastar a noite.** O gravador `trend5` do §3 pode ir para o
+repo (é barato e fica para o futuro), mas a sessão de 12–24 h, pelo censo, entrega 1–2 elegíveis e fecha
+insuficiente — o mesmo desfecho do N1, com o dobro do custo. Se a hipótese interessa, o caminho com poder é
+**medir em histórico** (o censo já é isso, e pode estender-se a 30/60 dias por duas chamadas públicas), não
+gravar mais uma noite do mesmo livro lento.
