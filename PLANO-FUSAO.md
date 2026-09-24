@@ -1359,3 +1359,79 @@ Mínimo de `alinhou` para p < 0,05 unilateral com p₀ = 0,5:
 
 Artefactos: `provas/n1/pre-medicao.ts` (o censo que ditou as correcções, read-only) e
 `provas/n1/episodios-300.py` (a tabela por episódio e a leitura, uma só).
+
+### 19.5 Leitura do N1 (24 set, 04:13Z) — **INSUFICIENTE**, e a sessão fecha aqui
+
+Sessão completa: **5,00 h**, fronteira `20260923T231226Z`, **8 998 ciclos**, motor fechado por PID pelo próprio
+guião da leitura. Actos do motor: `hold` **8 026** · `sell` **573** · `buy` **399** — a regra disparou lado em
+~11 % dos ticks. **Todos os 26 desfechos gravados têm `horizon_secs = 300`**: nenhum worker a 900 s tocou neste
+ledger, e o único horizonte presente é o do ensaio.
+
+| | |
+|---|---|
+| **episódios com sinal** (`\|last20\| ≥ 4` na janela) | **27** (26 graduados) |
+| etiquetas | `sem_relacao` 21 · **`alinhou` 4** · `inverteu` 2 |
+| **elegíveis** (`\|mov\| ≥ 5 bps`, lado, sem contradição) | **6** |
+| sinais | `sell` 15 · `buy` 12 (os dois sentidos ✓) |
+| `dir_after` a 300 s | `flat` **15** · `down` 7 · `up` 4 (os dois sentidos ✓) |
+
+**Veredicto: INSUFICIENTE — 6 elegíveis < 16.** Não se alonga a sessão para chegar lá.
+
+As duas guardas que exigiste **foram satisfeitas** (os dois sinais de `last20`, os dois sentidos de preço): a
+amostra não está enviesada — está **curta**. O que a trava é o livro: `flat` em 15 dos 27 episódios, movimento de
+300 s pequeno neste testnet.
+
+**Colunas de diagnóstico — e o número que NÃO se cita:** com o corte frouxo de 2 bps, `alinhou` 4 de 13 = 31 %;
+com 10 bps, **3 de 3 = 100 %**. O segundo é exactamente o número que não se promove (n=3 não é amostra, e o
+desenho proíbe-o). Os dois ficam publicados como diagnóstico, fora do veredicto.
+
+**Projecção minha, corrigida.** Eu disse 13–16 elegíveis; a leitura deu **6**. A razão está no que declarei no
+§19.2: o rótulo corre do **tick do sinal**, e não do início da janela — medido a partir de um instante mais tarde,
+a parte das janelas que passa os 5 bps é menor. E houve 27 âncoras, não as ~30 que projetei.
+
+**A aritmética para quem quiser reabrir isto:** 27 âncoras em 5 h = **5,4/h**; elegíveis 6/27 = **22 %** →
+16 elegíveis pediriam ~72 âncoras ≈ **13 h de sessão**. É por isso que "não alongar" é a decisão certa: a
+extensão não seria de uma hora, seria de uma noite inteira.
+
+**O que o ensaio estabeleceu, e o que não.** Estabeleceu: o campo composto gravado, a regra a decidir limpa
+durante 5 h em dry-run (8 998 decisões, nada no venue, um só horizonte no ledger), e que as duas guardas são
+satisfazíveis. **Não estabeleceu nada sobre a aresta da regra** — com 6 elegíveis não há leitura, e não se
+inventa uma a partir das colunas de diagnóstico.
+
+<details>
+<summary><b>Tabela crua dos 27 episódios</b> (`ts do sinal` · `last20_bps` · `sign` · `act` · `dir_after` · `\|mov\|` · `etiqueta`)</summary>
+
+| ts (t_sig) | last20 bps | sign | act | dir_after | \|mov\| bps | etiqueta |
+|---|---|---|---|---|---|---|
+| `20260923T231442Z-BTC` | -4.25 | sell | sell | flat | -1.4 | **sem_relacao** |
+| `20260923T234049Z-BTC` | -4.19 | sell | sell | flat | -1.6 | **sem_relacao** |
+| `20260923T234807Z-BTC` | -6.18 | sell | sell | flat | -3.5 | **sem_relacao** |
+| `20260924T000005Z-BTC` | -4.55 | sell | sell | flat | 2.0 | **sem_relacao** |
+| `20260924T000551Z-BTC` | 5.66 | buy | buy | down | -5.0 | **inverteu** |
+| `20260924T001543Z-BTC` | 4.08 | buy | buy | flat | -0.5 | **sem_relacao** |
+| `20260924T003954Z-BTC` | -4.20 | sell | sell | up | 6.8 | **inverteu** |
+| `20260924T005104Z-BTC` | 5.89 | buy | buy | flat | 2.8 | **sem_relacao** |
+| `20260924T005856Z-BTC` | 4.08 | buy | buy | flat | -0.5 | **sem_relacao** |
+| `20260924T010438Z-BTC` | -4.48 | sell | sell | flat | -4.2 | **sem_relacao** |
+| `20260924T011658Z-BTC` | -4.08 | sell | sell | flat | -2.9 | **sem_relacao** |
+| `20260924T012426Z-BTC` | 5.13 | buy | buy | flat | -4.8 | **sem_relacao** |
+| `20260924T013326Z-BTC` | 5.36 | buy | buy | flat | 3.0 | **sem_relacao** |
+| `20260924T014241Z-BTC` | -14.84 | sell | sell | down | -10.7 | **alinhou** |
+| `20260924T014745Z-BTC` | 5.31 | buy | buy | up | 7.4 | **sem_relacao** |
+| `20260924T015845Z-BTC` | -7.58 | sell | sell | down | -10.6 | **alinhou** |
+| `20260924T020845Z-BTC` | -4.15 | sell | sell | down | -9.6 | **alinhou** |
+| `20260924T022101Z-BTC` | 4.91 | buy | buy | flat | -2.1 | **sem_relacao** |
+| `20260924T022737Z-BTC` | -5.25 | sell | sell | up | 8.2 | **sem_relacao** |
+| `20260924T024241Z-BTC` | 13.76 | buy | buy | flat | 3.8 | **sem_relacao** |
+| `20260924T030428Z-BTC` | 6.40 | buy | buy | down | -6.5 | **sem_relacao** |
+| `20260924T031356Z-BTC` | -7.86 | sell | sell | flat | -1.4 | **sem_relacao** |
+| `20260924T032212Z-BTC` | -5.94 | sell | sell | down | -16.9 | **alinhou** |
+| `20260924T032738Z-BTC` | -11.67 | sell | sell | up | 11.7 | **sem_relacao** |
+| `20260924T033238Z-BTC` | 4.09 | buy | buy | flat | 2.2 | **sem_relacao** |
+| `20260924T035925Z-BTC` | -8.16 | sell | sell | down | -9.7 | **sem_relacao** |
+| `20260924T040925Z-BTC` | 4.85 | buy | buy | — | — | **sem_relacao** |
+
+</details>
+
+*(Saída crua do guião, com tudo o que ele imprimiu, em `provas/n1/leitura-n1.log`; os pontos em JSON em
+`provas/n1/episodios-n1.json`.)*
