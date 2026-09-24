@@ -16,6 +16,13 @@ export interface DecisionLine {
   ts: number;
   sleeve: string;
   state: string;
+  /**
+   * Numeros do `Snapshot` que a decisao consumiu (ensaio N1). Sem eles a regra nao e
+   * reproduzivel a partir do ledger: as marcas publicas vem de velas de 1 min e uma janela
+   * de 40 s cai dentro da mesma vela, logo o `last20` nao se reconstroi de fora.
+   * Opcional: as linhas antigas nao o tem e nao passam a ter.
+   */
+  returns_bps?: { last1: number; last5: number; last20: number };
   verdict: unknown;
   intent: unknown;
   fill: unknown;

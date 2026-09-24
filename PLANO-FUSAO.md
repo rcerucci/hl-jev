@@ -1295,3 +1295,143 @@ não apareceu uma única vez — a mesma tabela pode dizer outra coisa.
 de 4 770, com as **mesmas 100 contagens** — `alinhou` 3 · `inverteu` 17 · `sem_relacao` 80 · 13 estados com os dois
 sentidos — e a mesma leitura. O total de ticks move-se com a partição dos episódios (uma fronteira a deslizar um
 tick muda de que lado fica); os veredictos não. Os dois números ficam ditos, cada um com a sua hora.
+
+## 19. Ensaio N1 — `sign(last20)` × rótulo de 300 s, **sem Jev**
+
+**Hipótese (uma):** o sinal de `returns_bps.last20` (40 s = 20 ticks de 2 s) separa `up`/`down` num horizonte
+de **300 s** melhor que o acaso, na unidade **episódio**. Não é JSON, Laya, θ, `dumb` de adjectivos, mainnet nem
+signer; o Jev e o encoder do `tape` ficam intocados.
+
+### 19.1 A conta que reprovou o desenho inicial — e as correcções aceites antes da sessão
+
+Medido na sessão v2 (marcas públicas, 35 janelas de 300 s): `|mov|` a 300 s tem **mediana 4,2 bps** e só
+**22,9 %** das janelas passam os 10 bps; na âncora do segundo zero só **5,7 %** têm `tape ≠ flat` (proxy de
+`|last20| ≥ 4`). Como os dois cortes **se multiplicam**, o desenho com âncora dava **~0,2 pontos elegíveis por
+hora** — 16 episódios pediriam **~80 h**, não 2–3. Correcções congeladas:
+
+1. **Ponto = janela de 300 s se ALGUM tick lá dentro tiver `|last20| ≥ 4`.** A âncora no tick 0 descartava 99 %
+   do sinal. Mesma hipótese ("rajada de 40 s continua 5 min"). Medido: **57,1 %** das janelas têm alguma palavra
+   ≠ `flat` (contra 5,7 % das âncoras).
+2. **Rótulo primário a 300 s = 5 bps** — não 10 (é o corte de 15 min) nem 2 (está na folga do ruído do mid).
+   `|mov| ≥ 2` e `≥ 10` ficam como **diagnóstico, e nunca promovem**.
+3. **`EPS = 4` bps intocado** — é o `GRIND` do produto, escolhido antes de ver o rótulo.
+
+### 19.2 Regras, escritas antes de a sessão correr
+
+- O `last20_bps` do episódio é o do **primeiro** tick com `|last20| ≥ EPS` — não o máximo, não o que melhor
+  alinha.
+- Janela com ticks `> +EPS` **e** `< −EPS` → episódio `sem_relacao` (sinal contraditório): não se escolhe lado.
+- **O rótulo corre do tick do sinal** (`t_sig → t_sig + 300 s`). Do início da janela seria olhar para a frente —
+  com o sinal a meio, o movimento medido já conteria a rajada que o sinal mede. (Interpretação minha da letra do
+  desenho, declarada aqui.)
+- Episódios não se sobrepõem: guarda-se uma âncora apenas se estiver ≥ 300 s depois da anterior guardada.
+- **`OUTCOME_HORIZON_SECS=300`** no `.env` da sessão e na linha de fronteira do log. Worker a 900 s **proibido**
+  neste ledger: a idempotência é por `cycle_id`, logo um desfecho a 900 s não é substituído por um a 300 s — os
+  horizontes misturavam-se. (O campo do desfecho chama-se `mark_plus_15m` por legado; a 300 s é a marca a 300 s.)
+- `POLICY=numeric`, `DRY_RUN=true`, sem signer, sem chamada TypeSafe.
+
+### 19.3 PASS / FAIL / insuficiente — a tabela do binomial (não "65 %")
+
+Mínimo de `alinhou` para p < 0,05 unilateral com p₀ = 0,5:
+
+| n elegíveis | mínimo `alinhou` |
+|---|---|
+| 16 | **12/16 (75 %)** |
+| 24 | **17/24 (71 %)** |
+| 36 | **24/36 (67 %)** |
+
+- **Elegível** = episódio com `|mov| ≥ 5 bps`, `act ≠ hold` e sem sinal contraditório.
+- **Abaixo de 16 elegíveis → insuficiente**, e não se alonga a sessão para chegar lá.
+- **Um só sentido de preço em toda a sessão → amostra enviesada**, não PASS, mesmo com o mínimo.
+- **Proibido:** baixar `EPS`, voltar ao Jev neste PR, chamar PnL ao dry-run, misturar o rótulo de 15 min com o
+  de 5, promover as colunas de diagnóstico.
+
+### 19.4 O que o produto leva (diff mínimo)
+
+- `src/policy/numeric.ts` — a regra, sem rede, sem estado, determinista.
+- **`PolicyCtx`** na porta `Policy` (contexto **opcional**): a porta só recebia as palavras do estado, e o
+  número não está entre elas — `grinding` cobre 4–15 bps **sem dizer o sentido**, logo o sinal não se reconstrói
+  do texto. Jev e `dumb` ignoram o contexto: nada do que já decide mudou.
+- **`DecisionLine.returns_bps`** (opcional, composto `{last1,last5,last20}`), gravado no tick da fusão: é o que
+  torna a regra reproduzível. As marcas públicas vêm de velas de **1 min** e uma janela de 40 s cai dentro da
+  mesma vela — de fora, o `last20` não se reconstrói.
+- `POLICY=numeric` em `config`/`createPolicy`. RISK, portão, plano, JSON das perguntas, θ e encoder: intocados.
+
+Artefactos: `provas/n1/pre-medicao.ts` (o censo que ditou as correcções, read-only) e
+`provas/n1/episodios-300.py` (a tabela por episódio e a leitura, uma só).
+
+### 19.5 Leitura do N1 (24 set, 04:13Z) — **INSUFICIENTE**, e a sessão fecha aqui
+
+Sessão completa: **5,00 h**, fronteira `20260923T231226Z`, **8 998 ciclos**, motor fechado por PID pelo próprio
+guião da leitura. Actos do motor: `hold` **8 026** · `sell` **573** · `buy` **399** — a regra disparou lado em
+~11 % dos ticks. **Todos os 26 desfechos gravados têm `horizon_secs = 300`**: nenhum worker a 900 s tocou neste
+ledger, e o único horizonte presente é o do ensaio.
+
+| | |
+|---|---|
+| **episódios com sinal** (`\|last20\| ≥ 4` na janela) | **27** (26 graduados) |
+| etiquetas | `sem_relacao` 21 · **`alinhou` 4** · `inverteu` 2 |
+| **elegíveis** (`\|mov\| ≥ 5 bps`, lado, sem contradição) | **6** |
+| sinais | `sell` 15 · `buy` 12 (os dois sentidos ✓) |
+| `dir_after` a 300 s | `flat` **15** · `down` 7 · `up` 4 (os dois sentidos ✓) |
+
+**Veredicto: INSUFICIENTE — 6 elegíveis < 16.** Não se alonga a sessão para chegar lá.
+
+As duas guardas que exigiste **foram satisfeitas** (os dois sinais de `last20`, os dois sentidos de preço): a
+amostra não está enviesada — está **curta**. O que a trava é o livro: `flat` em 15 dos 27 episódios, movimento de
+300 s pequeno neste testnet.
+
+**Colunas de diagnóstico — e o número que NÃO se cita:** com o corte frouxo de 2 bps, `alinhou` 4 de 13 = 31 %;
+com 10 bps, **3 de 3 = 100 %**. O segundo é exactamente o número que não se promove (n=3 não é amostra, e o
+desenho proíbe-o). Os dois ficam publicados como diagnóstico, fora do veredicto.
+
+**Projecção minha, corrigida.** Eu disse 13–16 elegíveis; a leitura deu **6**. A razão está no que declarei no
+§19.2: o rótulo corre do **tick do sinal**, e não do início da janela — medido a partir de um instante mais tarde,
+a parte das janelas que passa os 5 bps é menor. E houve 27 âncoras, não as ~30 que projetei.
+
+**A aritmética para quem quiser reabrir isto:** 27 âncoras em 5 h = **5,4/h**; elegíveis 6/27 = **22 %** →
+16 elegíveis pediriam ~72 âncoras ≈ **13 h de sessão**. É por isso que "não alongar" é a decisão certa: a
+extensão não seria de uma hora, seria de uma noite inteira.
+
+**O que o ensaio estabeleceu, e o que não.** Estabeleceu: o campo composto gravado, a regra a decidir limpa
+durante 5 h em dry-run (8 998 decisões, nada no venue, um só horizonte no ledger), e que as duas guardas são
+satisfazíveis. **Não estabeleceu nada sobre a aresta da regra** — com 6 elegíveis não há leitura, e não se
+inventa uma a partir das colunas de diagnóstico.
+
+<details>
+<summary><b>Tabela crua dos 27 episódios</b> (`ts do sinal` · `last20_bps` · `sign` · `act` · `dir_after` · `\|mov\|` · `etiqueta`)</summary>
+
+| ts (t_sig) | last20 bps | sign | act | dir_after | \|mov\| bps | etiqueta |
+|---|---|---|---|---|---|---|
+| `20260923T231442Z-BTC` | -4.25 | sell | sell | flat | -1.4 | **sem_relacao** |
+| `20260923T234049Z-BTC` | -4.19 | sell | sell | flat | -1.6 | **sem_relacao** |
+| `20260923T234807Z-BTC` | -6.18 | sell | sell | flat | -3.5 | **sem_relacao** |
+| `20260924T000005Z-BTC` | -4.55 | sell | sell | flat | 2.0 | **sem_relacao** |
+| `20260924T000551Z-BTC` | 5.66 | buy | buy | down | -5.0 | **inverteu** |
+| `20260924T001543Z-BTC` | 4.08 | buy | buy | flat | -0.5 | **sem_relacao** |
+| `20260924T003954Z-BTC` | -4.20 | sell | sell | up | 6.8 | **inverteu** |
+| `20260924T005104Z-BTC` | 5.89 | buy | buy | flat | 2.8 | **sem_relacao** |
+| `20260924T005856Z-BTC` | 4.08 | buy | buy | flat | -0.5 | **sem_relacao** |
+| `20260924T010438Z-BTC` | -4.48 | sell | sell | flat | -4.2 | **sem_relacao** |
+| `20260924T011658Z-BTC` | -4.08 | sell | sell | flat | -2.9 | **sem_relacao** |
+| `20260924T012426Z-BTC` | 5.13 | buy | buy | flat | -4.8 | **sem_relacao** |
+| `20260924T013326Z-BTC` | 5.36 | buy | buy | flat | 3.0 | **sem_relacao** |
+| `20260924T014241Z-BTC` | -14.84 | sell | sell | down | -10.7 | **alinhou** |
+| `20260924T014745Z-BTC` | 5.31 | buy | buy | up | 7.4 | **sem_relacao** |
+| `20260924T015845Z-BTC` | -7.58 | sell | sell | down | -10.6 | **alinhou** |
+| `20260924T020845Z-BTC` | -4.15 | sell | sell | down | -9.6 | **alinhou** |
+| `20260924T022101Z-BTC` | 4.91 | buy | buy | flat | -2.1 | **sem_relacao** |
+| `20260924T022737Z-BTC` | -5.25 | sell | sell | up | 8.2 | **sem_relacao** |
+| `20260924T024241Z-BTC` | 13.76 | buy | buy | flat | 3.8 | **sem_relacao** |
+| `20260924T030428Z-BTC` | 6.40 | buy | buy | down | -6.5 | **sem_relacao** |
+| `20260924T031356Z-BTC` | -7.86 | sell | sell | flat | -1.4 | **sem_relacao** |
+| `20260924T032212Z-BTC` | -5.94 | sell | sell | down | -16.9 | **alinhou** |
+| `20260924T032738Z-BTC` | -11.67 | sell | sell | up | 11.7 | **sem_relacao** |
+| `20260924T033238Z-BTC` | 4.09 | buy | buy | flat | 2.2 | **sem_relacao** |
+| `20260924T035925Z-BTC` | -8.16 | sell | sell | down | -9.7 | **sem_relacao** |
+| `20260924T040925Z-BTC` | 4.85 | buy | buy | — | — | **sem_relacao** |
+
+</details>
+
+*(Saída crua do guião, com tudo o que ele imprimiu, em `provas/n1/leitura-n1.log`; os pontos em JSON em
+`provas/n1/episodios-n1.json`.)*

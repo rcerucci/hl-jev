@@ -1,0 +1,56 @@
+[23:12:33Z] sessao N1 a correr (5 h) | fronteira 20260923T231226
+[04:12:33Z] fechar a sessao (motor por PID, nunca por padrao)
+[04:12:33Z] parado pid 183309
+[04:12:33Z] parado pid 183379
+[04:12:36Z] ancoras por graduar aos 300 s
+    (o teste e da REGRA que escrevemos, nao de um modelo; nada aqui e PnL)
+
+  ancoras por graduar (horizonte 300 s): 27 -> /home/cerucci/.hermes/profiles/appbuilder/cache/scratch/n1-ancoras.json
+graduados 26 · pendentes 1 · sem marca 0 · limite 3000 · delay 700ms · desde 20260923T231226
+[04:13:11Z] LEITURA DO N1
+  janela desde 20260923T231226 · 8998 ciclos com `returns_bps`
+  EPISODIOS com sinal (|last20| >= 4 bps): 27
+  graduados 26/27 | horizonte do desfecho: {300: 26}
+
+  ts (t_sig)               last20 sign  act    conf dir300    |mov|  etiqueta    contraditorio
+  20260923T231442Z-BTC      -4.25 sell  sell    0.9 flat       -1.4  sem_relacao False
+  20260923T234049Z-BTC      -4.19 sell  sell    0.9 flat       -1.6  sem_relacao False
+  20260923T234807Z-BTC      -6.18 sell  sell    0.9 flat       -3.5  sem_relacao False
+  20260924T000005Z-BTC      -4.55 sell  sell    0.9 flat        2.0  sem_relacao True
+  20260924T000551Z-BTC       5.66 buy   buy     0.9 down       -5.0  inverteu    False
+  20260924T001543Z-BTC       4.08 buy   buy     0.9 flat       -0.5  sem_relacao False
+  20260924T003954Z-BTC      -4.20 sell  sell    0.9 up          6.8  inverteu    False
+  20260924T005104Z-BTC       5.89 buy   buy     0.9 flat        2.8  sem_relacao False
+  20260924T005856Z-BTC       4.08 buy   buy     0.9 flat       -0.5  sem_relacao False
+  20260924T010438Z-BTC      -4.48 sell  sell    0.9 flat       -4.2  sem_relacao True
+  20260924T011658Z-BTC      -4.08 sell  sell    0.9 flat       -2.9  sem_relacao False
+  20260924T012426Z-BTC       5.13 buy   buy     0.9 flat       -4.8  sem_relacao True
+  20260924T013326Z-BTC       5.36 buy   buy     0.9 flat        3.0  sem_relacao False
+  20260924T014241Z-BTC     -14.84 sell  sell    0.9 down      -10.7  alinhou     False
+  20260924T014745Z-BTC       5.31 buy   buy     0.9 up          7.4  sem_relacao True
+  20260924T015845Z-BTC      -7.58 sell  sell    0.9 down      -10.6  alinhou     False
+  20260924T020845Z-BTC      -4.15 sell  sell    0.9 down       -9.6  alinhou     False
+  20260924T022101Z-BTC       4.91 buy   buy     0.9 flat       -2.1  sem_relacao False
+  20260924T022737Z-BTC      -5.25 sell  sell    0.9 up          8.2  sem_relacao True
+  20260924T024241Z-BTC      13.76 buy   buy     0.9 flat        3.8  sem_relacao False
+  20260924T030428Z-BTC       6.40 buy   buy     0.9 down       -6.5  sem_relacao True
+  20260924T031356Z-BTC      -7.86 sell  sell    0.9 flat       -1.4  sem_relacao False
+  20260924T032212Z-BTC      -5.94 sell  sell    0.9 down      -16.9  alinhou     False
+  20260924T032738Z-BTC     -11.67 sell  sell    0.9 up         11.7  sem_relacao True
+  20260924T033238Z-BTC       4.09 buy   buy     0.9 flat        2.2  sem_relacao False
+  20260924T035925Z-BTC      -8.16 sell  sell    0.9 down       -9.7  sem_relacao True
+  20260924T040925Z-BTC       4.85 buy   buy     0.9 None         --  sem_relacao True
+
+  == CONTAGENS ==
+    episodios 27 | etiquetas: {'sem_relacao': 21, 'inverteu': 2, 'alinhou': 4}
+    elegiveis (lado, |mov| >= 5 bps, sem contradicao): 6
+    sinais: {'sell': 15, 'buy': 12}   (os dois sentidos de last20 pedidos: True)
+    dir_after a 300 s (corte 5 bps): {'flat': 15, 'down': 7, 'up': 4}
+    DIAGNOSTICO (nunca promove) corte |mov|>=2 bps: n=13 alinhou=4 = 31%
+    DIAGNOSTICO (nunca promove) corte |mov|>=10 bps: n=3 alinhou=3 = 100%
+
+  == VEREDICTO (uma leitura) ==
+    INSUFICIENTE: 6 elegiveis < 16 (nao se alonga a sessao para chegar la)
+    (o teste e da REGRA que escrevemos, nao de um modelo; nada aqui e PnL)
+  json: /home/cerucci/.hermes/profiles/appbuilder/cache/scratch/n1-episodios.json
+[04:13:11Z] fim
