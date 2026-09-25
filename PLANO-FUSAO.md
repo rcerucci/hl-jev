@@ -1638,3 +1638,59 @@ não se leu o 3/3 do §22. Nada aqui é PnL: sem fill, sem taxa, sem signer.
 **Testes do consultor (§G): 7/7 verdes.** O primeiro, na sua primeira versão, reprovava comportamento
 **correcto**: um flip-na-faixa dentro do warmup é descartado e contado, não é falha — a asserção passou a ser
 sobre os **eventos** (nenhum com `t_in` no warmup), e o descarte ficou impresso.
+
+## 24. Ensaio suporte/resistência com o `s` a favor — regra do dono (25 set 2026)
+
+**Regra:** na faixa, abrir de acordo com o `s` — `u ≤ 0,25` (**suporte**) com `s = +1` → **long**; `u ≥ 0,75`
+(**resistência**) com `s = −1` → **short**; fora disso não há evento. Mesmas fórmulas do #20/#23 (`mid = hl2`,
+`L = 130`, EMA24 do H1 fechado com seed SMA 24, `s` sem lookahead).
+
+**Interpretação congelada antes de correr** (a regra não diz a unidade, digo-a eu): evento = **período contínuo**
+da condição, aberto na **primeira** barra em que ela passa a valer (vinda de fora) e fechado na barra em que
+acaba. `R1` = holding fixo 12/36/72 barras; `R2` = até a condição acabar (a saída natural desta regra);
+`FLAT = 10 bps`. Sobreposição declarada: "extremo com `s` a favor" é o canto **E1 do #20** — lá com entrada no
+*toque*, aqui no início do *período*.
+
+### 24.1 Dispara — e desta vez há potência
+
+| | |
+|---|---|
+| barras na condição long / short | 123 / 105 (de 4 900) |
+| **períodos (eventos)** | **36** (long 11 · short 25) |
+| elegíveis (R1 12 / 36 / 72 · R2) | 27 / 27 / 29 / 18 |
+
+### 24.2 As quatro leituras — todas FAIL
+
+| leitura | fechados | elegíveis | alinhou | inverteu | razão | mínimo k/n | p unilateral | veredicto |
+|---|---|---|---|---|---|---|---|---|
+| R1 holding 12 barras | 34 | 27 | 18 | 9 | 0,667 | 19 | 0,061 | **FAIL** |
+| R1 holding 36 barras | 32 | 27 | 17 | 10 | 0,630 | 19 | 0,124 | **FAIL** |
+| R1 holding 72 barras | 31 | 29 | 16 | 13 | 0,552 | 20 | 0,356 | **FAIL** |
+| R2 até a condição acabar | 36 | 18 | 6 | 12 | 0,333 | 13 | 0,952 | **FAIL** |
+
+A taxa agregada **não** chega ao mínimo (o melhor bloco fica em 0,667 contra os 0,704 exigidos; p = 0,061). O
+critério era **um só** e ele diz FAIL.
+
+### 24.3 O confundidor que trava a leitura
+
+Não é o tamanho da amostra — é o **livro**. As medianas de movimento são **negativas em todos os blocos**
+(−17 a −68 bps): a janela foi de queda, e **25 dos 36 eventos são shorts**. Numa janela assim, "short no topo"
+ganha por **beta**. O guarda de amostra (§F: os dois lados presentes) está satisfeito — long 10, short 17 — mas
+isso não separa habilidade de regime.
+
+### 24.4 Diagnóstico por lado (**post hoc — não promove**)
+
+| lado | R1 12 | R1 36 | R1 72 | R2 |
+|---|---|---|---|---|
+| **short** (resistência + `s = −1`) | **14/17 = 0,824** | 13/17 = 0,765 | 13/18 = 0,722 | 4/11 = 0,364 |
+| **long** (suporte + `s = +1`) | 4/10 = 0,400 | 4/10 = 0,400 | 3/11 = 0,273 | 2/7 = 0,286 |
+
+O lado do **short** carrega todo o tilt; o lado do **long** *inverte*. Mas isto é **post hoc**: 13/17 tem
+p ≈ 0,006 justamente porque foi escolhido **depois** de ver a tabela. Se o dono quiser o lado do short como
+regra, tem de ser **declarado** e medido em dado novo — não neste.
+
+`R2` é pior que `R1` nos dois lados, e sabe-se porquê: a duração mediana do período é de **2 barras** — a
+condição desfaz-se logo, portanto "sair quando a condição acaba" é sair aos 10 minutos.
+
+**Testes: 7/7** — e o terceiro apanhou, duas vezes, um defeito real meu: entrada a **meio de um período** nascido
+no warmup, e um bloqueio que eu tinha atribuído **sem consultar**.
