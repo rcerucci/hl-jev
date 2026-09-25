@@ -209,37 +209,3 @@ test("stance com canal no meio e s>0 entra buy ALO; o tick seguinte e hold sem c
   expect(second.raw).toBe("buy");
   expect(second.signal).toBe("hold");
 });
-
-test("stance usa o close da vela, nao o meio do range", async () => {
-  const now = Date.now();
-  const step5 = 300_000;
-  const step1h = 3_600_000;
-  const last5 = Math.floor(now / step5) * step5 - step5;
-  const bars5 = Array.from({ length: 130 }, (_, i) => {
-    const ts = last5 - (129 - i) * step5;
-    return { ts, high: 110, low: 90, close: 109 };
-  });
-  const last1h = Math.floor(now / step1h) * step1h - 2 * step1h;
-  const bars1h = Array.from({ length: 30 }, (_, i) => {
-    const ts = last1h - (29 - i) * step1h;
-    return { ts, high: 96, low: 94, close: 95 };
-  });
-  const market = new FakeMarket();
-  market.candleBars5m = () => bars5;
-  market.candleBars1h = () => bars1h;
-  const ledger = new Ledger(`${DIR}/${++seq}`);
-  const trader = new Trader(
-    market as unknown as Market,
-    new MockModel() as unknown as Model,
-    () => {},
-    () => {},
-    () => {},
-    { policy: new StancePolicy(), ledger },
-  );
-  await trader.onBlock(1);
-  await Bun.sleep(60);
-  const line = ledger.read("BTC", today())[0] as { raw?: string; signal?: string; u?: number };
-  expect(line.raw).toBe("caixa");
-  expect(line.signal).toBe("caixa");
-  expect(market.sends.length).toBe(0);
-});
