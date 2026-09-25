@@ -97,13 +97,33 @@ CI runs the same command on push and pull request.
 
 `POLICY` turns on the policy/risk layer. Without it the bot runs exactly as before and `MODEL` decides.
 
-| Where you are | What decides | Live key OK? |
+### `POLICY=sigma` — the engine of the 100 account
+
+The account this repo trades runs **one** mode: **`POLICY=sigma`**. An H1 decision clock; a single state
+`s = sign(hl2 − EMA24)` of the **already closed** H1 candle (EMA from the previous bar, no lookahead); a
+**wick veto** (a turn where only the wick crossed the EMA and the close stayed on the old side is ignored);
+and a **chop circuit breaker** (3 turns in 12 h → 6 h of `caixa`, then the standing `s` applies again).
+Inventory: long while `s > 0`, short while `s < 0`, hold while `s` does not move. Execution posts at the
+touch and sends the rest to market; 1×, BTC first, re-sized at the episode close.
+
+It lands in slices (spec → plan → tasks → PR). **Until the mode resolves, `POLICY=sigma` is not runnable
+here** — nothing in this repo trades that account yet.
+
+### Laboratory modes — no edge claimed, no recipe
+
+| Mode | What it is | Live key OK? |
 | --- | --- | --- |
 | no `POLICY` | the legacy path (`MODEL`) | **no** — the fusion's gates do not exist on that path |
-| `POLICY=jev` | the fusion: typed policy + risk gates | yes, on testnet |
-| `POLICY=dumb` | the control (no API key, no network) | yes |
-| `POLICY=numeric` | sign(last20) control | yes |
-| `POLICY=stance` | inventory machine: buy / sell / hold / caixa | yes, dry-run |
+| `POLICY=jev` | the fusion: typed policy + risk gates | testnet |
+| `POLICY=dumb` | control over the same twelve words, no network | yes |
+| `POLICY=numeric` | `sign(last20)` control (ensaio N1, closed: insuficiente) | yes |
+| `POLICY=stance` | museum: buy / sell / hold / caixa over `s` and the L=130 channel `u` | dry-run |
+
+These exist to compare policies in the ledger, not to trade this account. `stance` stays in the code while
+the sigma CI is not green, and it is **not** the account path: its channel `u` was measured on the real book
+and **eats trend**. The discarded families — 5m decisions, `trend5`, P+V, the extreme flips, the flip-in-band
+rule, `hysteresis`/ATR, and Jev/`dumb`/Laya as the engine of this account — are closed and tombstoned in
+`PLANO-FUSAO.md`.
 
 `caixa` is not `hold`. `caixa` flattens an open position (IOC reduce-only) and pulls the quote. `hold` after a `buy`/`sell` stance leaves the resting quote alone. This path does not claim edge.
 
@@ -112,9 +132,10 @@ policy, same book, testnet) closed as **amostra insuficiente**: 100% `hold` on b
 `conf >= 0.80`. Nothing there is evidence of edge — it is evidence that this book produces no experiment.
 
 ```sh
-POLICY=dumb
-POLICY=jev
-POLICY=stance  # four labels: buy, sell, hold, caixa. No TypeSafe call. Not a PnL claim.
+POLICY=sigma  # the account engine (lands in slices; not runnable here yet)
+POLICY=jev    # laboratory: the fusion with the typed Jev policy
+POLICY=dumb   # laboratory: the control over the twelve words
+POLICY=stance # museum: s plus the L=130 channel u. Not a PnL claim.
 ```
 
 The tick becomes: snapshot (numbers, kept off the Jev) -> twelve-word state -> policy -> risk gates -> plan -> the same `market.send`. There is one submit path.
@@ -146,7 +167,7 @@ See [`.env.example`](.env.example). The ones that change behavior:
 | `HL_COINS` | `BTC,ETH,SOL,DOGE,BNB` | Sleeves to run |
 | `HL_TESTNET` | `true` | `false` is mainnet |
 | `MODEL` | `mock` | Legacy path. `jev` needs a TypeSafe or Gateway key |
-| `POLICY` | empty | Empty is the legacy path. `jev`, `dumb`, `numeric` or `stance` turns on the fusion |
+| `POLICY` | empty | Empty is the legacy path. `sigma` is the account engine (slices); `jev`, `dumb`, `numeric` and `stance` are laboratory modes |
 | `JEV_PROVIDER` | `typesafe` | `typesafe` or `gateway` |
 | `TYPESAFE_API_KEY` | empty | Official TypeSafe key |
 | `AI_GATEWAY_API_KEY` | empty | Vercel AI Gateway key |
