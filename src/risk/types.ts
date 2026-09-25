@@ -7,6 +7,8 @@
  */
 
 export type Act = "buy" | "sell" | "hold";
+export type StanceRaw = "buy" | "sell" | "caixa";
+export type StanceSignal = "buy" | "sell" | "hold" | "caixa";
 export type Urgency = "maker" | "taker" | "none";
 
 /**
@@ -63,6 +65,10 @@ export interface Verdict {
   /** Diagnostico apenas: nao faz parte da decisao. */
   note?: string;
   input_tokens?: number;
+  /** Postura de inventário (POLICY=stance). Ausente nas outras policies. */
+  raw?: StanceRaw;
+  /** Evento publicado: hold sse raw == raw anterior. */
+  signal?: StanceSignal;
 }
 
 /**
@@ -82,7 +88,10 @@ export type IntentReason =
   | "inventory_block"
   | "frozen_timeout"
   | "frozen_raw"
-  | "frozen_stale";
+  | "frozen_stale"
+  | "caixa"
+  | "stance_hold"
+  | "stance_act";
 
 export interface RiskIntent {
   cycle_id: string;
@@ -108,4 +117,9 @@ export interface Policy {
  */
 export interface PolicyCtx {
   returns_bps: { last1: number; last5: number; last20: number };
+  mid_5m?: number;
+  u?: number;
+  s?: number;
+  ema_h1?: number | null;
+  raw_prev?: StanceRaw;
 }

@@ -28,6 +28,7 @@ export function isFrozen(intent: RiskIntent): boolean {
 
 /** O Jev respondeu (ou o codigo recusou sobre uma resposta valida): cancela a resting. */
 export function standsDown(intent: RiskIntent): boolean {
+  if (intent.reason === "stance_hold") return false;
   return intent.side === "hold" && !isFrozen(intent);
 }
 
@@ -65,6 +66,16 @@ export function riskIntent(input: RiskGateInput): RiskIntent {
 
   const reducing = reducingExisting(snap.pos_side, verdict.act);
 
+  // Caixa = capital fora do mercado. Nao e hold de sinal.
+  if (verdict.signal === "caixa" || verdict.raw === "caixa") {
+    return hold(cycleId, sleeve, conf, "caixa");
+  }
+
+  // Hold de postura: raw nao mudou. Nao cancela a resting que ainda serve.
+  if (verdict.signal === "hold" && (verdict.raw === "buy" || verdict.raw === "sell")) {
+    return hold(cycleId, sleeve, conf, "stance_hold");
+  }
+
   // 3. Livro hostil, salvo se a ordem reduz o que ja esta aberto.
   if (verdict.too_hostile >= hostileTh && !reducing) {
     return hold(cycleId, sleeve, conf, "hostile");
@@ -90,6 +101,6 @@ export function riskIntent(input: RiskGateInput): RiskIntent {
     urgency: "maker",
     reduce_only: reducing,
     conf,
-    reason: "jev_act",
+    reason: verdict.model === "stance" ? "stance_act" : "jev_act",
   };
 }
