@@ -68,8 +68,13 @@ export class Market {
     return this.wallet?.address ?? null;
   }
 
-  quoteSize(mid: number): number {
-    return lot(config.quoteUsd / Math.max(mid, 1e-9), this.szDecimals);
+  /**
+   * Tamanho da ordem. Sem argumento, o de sempre (`QUOTE_USD`, o caminho legado). Com `notional`,
+   * e o tamanho do F6: o sigma dimensiona pelo saldo da sleeve x `LEVERAGE`, nao por um dolar
+   * cravado — a mesma regua que o `inventoryBucket` usa (`bankroll_usd`).
+   */
+  quoteSize(mid: number, notional?: number): number {
+    return lot((notional ?? config.quoteUsd) / Math.max(mid, 1e-9), this.szDecimals);
   }
 
   /** Instante do ultimo livro recebido. Null antes do primeiro l2Book. */

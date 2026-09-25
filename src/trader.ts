@@ -209,6 +209,13 @@ export class Trader {
     const intent = riskIntent({ cycleId: cid, sleeve: this.market.coin, verdict, snap });
     const frozen = isFrozen(intent);
     const plan = planFromRisk(intent, this.position.sz, this.market.quoteSize(book.mid));
+    // F6 — so o tamanho. No fecho do episodio (e na primeira abertura) o notional do lado novo e
+    // `saldo x LEVERAGE`, com o saldo a ser a equity da sleeve como o `toSnapshot` ja a calcula
+    // (`bankroll_usd`: equity do venue quando existe, senao o BANKROLL_USD do config). A caixa e
+    // o `cb_chop` nao abrem nada — so desmontam o que esta. Sem H1 nova nao ha entrada (F4).
+    const abre = config.policy === "sigma" && plan != null && intent.reason !== "caixa" && intent.reason !== "cb_chop";
+    const equity = snap.bankroll_usd;
+    const notional = abre ? equity * config.leverage : null;
     timing.loopMs = Math.round(performance.now() - t0);
     if (frozen) this.totals.lateBlocks++;
     this.emit(block, book, fusedDecision(verdict, state, intent.reason), null, frozen, timing);
@@ -229,6 +236,9 @@ export class Trader {
       cb_active: verdict.cb_active,
       cb_flips_12h: verdict.cb_flips_12h,
       cb_until: verdict.cb_until,
+      equity: config.policy === "sigma" ? equity : undefined,
+      notional: notional ?? undefined,
+      leverage: config.policy === "sigma" ? config.leverage : undefined,
       verdict,
       intent,
       // O fill chega assincrono (userFills/dry-run): a linha do fill e escrita
@@ -243,8 +253,23 @@ export class Trader {
       if (intent.reason === "caixa" || intent.reason === "cb_chop") {
         if (plan) this.enqueueQuote(block, plan, book, config.leverage);
       } else if (plan) {
-        if (plan.reduceOnly) this.enqueueQuote(block, plan, book, config.leverage);
-        this.enqueueSigmaEntry(block, plan.side, this.market.quoteSize(book.mid), book, cid, book.mid);
+        // O tamanho da entrada nova e o notional do F6, nao o `QUOTE_USD` do caminho legado.
+        const size = this.market.quoteSize(book.mid, notional ?? equity * config.leverage);
+        if (plan.reduceOnly) {
+          // Virada: fechar o lado velho e so depois abrir o novo, **na mesma tarefa da fila** —
+          // duas entradas separadas cancelavam-se (o segundo `++sendSeq` matava a primeira).
+          const seq = ++this.sendSeq;
+          this.exchangeTail = this.exchangeTail.catch(() => {}).then(async () => {
+            if (seq !== this.sendSeq) return;
+            const cancel = [...this.orders.keys()].filter((id) => id > 0);
+            const fecho = await this.market.send(plan.side, plan.size, book, cancel, plan.reduceOnly, plan.taker);
+            this.applyPosted(block, fecho);
+            if (seq !== this.sendSeq) return;
+            await this.sigmaEntryLeg(block, plan.side, size, book, cid, book.mid);
+          });
+        } else {
+          this.enqueueSigmaEntry(block, plan.side, size, book, cid, book.mid);
+        }
       }
     } else if (plan) this.enqueueQuote(block, plan, book, config.leverage);
     else if (standsDown(intent)) this.enqueueStandDown();
@@ -308,23 +333,32 @@ export class Trader {
     const seq = ++this.sendSeq;
     this.exchangeTail = this.exchangeTail.catch(() => {}).then(async () => {
       if (seq !== this.sendSeq) return;
-      const cancel = [...this.orders.keys()].filter((id) => id > 0);
-      let quote = await this.market.send(side, sizeSz, book, cancel, false, false, 0);
-      if (quote.status === "reverted") {
-        quote = await this.market.send(side, sizeSz, book, cancel, false, false, -1);
-      }
-      if (seq !== this.sendSeq) return;
-      this.applyPosted(block, quote);
-      if (quote.status === "reverted" || !(quote.size > 0)) return;
-      this.sigmaFill.set(this.market.coin, {
-        cycleId: cid,
-        block,
-        side,
-        size: quote.size,
-        makerPx: quote.price,
-        midAtSend: mid,
-        deadline: Date.now() + SIGMA_FILL.ALO_WAIT_MS,
-      });
+      await this.sigmaEntryLeg(block, side, sizeSz, book, cid, mid);
+    });
+  }
+
+  /**
+   * A perna de abertura, sem mexer no `sendSeq`: quem chama ja reservou a vez na fila. E isto
+   * que permite a virada mandar as **duas** pernas (fechar e depois abrir) na mesma tarefa — com
+   * um `enqueueQuote` + um `enqueueSigmaEntry` por tick, o segundo `++sendSeq` cancelava o
+   * primeiro e o lado velho ficava aberto.
+   */
+  private async sigmaEntryLeg(block: number, side: Side, sizeSz: number, book: Book, cid: string, mid: number) {
+    const cancel = [...this.orders.keys()].filter((id) => id > 0);
+    let quote = await this.market.send(side, sizeSz, book, cancel, false, false, 0);
+    if (quote.status === "reverted") {
+      quote = await this.market.send(side, sizeSz, book, cancel, false, false, -1);
+    }
+    this.applyPosted(block, quote);
+    if (quote.status === "reverted" || !(quote.size > 0)) return;
+    this.sigmaFill.set(this.market.coin, {
+      cycleId: cid,
+      block,
+      side,
+      size: quote.size,
+      makerPx: quote.price,
+      midAtSend: mid,
+      deadline: Date.now() + SIGMA_FILL.ALO_WAIT_MS,
     });
   }
 
