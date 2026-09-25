@@ -46,7 +46,7 @@ the **already closed** H1 candle; wick veto; chop breaker (3 turns in 12 h → 6
 decides, not Jev**, and the clock is the **H1 close, not every tick**. `jev`, `dumb`, `numeric` and `stance`
 are laboratory modes. Tombstoned, do not implement: 5m decision families (T-5m, extremes, flip-in-band,
 support/resistance), the `u` channel as box or filter, hysteresis/ATR/σ, and Jev/`dumb`/Laya as the engine
-of this account. See the tombstone block in `PLANO-FUSAO.md`.
+of this account. See the tombstone block in `archive/PLANO-FUSAO.md`.
 
 ---
 
