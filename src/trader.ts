@@ -200,6 +200,7 @@ export class Trader {
       ema_h1: ctx.ema_h1,
       raw: verdict.raw,
       signal: verdict.signal,
+      wick_veto: verdict.wick_veto,
       verdict,
       intent,
       // O fill chega assincrono (userFills/dry-run): a linha do fill e escrita
@@ -218,8 +219,8 @@ export class Trader {
       raw_prev: this.stancePrev.get(this.market.coin),
     };
     const m = this.market as Market & {
-      candleBars5m?: () => { ts: number; high: number; low: number }[];
-      candleBars1h?: () => { ts: number; high: number; low: number }[];
+      candleBars5m?: () => { ts: number; high: number; low: number; close: number }[];
+      candleBars1h?: () => { ts: number; high: number; low: number; close: number }[];
     };
     const raw5 = m.candleBars5m?.() ?? [];
     const raw1h = m.candleBars1h?.() ?? [];
@@ -236,6 +237,9 @@ export class Trader {
       ctx.s = feat.s;
       ctx.ema_h1 = feat.ema_h1;
     }
+    // Sigma: as velas H1 cruas COM o close. E o sigma que escolhe a ultima fechada, pelo
+    // instante do ciclo — o tick de 5m ingere barra, nao vira inventario.
+    ctx.h1 = raw1h.map((c) => ({ t: c.ts, high: c.high, low: c.low, close: c.close }));
     return ctx;
   }
 

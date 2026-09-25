@@ -1,0 +1,146 @@
+/**
+ * POLICY=sigma: o nucleo `s` H1. Maquina de inventario buy / sell / hold / caixa.
+ * Nao e oraculo de PnL. Sem rede, sem Jev.
+ *
+ * `s = sign(hl2 - EMA24)` da vela H1 **ja fechada**, com a EMA calculada sobre as barras
+ * **anteriores** a essa (sem lookahead). Sem `u`, sem canal, sem chao/tecto: a unica entrada e
+ * o `s`.
+ *
+ * Veto de pavio (F2): se o `s` quer virar e so o **wick** cruzou a EMA — o `hl2` passou para o
+ * lado novo mas o **close** ficou no lado velho — a barra e ignorada e o `s` mantem-se. Um close
+ * que confirma o lado novo flipa.
+ *
+ * raw    ∈ {buy, sell, caixa}        (caixa sse s == 0: preco exactamente na EMA)
+ * signal ∈ {buy, sell, hold, caixa}  — hold sse raw == raw anterior
+ */
+import type { Act, Policy, PolicyCtx, SigmaBar, StanceRaw, StanceSignal, Verdict } from "../risk/types";
+
+export const SIGMA = {
+  EMA_N: 24,
+  CONF_ON_SIDE: 0.9,
+  CONF_ON_HOLD: 0.5,
+  HOSTILE_FALSE: 0.1,
+} as const;
+
+/** `hl2` da vela: o sigma compara a mediana do intervalo H1 contra a EMA. */
+export function hl2Of(b: SigmaBar): number {
+  return (b.high + b.low) / 2;
+}
+
+/** EMA com seed SMA sobre uma serie. `null` enquanto nao houver `n` valores. */
+export function emaSigma(xs: number[], n: number = SIGMA.EMA_N): (number | null)[] {
+  const out: (number | null)[] = [];
+  const k = 2 / (n + 1);
+  let e: number | null = null;
+  for (let i = 0; i < xs.length; i++) {
+    if (i < n - 1) { out.push(null); continue; }
+    if (i === n - 1) { e = xs.slice(0, n).reduce((a, b) => a + b, 0) / n; out.push(e); continue; }
+    e = xs[i]! * k + (e as number) * (1 - k);
+    out.push(e);
+  }
+  return out;
+}
+
+/** `raw` so olha para o `s`. Sem `u`, sem canal, sem chao/tecto — e o teste prova-o. */
+export function sigmaRaw(s: number): StanceRaw {
+  if (s === 0) return "caixa";
+  return s > 0 ? "buy" : "sell";
+}
+
+/** `hold` sse o raw nao mudou (mesmo contrato do stance). */
+export function signalFrom(raw: StanceRaw, prev: StanceRaw | undefined): StanceSignal {
+  return prev !== undefined && raw === prev ? "hold" : raw;
+}
+
+/** O instante do ciclo, lido do proprio `cycle_id` (`YYYYMMDDTHHMMSSZ-SLEEVE`). */
+export function cycleTsMs(cycleId: string): number {
+  const m = /^(\d{8})T(\d{6})Z/.exec(cycleId);
+  if (!m) return 0;
+  const d = m[1]!;
+  const t = m[2]!;
+  return Date.UTC(Number(d.slice(0, 4)), Number(d.slice(4, 6)) - 1, Number(d.slice(6, 8)),
+    Number(t.slice(0, 2)), Number(t.slice(2, 4)), Number(t.slice(4, 6)));
+}
+
+/**
+ * Indice da H1 **ja fechada** no instante do ciclo — a ultima com `t + 1h <= at`. E o que faz
+ * "5m sozinho nao muda o s": dentro da mesma hora, a mesma vela, o mesmo `s`.
+ */
+export function lastClosedH1(bars: SigmaBar[], atMs: number): number {
+  let idx = -1;
+  for (let i = 0; i < bars.length; i++) {
+    if (bars[i]!.t + 3_600_000 <= atMs) idx = i;
+  }
+  return idx;
+}
+
+/**
+ * O passo do sigma numa vela fechada: o `s` candidato (hl2 contra a EMA das barras anteriores) e
+ * o veto de pavio. `sPrev` = `s` vigente (0 = ainda sem estado). `null` sem historico para a EMA
+ * — e sem historico a policy nao inventa lado.
+ */
+export function sigmaStep(
+  bars: SigmaBar[],
+  atMs: number,
+  sPrev: number,
+): { s: number; veto: boolean; hl2: number; close: number; ema: number } | null {
+  const idx = lastClosedH1(bars, atMs);
+  if (idx < SIGMA.EMA_N) return null; // precisa de EMA_N barras ANTERIORES a vela lida
+  const at = bars[idx]!;
+  const emas = emaSigma(bars.slice(0, idx).map(hl2Of));
+  const ema = emas[emas.length - 1] ?? null;
+  if (ema == null) return null;
+  const hl2 = hl2Of(at);
+  const sRaw = hl2 > ema ? 1 : hl2 < ema ? -1 : 0;
+  const sClose = at.close > ema ? 1 : at.close < ema ? -1 : 0;
+  const querVirar = sPrev !== 0 && sRaw !== 0 && sRaw !== sPrev;
+  const veto = querVirar && sClose === sPrev; // so o wick cruzou: o close ficou no lado velho
+  return { s: veto ? sPrev : sRaw, veto, hl2, close: at.close, ema };
+}
+
+function actOf(signal: StanceSignal): Act {
+  if (signal === "buy" || signal === "sell") return signal;
+  return "hold";
+}
+
+export class SigmaPolicy implements Policy {
+  readonly name = "sigma";
+  private prevRaw = new Map<string, StanceRaw>();
+  private sState = new Map<string, number>();
+
+  async decide(_state: string, cycleId: string, ctx?: PolicyCtx): Promise<Verdict> {
+    const sleeve = cycleId.includes("-") ? cycleId.slice(cycleId.indexOf("-") + 1) : cycleId;
+    const prev = ctx?.raw_prev ?? this.prevRaw.get(sleeve);
+    const step = ctx?.h1 ? sigmaStep(ctx.h1, cycleTsMs(cycleId), this.sState.get(sleeve) ?? 0) : null;
+    let raw: StanceRaw;
+    if (!step) {
+      raw = "caixa"; // sem features nao inventa lado
+    } else {
+      raw = sigmaRaw(step.s);
+      this.sState.set(sleeve, step.s);
+    }
+    const signal = signalFrom(raw, prev);
+    this.prevRaw.set(sleeve, raw);
+    const act = actOf(signal);
+    const side = act === "hold" ? SIGMA.CONF_ON_HOLD : SIGMA.CONF_ON_SIDE;
+    const rest = (1 - side) / 2;
+    return {
+      cycle_id: cycleId,
+      model: this.name,
+      latency_ms: 0,
+      act,
+      act_probs: {
+        buy: act === "buy" ? side : rest,
+        sell: act === "sell" ? side : rest,
+        hold: act === "hold" ? side : rest,
+      },
+      act_conf: side,
+      too_hostile: SIGMA.HOSTILE_FALSE,
+      raw_ok: true,
+      raw,
+      signal,
+      wick_veto: step?.veto ?? false,
+      note: `sigma s=${step?.s ?? "na"} hl2=${step ? step.hl2.toFixed(2) : "na"} ema=${step ? step.ema.toFixed(2) : "na"} veto=${step?.veto ?? false}`,
+    };
+  }
+}
