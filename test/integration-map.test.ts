@@ -24,9 +24,23 @@ const hits = (haystack: string, needle: string) => haystack.split(needle).length
 
 describe("o executor nao foi reimplementado (spec 11)", () => {
   test("market.send mantem a assinatura", () => {
-    expect(read("src/market.ts")).toContain(
-      "async send(side: Side, sizeSz: number, book: Book, cancel: number[], reduceOnly = false, taker = false): Promise<Quote>",
-    );
+    // F5 acrescentou **um argumento opcional** ao fim (`quoteInside`): a entrada do sigma poe o
+    // ALO no touch (0) ou um tick para tras (-1). Os seis argumentos de antes ficam iguais, pela
+    // mesma ordem, e quem nao passa o novo continua com o comportamento de sempre.
+    const send = read("src/market.ts");
+    for (const arg of [
+      "side: Side,",
+      "sizeSz: number,",
+      "book: Book,",
+      "cancel: number[],",
+      "reduceOnly = false,",
+      "taker = false,",
+      "quoteInside?: number,",
+    ]) {
+      expect(send).toContain(arg);
+    }
+    expect(send).toContain("): Promise<Quote>");
+    expect(send).toContain("async send(");
   });
 
   test("cancelResting mantem a assinatura", () => {
@@ -41,7 +55,10 @@ describe("o executor nao foi reimplementado (spec 11)", () => {
   test("existe um unico sitio que chama market.send, e e o trader", () => {
     const callers = srcText().filter(([, t]) => t.includes("this.market.send(")).map(([f]) => f);
     expect(callers).toEqual(["trader.ts"]);
-    expect(hits(read("src/trader.ts"), "this.market.send(")).toBe(1);
+    // F5: o trader chama quatro vezes — o ALO da entrada, o reenvio um tick para tras quando o
+    // venue o recusa, a Ioc do resto e o flatten dos outros modos. Continua a ser o unico sitio
+    // que submete ordem: a porta de baixo nao mudou.
+    expect(hits(read("src/trader.ts"), "this.market.send(")).toBe(4);
   });
 
   test("o trader continua a passar por planQuote e pelos dois desfechos", () => {

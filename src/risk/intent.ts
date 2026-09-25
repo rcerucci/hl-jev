@@ -66,6 +66,12 @@ export function riskIntent(input: RiskGateInput): RiskIntent {
 
   const reducing = reducingExisting(snap.pos_side, verdict.act);
 
+  // F5 — o portao do relogio nao e um evento: a postura fica e a resting que ja serve nao se
+  // toca. Sem isto, um tick dentro da mesma H1 com a postura em caixa voltaria a desmontar.
+  if (verdict.clock_hold) {
+    return hold(cycleId, sleeve, conf, "stance_hold");
+  }
+
   // F3 — caixa do circuit breaker de chop: mesma saida do caixa (flatten IOC reduce-only em
   // `planFromRisk`), razao propria para o ledger distinguir as duas causas.
   if (verdict.cb_active) {

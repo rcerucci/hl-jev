@@ -28,6 +28,19 @@ export const SIGMA = {
   HOSTILE_FALSE: 0.1,
 } as const;
 
+/**
+ * F5 — a mecanica de ordem do sigma. Constante no codigo (como o CB), nao vai para o `.env`:
+ * o ALO no touch espera isto antes de o resto ir a mercado. As taxas sao as assumidas no paper
+ * (tier 0 da Hyperliquid: 1,5 maker / 4,5 taker) — sem rebate inventado.
+ *
+ * Nao e `as const` de proposito: o teste do mecanismo encurta a espera em vez de dormir 8 s.
+ */
+export const SIGMA_FILL = {
+  ALO_WAIT_MS: 8000,
+  MAKER_FEE_BPS: 1.5,
+  TAKER_FEE_BPS: 4.5,
+};
+
 /** F3 — circuit breaker de chop. Constantes escritas antes da tabela, como as do N1. */
 export const CB_CHOP = {
   FLIPS: 3,
