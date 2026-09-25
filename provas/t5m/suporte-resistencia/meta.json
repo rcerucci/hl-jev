@@ -18,8 +18,8 @@
   72
  ],
  "sha_serie": "1a6a1d833c434c63",
- "commit": "ad5c58d",
- "gerado_em": "2026-09-25T01:12:03.885Z",
+ "commit": "ad6e719",
+ "gerado_em": "2026-09-25T01:19:23.085Z",
  "regra": "suporte (u<=0,25) com s=+1 -> long; resistencia (u>=0,75) com s=-1 -> short; evento = periodo continuo, t_in na primeira barra",
  "interpretacao": "unidade = periodo continuo da condicao; R2 = saida quando a condicao acaba; FLAT=10 bps"
 }

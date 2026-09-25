@@ -1,7 +1,7 @@
 # Ensaio suporte/resistência com o `s` a favor
 
 Fonte: hyperliquid-testnet BTC · 5030 barras de 5 min (pedidas 5760 — a fonte dá menos: ~17,5 dias)
-Janela: 2026-09-07T13:45:00.000Z → 2026-09-25T00:50:00.000Z · série `1a6a1d833c434c63` · commit `ad5c58d`
+Janela: 2026-09-07T13:45:00.000Z → 2026-09-25T00:50:00.000Z · série `1a6a1d833c434c63` · commit `ad6e719`
 L=130 · CHAO=0.25 · TECTO=0.75 · FLAT=10 bps · R1 12/36/72 barras · R2 até a condição acabar
 
 Regra: **na faixa, seguir o `s`** — `u ≤ 0.25` (suporte) com `s = +1` → long; `u ≥ 0.75` (resistência) com `s = −1` → short. Fora disso não há evento.

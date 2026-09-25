@@ -50,7 +50,9 @@ if (existsSync(CACHE)) {
 }
 
 const agora = Date.now();
-const h1: Vela[] = await velas(COIN, "1h", vs[0].t - 30 * 3_600_000, agora, 3_600_000);
+// Aquecimento LONGO da EMA24: a fonte dá ~1681 barras de H1 (~70 d). Com 30 h o `s`
+// difere em 87 % das barras — ver provas/t5m/diagnostico-s.ts.
+const h1: Vela[] = await velas(COIN, "1h", vs[0].t - 60 * 24 * 3_600_000, agora, 3_600_000);
 
 type Bar = { t: number; T: number; mid: number; h: number; l: number };
 const bars: Bar[] = vs.map((v) => ({ t: v.t, T: v.T, mid: (Number(v.h) + Number(v.l)) / 2, h: Number(v.h), l: Number(v.l) }));

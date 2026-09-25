@@ -62,7 +62,8 @@ async function velas(interval: "5m" | "1h", de: number, ate: number, passoMs: nu
 
 const c5 = await velas("5m", agora - horas * H1, agora, T5);
 // H1 com folga de 8 dias antes da janela: a EMA 24 precisa de barras fechadas a montante.
-const c1h = await velas("1h", agora - (horas + 8 * 24) * H1, agora, H1);
+// Aquecimento LONGO da EMA24 (ver provas/t5m/diagnostico-s.ts): 60 dias antes da janela.
+const c1h = await velas("1h", agora - (horas + 60 * 24) * H1, agora, H1);
 
 console.log("== 1. PROVA DE VOLUME (vela de 5 min crua do cliente) ==");
 const ultima = c5[c5.length - 1] as unknown as Record<string, unknown>;

@@ -61,7 +61,8 @@ if (vs.length < PEDIDAS * 0.9) {
   console.log(`  AVISO: a fonte de 5 min deste venue acaba em ~${vs.length} barras (~17,5 d); pedir 20 dias devolve o mesmo.`);
 }
 
-const h1: Vela[] = await velas(COIN, "1h", vs[0].t - 30 * 3_600_000, Date.now(), 3_600_000);
+// Aquecimento LONGO da EMA24 (ver provas/t5m/diagnostico-s.ts): 60 dias antes da janela.
+const h1: Vela[] = await velas(COIN, "1h", vs[0].t - 60 * 24 * 3_600_000, Date.now(), 3_600_000);
 
 type Bar = { t: number; mid: number; h: number; l: number };
 const bars: Bar[] = vs.map((v) => ({ t: v.t, mid: (Number(v.h) + Number(v.l)) / 2, h: Number(v.h), l: Number(v.l) }));

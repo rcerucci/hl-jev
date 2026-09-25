@@ -18,7 +18,7 @@
   72
  ],
  "sha_serie": "1a6a1d833c434c63",
- "commit": "b56abe9",
- "gerado_em": "2026-09-25T01:04:39.005Z",
+ "commit": "ad6e719",
+ "gerado_em": "2026-09-25T01:19:22.064Z",
  "regra": "evento = s muda de sinal E (u<=CHAO para long) ou (u>=TECTO para short); toque sem flip nao entra"
 }

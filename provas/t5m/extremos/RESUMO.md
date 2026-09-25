@@ -2,7 +2,7 @@
 
 Fonte: hyperliquid-testnet BTC · 5030 barras de 5 min (pedidas 5760, TRUNCADA)
 Janela: 2026-09-07T13:45:00.000Z → 2026-09-25T00:50:00.000Z
-L=130 · CHAO=0.15 · TECTO=0.85 · FLAT=10 bps · horizontes 12/36/72 barras · serie `1a6a1d833c434c63` · commit `76a743b`
+L=130 · CHAO=0.15 · TECTO=0.85 · FLAT=10 bps · horizontes 12/36/72 barras · serie `1a6a1d833c434c63` · commit `ad6e719`
 
 Visita = uma linha (t_in = primeira barra da visita). Zero produto, zero sessão, zero Pine.
 

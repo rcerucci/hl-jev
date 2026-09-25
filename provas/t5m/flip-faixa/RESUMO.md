@@ -1,7 +1,7 @@
 # Ensaio flip-na-faixa — entrada só no flip dentro da faixa do extremo
 
 Fonte: hyperliquid-testnet BTC · 5030 barras de 5 min (pedidas 5760 — a fonte dá menos: ~17,5 dias)
-Janela: 2026-09-07T13:45:00.000Z → 2026-09-25T00:50:00.000Z · série `1a6a1d833c434c63` · commit `b56abe9`
+Janela: 2026-09-07T13:45:00.000Z → 2026-09-25T00:50:00.000Z · série `1a6a1d833c434c63` · commit `ad6e719`
 L=130 · CHAO=0.25 · TECTO=0.75 · FLAT=10 bps · R1 12/36/72 barras · R2 até o próximo flip
 
 Regra de entrada: **flip de `s` na faixa** — `u ≤ 0.25` e flip para `+1` → long; `u ≥ 0.75` e flip para `−1` → short. Toque no extremo **sem** flip não é evento; flip no meio do canal não é evento.
