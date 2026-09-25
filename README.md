@@ -107,8 +107,9 @@ Inventory: long while `s > 0`, short while `s < 0`, hold while `s` does not move
 touch and sends the rest to market; 1×, BTC first, re-sized at the episode close.
 
 It landed in slices (spec → plan → tasks → PR). **`POLICY=sigma` resolves and runs**: the `s` and the wick
-veto are live and the chop breaker arms 6 h of `caixa` on 3 turns in 12 h. The account itself is not traded
-yet — nothing here sends an order for it.
+veto are live and the chop breaker arms 6 h of `caixa` on 3 turns in 12 h. Under `POLICY=sigma` the tick
+decides **only when a new H1 close is born** — between closes it holds and leaves the resting quote alone,
+so the 5m block cannot re-quote. The account itself is not traded yet — nothing here sends an order for it.
 
 ### Laboratory modes — no edge claimed, no recipe
 

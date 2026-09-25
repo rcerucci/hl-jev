@@ -6,6 +6,7 @@ import { planFromRisk, planQuote, type QuotePlan } from "./plan";
 import { toSnapshot, toState } from "./risk/buckets";
 import { isFrozen, riskIntent, standsDown } from "./risk/intent";
 import type { Policy, PolicyCtx, Snapshot, StanceRaw, Verdict } from "./risk/types";
+import { SIGMA, lastClosedH1 } from "./policy/sigma";
 import { stanceFeatures, type StanceBar } from "./policy/stance_features";
 import { cycleId, type Ledger } from "./ledger/jsonl";
 import { aggregateFills, emptySummary, takeLiveFills, takeSimFills, type Resting, type TradeFeed } from "./trades";
@@ -56,6 +57,8 @@ export class Trader {
   private totals: Totals = emptyTotals();
   private jevPauseUntil = 0;
   private stancePrev = new Map<string, StanceRaw>();
+  /** F4 — a H1 fechada que ja foi decidida, por moeda. O portao do relogio le e escreve aqui. */
+  private h1Decided = new Map<string, number>();
 
   constructor(
     private market: Market,
@@ -177,7 +180,12 @@ export class Trader {
     const state = toState(snap);
     const cid = cycleId(new Date(now), this.market.coin);
     const ctx = this.policyCtx(snap, now);
-    const verdict = await fusion.policy.decide(state, cid, ctx);
+    // F4 — portao do relogio. O `s` e H1 mas o tick corre em todo o bloco: sem isto, o 5m
+    // re-cotiza. So uma H1 **fechada nova** abre decisao de inventario; no resto do tempo o
+    // tick e um `hold` que nao chama a policy, nao flipa e nao desmonta a resting que serve.
+    const verdict = this.repeatH1(ctx, now)
+      ? this.gateHold(cid)
+      : await fusion.policy.decide(state, cid, ctx);
     if (verdict.raw) this.stancePrev.set(this.market.coin, verdict.raw);
     this.totals.decisions++;
     this.totals.jevUsd += ((verdict.input_tokens ?? 0) / 1e6) * config.jevUsdPerMTok;
@@ -214,6 +222,51 @@ export class Trader {
     else if (standsDown(intent)) this.enqueueStandDown();
     // Congelado (timeout/JSON invalido/livro velho): sem ordem nova **e** sem
     // cancelar. Nao ha mais nada a fazer neste tick — e a decisao D3.
+  }
+
+  /**
+   * F4 — o portao do relogio: `true` quando NAO ha H1 fechada nova (o tick fica em `hold`).
+   *
+   * A unidade e a vela H1 **fechada**, pelo mesmo critério do sigma: o instante de fecho
+   * (`t + 1h`) e comparado com o da ultima decidida. Doze blocos dentro da mesma hora — 12
+   * velas de 5m — sao doze `hold`, sem ordem nova. Uma vela nova marca e devolve `false`, e a
+   * decisao corre como sempre (s + veto + CB).
+   *
+   * Vale **so** para `POLICY=sigma`: `jev`, `dumb`, `numeric` e `stance` mantem o relogio deles
+   * — esta fatia nao lhes muda o comportamento. O tick de 5m continua a ingerir barra no chart.
+   */
+  private repeatH1(ctx: PolicyCtx, now: number): boolean {
+    if (config.policy !== "sigma") return false;
+    const bars = ctx.h1 ?? [];
+    const idx = lastClosedH1(bars, now);
+    if (idx < 0) return true; // ainda nao fechou nenhuma H1: nada de inventario
+    const closeAt = bars[idx]!.t + 3_600_000;
+    if (this.h1Decided.get(this.market.coin) === closeAt) return true;
+    this.h1Decided.set(this.market.coin, closeAt);
+    return false;
+  }
+
+  /**
+   * A decisao do portao: `hold` com a postura vigente, sem chamar a policy. O `raw` mantem-se e
+   * o `signal` e `hold`, e por isso o `riskIntent` da-lhe a razao `stance_hold` — a resting que
+   * ja serve nao e cancelada. Sem postura anterior (`caixa`), nada fica a caminho.
+   */
+  private gateHold(cid: string): Verdict {
+    const prev = this.stancePrev.get(this.market.coin);
+    return {
+      cycle_id: cid,
+      model: config.policy,
+      latency_ms: 0,
+      act: "hold",
+      act_probs: { buy: 0.25, sell: 0.25, hold: 0.5 },
+      act_conf: SIGMA.CONF_ON_HOLD,
+      too_hostile: SIGMA.HOSTILE_FALSE,
+      raw_ok: true,
+      raw: prev === "buy" || prev === "sell" ? prev : "caixa",
+      signal: "hold",
+      wick_veto: false,
+      note: "sigma: sem H1 fechada nova (portao do relogio)",
+    };
   }
 
   private policyCtx(snap: Snapshot, now: number): PolicyCtx {
