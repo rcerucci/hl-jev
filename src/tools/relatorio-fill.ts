@@ -1,7 +1,11 @@
 /**
- * F7 — relatorio da corrida seca do sigma. Le o ledger e confronta o fill com o mid, contra o
- * ensaio (markout hl2, 6 bps ida-e-volta). **Nao decide aresta e nao projecta PnL**: mede o
- * mecanismo — como a ordem encheu, a que distancia do mid, e com que taxa assumida.
+ * F7 — relatorio da corrida seca do sigma. Le o ledger e mede o **custo** do fill contra o mid,
+ * ao lado do ensaio (markout hl2, 6 bps de ida-e-volta). **Nao decide aresta e nao projecta
+ * PnL**: mede o mecanismo — como a ordem encheu, quanto pior que o mid, e com que taxa assumida.
+ *
+ * Sinais: `fill_bps` e `fee_bps` sao ambos **custo** — positivos quando se paga mais (compra
+ * acima do mid) ou se recebe menos (venda abaixo do mid). Somam-se: o custo da perna e a soma,
+ * e a ida-e-volta sao (aproximadamente) duas pernas.
  *
  *   bun run src/tools/relatorio-fill.ts [--desde 20260925T000000Z] [--sleeve BTC] [--horas 24]
  *
@@ -86,7 +90,8 @@ for (const day of ledger.days()) {
 
 const bpsTodos = fills.map((f) => f.fill_bps);
 const fee = fills.map((f) => f.fee_bps);
-const liquido = fills.map((f) => f.fill_bps - f.fee_bps);
+/** Custo da perna: a distancia ao mid **mais** a taxa. Os dois sao custo, logo somam-se. */
+const custoPerna = fills.map((f) => f.fill_bps + f.fee_bps);
 const maker = fills.filter((f) => f.fill_role === "maker").length;
 const taker = fills.filter((f) => f.fill_role === "taker").length;
 const mixed = fills.filter((f) => f.fill_role === "mixed").length;
@@ -99,9 +104,10 @@ console.log(`relatorio do fill do sigma  (ledger ${dir}, sleeve ${args.sleeve}, 
 console.log("");
 console.log(`  decisoes                 ${decisoes}`);
 console.log(`  episodios com fill       ${fills.length}`);
-console.log(`  fill vs mid (bps)        media ${bps(media(bpsTodos))}   mediana ${bps(mediana(bpsTodos))}`);
-console.log(`  taxa assumida (bps)      media ${bps(media(fee))}   ida-e-volta ~${bps(2 * media(fee))}  (ensaio: 6,00)`);
-console.log(`  liquido da taxa (bps)    media ${bps(media(liquido))}   mediana ${bps(mediana(liquido))}`);
+console.log(`  custo vs mid (bps)       media ${bps(media(bpsTodos))}   mediana ${bps(mediana(bpsTodos))}   (positivo = PIOR que o mid)`);
+console.log(`  taxa assumida (bps)      media ${bps(media(fee))}`);
+console.log(`  custo da perna (bps)     media ${bps(media(custoPerna))}   mediana ${bps(mediana(custoPerna))}   (mid + taxa)`);
+console.log(`  ida-e-volta estimada     ${bps(2 * media(custoPerna))} (2 pernas)   o ensaio assumia 6,00`);
 console.log(`  papel                    maker ${pct(maker, fills.length)} (${maker})  taker ${pct(taker, fills.length)} (${taker})  mixed ${pct(mixed, fills.length)} (${mixed})`);
 console.log(`  ALO que encheu nos 8 s   ${pct(aloCheio, fills.length)} (${aloCheio})   com resto para a Ioc ${pct(comResto, fills.length)} (${comResto})`);
 console.log(`  caixa (s=0 ou CB)        decisoes ${caixa}   com CB activo ${cb}   (CB armado ${cbArmado})`);

@@ -74,7 +74,12 @@ export interface FillLine {
   fill_px: number;
   /** Mid no instante em que o ALO saiu. */
   mid_at_send: number;
-  /** (fill - mid) em bps com o sinal do lado: positivo e melhor que o mid. */
+  /**
+   * **Custo** contra o mid, em bps, com o sinal do lado: positivo = pior que o mid (numa compra
+   * pagou-se acima, numa venda recebeu-se abaixo). O numero e este desde o F5 — o que estava
+   * errado era a etiqueta, que o lia como vantagem: uma venda a 83 278 com mid 83 320,5 e +5,10
+   * de **custo**, nao de ganho. Somar `fee_bps` da o custo da perna.
+   */
   fill_bps: number;
   /** O que continuava aberto aos 8 s (0 se o ALO encheu tudo). */
   unfilled: number;
