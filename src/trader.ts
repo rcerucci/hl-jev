@@ -5,7 +5,8 @@ import type { Model, ModelDecision, TradeState } from "./model";
 import { planFromRisk, planQuote, type QuotePlan } from "./plan";
 import { toSnapshot, toState } from "./risk/buckets";
 import { isFrozen, riskIntent, standsDown } from "./risk/intent";
-import type { Policy, Snapshot, Verdict } from "./risk/types";
+import type { Policy, PolicyCtx, Snapshot, StanceRaw, Verdict } from "./risk/types";
+import { stanceFeatures, type StanceBar } from "./policy/stance_features";
 import { cycleId, type Ledger } from "./ledger/jsonl";
 import { aggregateFills, emptySummary, takeLiveFills, takeSimFills, type Resting, type TradeFeed } from "./trades";
 import type { BlockEvent, Book, Fill, PricePoint, Quote, Side, Timing, Totals } from "./types";
@@ -54,6 +55,7 @@ export class Trader {
   private position = { sz: 0, costUsd: 0 };
   private totals: Totals = emptyTotals();
   private jevPauseUntil = 0;
+  private stancePrev = new Map<string, StanceRaw>();
 
   constructor(
     private market: Market,
@@ -174,7 +176,9 @@ export class Trader {
     const snap = this.buildSnapshot(now, book);
     const state = toState(snap);
     const cid = cycleId(new Date(now), this.market.coin);
-    const verdict = await fusion.policy.decide(state, cid, { returns_bps: snap.returns_bps });
+    const ctx = this.policyCtx(snap, now);
+    const verdict = await fusion.policy.decide(state, cid, ctx);
+    if (verdict.raw) this.stancePrev.set(this.market.coin, verdict.raw);
     this.totals.decisions++;
     this.totals.jevUsd += ((verdict.input_tokens ?? 0) / 1e6) * config.jevUsdPerMTok;
     const intent = riskIntent({ cycleId: cid, sleeve: this.market.coin, verdict, snap });
@@ -190,6 +194,12 @@ export class Trader {
       sleeve: this.market.coin,
       state,
       returns_bps: snap.returns_bps,
+      mid_5m: ctx.mid_5m,
+      u: ctx.u,
+      s: ctx.s,
+      ema_h1: ctx.ema_h1,
+      raw: verdict.raw,
+      signal: verdict.signal,
       verdict,
       intent,
       // O fill chega assincrono (userFills/dry-run): a linha do fill e escrita
@@ -200,6 +210,33 @@ export class Trader {
     else if (standsDown(intent)) this.enqueueStandDown();
     // Congelado (timeout/JSON invalido/livro velho): sem ordem nova **e** sem
     // cancelar. Nao ha mais nada a fazer neste tick — e a decisao D3.
+  }
+
+  private policyCtx(snap: Snapshot, now: number): PolicyCtx {
+    const ctx: PolicyCtx = {
+      returns_bps: snap.returns_bps,
+      raw_prev: this.stancePrev.get(this.market.coin),
+    };
+    const m = this.market as Market & {
+      candleBars5m?: () => { ts: number; high: number; low: number }[];
+      candleBars1h?: () => { ts: number; high: number; low: number }[];
+    };
+    const raw5 = m.candleBars5m?.() ?? [];
+    const raw1h = m.candleBars1h?.() ?? [];
+    const toBar = (c: { ts: number; high: number; low: number }): StanceBar => ({
+      t: c.ts,
+      high: c.high,
+      low: c.low,
+      mid: (c.high + c.low) / 2,
+    });
+    const feat = stanceFeatures(raw5.map(toBar), raw1h.map(toBar), now);
+    if (feat) {
+      ctx.mid_5m = feat.mid_5m;
+      ctx.u = feat.u;
+      ctx.s = feat.s;
+      ctx.ema_h1 = feat.ema_h1;
+    }
+    return ctx;
   }
 
   /**

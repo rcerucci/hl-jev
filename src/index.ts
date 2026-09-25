@@ -2,7 +2,8 @@ import { config } from "./config";
 import { Feed } from "./feed";
 import { Ledger } from "./ledger/jsonl";
 import { Market } from "./market";
-import { createModel, createPolicy } from "./model";
+import { createModel } from "./model";
+import { createFusionPolicy } from "./policy/factory";
 import { loadSleeves } from "./sleeves";
 import { startServer, type SleeveView } from "./server";
 import { Trader, type Fusion } from "./trader";
@@ -13,7 +14,7 @@ if (!specs.length) throw new Error("no sleeves");
 
 // Sem POLICY o repo corre como sempre correu. Com POLICY, o tick passa a ser
 // snapshot -> state -> POLICY -> RISK -> planFromRisk -> o mesmo submit.
-const policy = createPolicy();
+const policy = createFusionPolicy();
 const fusion: Fusion | null = policy ? { policy, ledger: new Ledger(config.ledgerDir) } : null;
 
 const views: SleeveView[] = [];

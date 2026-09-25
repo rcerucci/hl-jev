@@ -23,6 +23,12 @@ export interface DecisionLine {
    * Opcional: as linhas antigas nao o tem e nao passam a ter.
    */
   returns_bps?: { last1: number; last5: number; last20: number };
+  mid_5m?: number;
+  u?: number;
+  s?: number;
+  ema_h1?: number | null;
+  raw?: string;
+  signal?: string;
   verdict: unknown;
   intent: unknown;
   fill: unknown;

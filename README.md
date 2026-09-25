@@ -102,14 +102,19 @@ CI runs the same command on push and pull request.
 | no `POLICY` | the legacy path (`MODEL`) | **no** — the fusion's gates do not exist on that path |
 | `POLICY=jev` | the fusion: typed policy + risk gates | yes, on testnet |
 | `POLICY=dumb` | the control (no API key, no network) | yes |
+| `POLICY=numeric` | sign(last20) control | yes |
+| `POLICY=stance` | inventory machine: buy / sell / hold / caixa | yes, dry-run |
+
+`caixa` is not `hold`. `caixa` flattens an open position (IOC reduce-only) and pulls the quote. `hold` after a `buy`/`sell` stance leaves the resting quote alone. This path does not claim edge.
 
 `HL_TESTNET=true` is mandatory for the fusion. The attribution ensaio of 23 Sep 2026 (100 cycles per
 policy, same book, testnet) closed as **amostra insuficiente**: 100% `hold` on both sides and `n=0` at
 `conf >= 0.80`. Nothing there is evidence of edge — it is evidence that this book produces no experiment.
 
 ```sh
-POLICY=dumb   # the control: a dumb heuristic over the same words the Jev sees. No API key, no network.
-POLICY=jev    # the live Jev: same client, but the state is a short line and the questions come from policy/jev_questions.json.
+POLICY=dumb
+POLICY=jev
+POLICY=stance  # four labels: buy, sell, hold, caixa. No TypeSafe call. Not a PnL claim.
 ```
 
 The tick becomes: snapshot (numbers, kept off the Jev) -> twelve-word state -> policy -> risk gates -> plan -> the same `market.send`. There is one submit path.
@@ -141,7 +146,7 @@ See [`.env.example`](.env.example). The ones that change behavior:
 | `HL_COINS` | `BTC,ETH,SOL,DOGE,BNB` | Sleeves to run |
 | `HL_TESTNET` | `true` | `false` is mainnet |
 | `MODEL` | `mock` | Legacy path. `jev` needs a TypeSafe or Gateway key |
-| `POLICY` | empty | Empty is the legacy path. `jev` or `dumb` turns on the fusion |
+| `POLICY` | empty | Empty is the legacy path. `jev`, `dumb`, `numeric` or `stance` turns on the fusion |
 | `JEV_PROVIDER` | `typesafe` | `typesafe` or `gateway` |
 | `TYPESAFE_API_KEY` | empty | Official TypeSafe key |
 | `AI_GATEWAY_API_KEY` | empty | Vercel AI Gateway key |

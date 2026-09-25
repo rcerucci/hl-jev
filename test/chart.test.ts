@@ -5,6 +5,15 @@ test("chart lookback is a week", () => {
   expect(CHART_LOOKBACK_MS).toBe(7 * 24 * 60 * 60 * 1000);
 });
 
+test("VenueChart guarda 5m e 1h fora do desk", () => {
+  const chart = new VenueChart();
+  chart.ingestStanceBar("5m", { t: 300_000, o: "100", h: "110", l: "90", c: "105" });
+  chart.ingestStanceBar("1h", { t: 3_600_000, o: "94", h: "96", l: "94", c: "95" });
+  expect(chart.bars5m()).toEqual([{ ts: 300_000, open: 100, high: 110, low: 90, close: 105 }]);
+  expect(chart.bars1h()).toEqual([{ ts: 3_600_000, open: 94, high: 96, low: 94, close: 95 }]);
+  expect(chart.points.some((p) => p.ts === 300_000)).toBe(false);
+});
+
 test("candleOhlc keeps the venue bar and fills missing sides from close", () => {
   expect(candleOhlc({})).toBeNull();
   expect(candleOhlc({ t: 1, c: 0 })).toBeNull();
