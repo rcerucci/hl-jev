@@ -6,7 +6,7 @@ import type { Market } from "../src/market";
 import { MockModel, type Model } from "../src/model";
 import { DumbPolicy } from "../src/policy/dumb";
 import { quotePrice } from "../src/book";
-import { SIGMA_FILL, SigmaPolicy } from "../src/policy/sigma";
+import { SigmaPolicy } from "../src/policy/sigma";
 import { TradeFeed } from "../src/trades";
 import { StancePolicy } from "../src/policy/stance";
 import type { Policy, Verdict } from "../src/risk/types";
@@ -340,9 +340,9 @@ test("sigma F6: caixa desmonta o que esta e nao abre nada, sem notional", async 
 
 test("sigma F5: o preco do ALO e o touch; recusado, um tick para tras (continua maker)", () => {
   // A espera e uma constante do codigo, nao um knob de `.env`.
-  expect(SIGMA_FILL.ALO_WAIT_MS).toBe(8000);
-  expect(SIGMA_FILL.MAKER_FEE_BPS).toBe(1.5);
-  expect(SIGMA_FILL.TAKER_FEE_BPS).toBe(4.5);
+  expect(config.sigma.aloWaitMs).toBe(8000);
+  expect(config.sigma.makerFeeBps).toBe(1.5);
+  expect(config.sigma.takerFeeBps).toBe(4.5);
   const b: Book = { ...book, bid: 99.9, ask: 100.1 };
   expect(quotePrice("buy", b, 5, 0)).toBe(99.9); // best bid
   expect(quotePrice("sell", b, 5, 0)).toBe(100.1); // best ask
@@ -353,8 +353,8 @@ test("sigma F5: o preco do ALO e o touch; recusado, um tick para tras (continua 
 });
 
 test("sigma F5: ALO no touch que enche -> sem segundo envio e fill_role=maker", async () => {
-  const prevWait = SIGMA_FILL.ALO_WAIT_MS;
-  SIGMA_FILL.ALO_WAIT_MS = 40;
+  const prevWait = config.sigma.aloWaitMs;
+  config.sigma.aloWaitMs = 40;
   try {
     const now = Date.now();
     const market = new FakeMarket();
@@ -382,10 +382,10 @@ test("sigma F5: ALO no touch que enche -> sem segundo envio e fill_role=maker", 
     expect(fills.length).toBe(1);
     expect(fills[0]!.fill_role).toBe("maker");
     expect(fills[0]!.unfilled).toBe(0);
-    expect(fills[0]!.fee_bps).toBe(SIGMA_FILL.MAKER_FEE_BPS);
+    expect(fills[0]!.fee_bps).toBe(config.sigma.makerFeeBps);
     expect(typeof fills[0]!.mid_at_send).toBe("number");
   } finally {
-    SIGMA_FILL.ALO_WAIT_MS = prevWait;
+    config.sigma.aloWaitMs = prevWait;
   }
 });
 
@@ -455,8 +455,8 @@ test("sigma F5 · F4: caixa repetido na MESMA H1 nao desmonta nada (o portao seg
 });
 
 test("sigma F5: ALO que nao enche -> exactamente uma Ioc do resto (taker)", async () => {
-  const prevWait = SIGMA_FILL.ALO_WAIT_MS;
-  SIGMA_FILL.ALO_WAIT_MS = 40;
+  const prevWait = config.sigma.aloWaitMs;
+  config.sigma.aloWaitMs = 40;
   try {
     const now = Date.now();
     const market = new FakeMarket();
@@ -483,7 +483,7 @@ test("sigma F5: ALO que nao enche -> exactamente uma Ioc do resto (taker)", asyn
     await Bun.sleep(60);
     expect(market.sends.length).toBe(2); // e so uma: sem chase, sem segundo ALO
   } finally {
-    SIGMA_FILL.ALO_WAIT_MS = prevWait;
+    config.sigma.aloWaitMs = prevWait;
   }
 });
 

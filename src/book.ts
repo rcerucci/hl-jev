@@ -18,7 +18,7 @@ export function alignPrice(price: number, szDecimals: number): number {
  * Post-only price `quoteInsideTicks` inside the touch. Never crosses.
  * If the spread is too tight, join the touch.
  */
-export function quotePrice(side: Side, book: Book, szDecimals: number, inside = config.quoteInsideTicks): number {
+export function quotePrice(side: Side, book: Book, szDecimals: number, inside = config.lab.quoteInsideTicks): number {
   const tick = priceTick(szDecimals);
   const step = inside * tick;
   let raw = side === "buy" ? book.bid + step : book.ask - step;

@@ -1,5 +1,6 @@
 import { config } from "./config";
 import { Feed } from "./feed";
+import { assertAlphaRun, bootLine, type ResolvedRun } from "./gate";
 import { Ledger } from "./ledger/jsonl";
 import { Market } from "./market";
 import { createModel } from "./model";
@@ -12,6 +13,22 @@ import type { BlockEvent, Fill, Meta, Quote, Timing } from "./types";
 const specs = loadSleeves();
 if (!specs.length) throw new Error("no sleeves");
 
+/**
+ * H4 — o porteiro. Uma corrida que nao e a do alfa nao arranca: exit, nao warn. Corre por sleeve
+ * (a moeda e a chave sao dela) e a primeira recusa mata o processo.
+ */
+const resolved = (spec: (typeof specs)[number]): ResolvedRun => ({
+  policy: config.policy,
+  coins: specs.map((s) => s.coin),
+  dryRun: config.dryRun || specs.every((s) => !s.privateKey),
+  hlTestnet: config.hlTestnet,
+  hasSigner: Boolean(spec.privateKey),
+  leverage: config.leverage,
+  bankrollUsd: config.bankrollUsd,
+  maxLiveEquityUsd: config.maxLiveEquityUsd,
+});
+for (const spec of specs) assertAlphaRun(resolved(spec));
+
 // Sem POLICY o repo corre como sempre correu. Com POLICY, o tick passa a ser
 // snapshot -> state -> POLICY -> RISK -> planFromRisk -> o mesmo submit.
 const policy = createFusionPolicy();
@@ -20,7 +37,7 @@ const fusion: Fusion | null = policy ? { policy, ledger: new Ledger(config.ledge
 const views: SleeveView[] = [];
 const first = specs[0]!;
 const meta: Meta = {
-  model: config.model,
+  model: config.lab.model,
   wallet: null,
   dryRun: config.dryRun || specs.every((s) => !s.privateKey),
   market: first.pair,
@@ -50,6 +67,8 @@ for (const spec of specs) {
           spreadBps: book.spreadBps,
         });
       };
+      // O objecto resolvido, numa linha, antes de tocar na rede. Sem ela o arranque nao conta.
+      console.log(bootLine(resolved(spec), spec.coin));
       await feed.connect();
       const market = new Market(feed, spec);
       await market.init();
@@ -98,7 +117,7 @@ if (!views.length) throw new Error("no sleeves started");
 server = startServer(meta, views);
 for (const start of starters) start();
 
-console.log(`jev-trade ${meta.sleeves.map((s) => s.label).join(" ")} model=${meta.model}${config.model === "jev" ? ` ${config.jevProvider}` : ""}${policy ? ` policy=${policy.name}` : ""} tick ${config.tickMs}ms price ${config.priceMs}ms quote $${config.quoteUsd} :${config.port}`);
+console.log(`jev-trade ${meta.sleeves.map((s) => s.label).join(" ")} model=${meta.model}${config.lab.model === "jev" ? ` ${config.lab.jevProvider}` : ""}${policy ? ` policy=${policy.name}` : ""} tick ${config.tickMs}ms price ${config.priceMs}ms quote $${config.lab.quoteUsd} :${config.port}`);
 
 function onEvent(coin: string) {
   return (e: BlockEvent, t?: Timing) => {

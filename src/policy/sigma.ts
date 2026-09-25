@@ -19,33 +19,17 @@
  * lado: `hold` e veto de pavio nao contam. Ao expirar, o `s` (+ veto) vigente volta a valer e o
  * contador recomeca — o CB nao se alimenta das viradas que ele proprio provocou.
  */
+import { config } from "../config";
 import type { Act, Policy, PolicyCtx, SigmaBar, StanceRaw, StanceSignal, Verdict } from "../risk/types";
 
+/**
+ * H4 — as constantes do motor vivem no `config.ts` (`config.sigma`), numa fonte so: `emaN`,
+ * o circuit breaker, a espera do fill e as taxas. Aqui fica o que e do **sinal** apenas.
+ */
 export const SIGMA = {
-  EMA_N: 24,
   CONF_ON_SIDE: 0.9,
   CONF_ON_HOLD: 0.5,
   HOSTILE_FALSE: 0.1,
-} as const;
-
-/**
- * F5 — a mecanica de ordem do sigma. Constante no codigo (como o CB), nao vai para o `.env`:
- * o ALO no touch espera isto antes de o resto ir a mercado. As taxas sao as assumidas no paper
- * (tier 0 da Hyperliquid: 1,5 maker / 4,5 taker) — sem rebate inventado.
- *
- * Nao e `as const` de proposito: o teste do mecanismo encurta a espera em vez de dormir 8 s.
- */
-export const SIGMA_FILL = {
-  ALO_WAIT_MS: 8000,
-  MAKER_FEE_BPS: 1.5,
-  TAKER_FEE_BPS: 4.5,
-};
-
-/** F3 — circuit breaker de chop. Constantes escritas antes da tabela, como as do N1. */
-export const CB_CHOP = {
-  FLIPS: 3,
-  WINDOW_MS: 12 * 3_600_000,
-  CAIXA_MS: 6 * 3_600_000,
 } as const;
 
 /** Estado do CB de um sleeve. `flips` guarda os instantes das H1 fechadas que viraram. */
@@ -82,9 +66,9 @@ export function cbStep(st: CbState, closedAt: number, flip: boolean): CbDecision
     st.flips = [];
   }
   if (flip && st.until === 0) {
-    st.flips = st.flips.filter((t) => t > closedAt - CB_CHOP.WINDOW_MS);
+    st.flips = st.flips.filter((t) => t > closedAt - config.sigma.cbWindowMs);
     st.flips.push(closedAt);
-    if (st.flips.length >= CB_CHOP.FLIPS) st.until = closedAt + CB_CHOP.CAIXA_MS;
+    if (st.flips.length >= config.sigma.cbFlips) st.until = closedAt + config.sigma.cbCaixaMs;
   }
   return cbView(st);
 }
@@ -102,7 +86,7 @@ export function hl2Of(b: SigmaBar): number {
 }
 
 /** EMA com seed SMA sobre uma serie. `null` enquanto nao houver `n` valores. */
-export function emaSigma(xs: number[], n: number = SIGMA.EMA_N): (number | null)[] {
+export function emaSigma(xs: number[], n: number = config.sigma.emaN): (number | null)[] {
   const out: (number | null)[] = [];
   const k = 2 / (n + 1);
   let e: number | null = null;
@@ -159,7 +143,7 @@ export function sigmaStep(
   sPrev: number,
 ): { s: number; veto: boolean; hl2: number; close: number; ema: number; closedAt: number } | null {
   const idx = lastClosedH1(bars, atMs);
-  if (idx < SIGMA.EMA_N) return null; // precisa de EMA_N barras ANTERIORES a vela lida
+  if (idx < config.sigma.emaN) return null; // precisa de `emaN` barras ANTERIORES a vela lida
   const at = bars[idx]!;
   const emas = emaSigma(bars.slice(0, idx).map(hl2Of));
   const ema = emas[emas.length - 1] ?? null;

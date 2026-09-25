@@ -163,8 +163,8 @@ export function toState(snap: Snapshot): string {
     fundingBucket(snap.funding_bps),
     clockBucket(snap.ts),
   ];
-  if (tokens.length > config.stateMaxWords) {
-    throw new Error(`state has ${tokens.length} tokens, max ${config.stateMaxWords}`);
+  if (tokens.length > config.lab.stateMaxWords) {
+    throw new Error(`state has ${tokens.length} tokens, max ${config.lab.stateMaxWords}`);
   }
   const state = tokens.join(" ");
   if (/\d/.test(state)) throw new Error(`state carries a digit: ${state}`);

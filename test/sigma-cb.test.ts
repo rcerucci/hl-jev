@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { CB_CHOP, SigmaPolicy, cbStep, isFlip, newCbState } from "../src/policy/sigma";
+import { config } from "../src/config";
+import { SigmaPolicy, cbStep, isFlip, newCbState } from "../src/policy/sigma";
 import { planFromRisk } from "../src/plan";
 import { riskIntent } from "../src/risk/intent";
 import { toSnapshot, type SnapshotInput } from "../src/risk/buckets";
@@ -79,7 +80,7 @@ describe("sigma · o passo do CB (unidade = H1 fechada)", () => {
     expect(cbStep(st, fecho(32), true).flips_12h).toBe(2);
     const armado = cbStep(st, fecho(33), true);
     expect(armado.active).toBe(true);
-    expect(armado.until).toBe(fecho(33) + CB_CHOP.CAIXA_MS);
+    expect(armado.until).toBe(fecho(33) + config.sigma.cbCaixaMs);
   });
 
   test("2 viradas nao disparam", () => {
@@ -143,7 +144,7 @@ describe("sigma · o CB na policy", () => {
     const v = await p.decide("s", cid(fecho(33)), ctx);
     expect(v.cb_active).toBe(true);
     expect(v.cb_flips_12h).toBe(3);
-    expect(v.cb_until).toBe(fecho(33) + CB_CHOP.CAIXA_MS);
+    expect(v.cb_until).toBe(fecho(33) + config.sigma.cbCaixaMs);
     expect(v.raw).toBe("caixa");
     expect(v.signal).toBe("caixa");
     expect(v.act).toBe("hold");
@@ -237,8 +238,8 @@ describe("sigma · a caixa do CB usa o flatten que ja existe", () => {
   });
 
   test("as constantes do CB estao escritas, nao derivadas da tabela", () => {
-    expect(CB_CHOP.FLIPS).toBe(3);
-    expect(CB_CHOP.WINDOW_MS).toBe(12 * H);
-    expect(CB_CHOP.CAIXA_MS).toBe(6 * H);
+    expect(config.sigma.cbFlips).toBe(3);
+    expect(config.sigma.cbWindowMs).toBe(12 * H);
+    expect(config.sigma.cbCaixaMs).toBe(6 * H);
   });
 });

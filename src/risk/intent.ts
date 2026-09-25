@@ -49,8 +49,8 @@ function hold(cycleId: string, sleeve: string, conf: number, reason: IntentReaso
 
 export function riskIntent(input: RiskGateInput): RiskIntent {
   const { cycleId, sleeve, verdict, snap } = input;
-  const confAct = input.confAct ?? config.confAct;
-  const hostileTh = input.hostileTh ?? config.hostileTh;
+  const confAct = input.confAct ?? config.lab.confAct;
+  const hostileTh = input.hostileTh ?? config.lab.hostileTh;
   const staleMs = input.staleMs ?? config.bookStaleMs;
   const conf = Number.isFinite(verdict.act_conf) ? verdict.act_conf : 0;
 
