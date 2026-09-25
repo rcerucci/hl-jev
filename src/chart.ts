@@ -70,6 +70,8 @@ export class VenueChart {
   private candles1s = new Map<number, Ohlc>();
   private candles1m = new Map<number, Ohlc>();
   private candles15m = new Map<number, Ohlc>();
+  private candles5m = new Map<number, Ohlc>();
+  private candles1h = new Map<number, Ohlc>();
   private last1s: Ohlc | null = null;
   private fills: VenueFill[] = [];
   private seen = new Set<string>();
@@ -79,6 +81,15 @@ export class VenueChart {
   closes(limit = 80): number[] {
     const times = [...this.candles1m.keys()].sort((a, b) => a - b);
     return times.slice(-Math.max(1, limit)).map((ts) => this.candles1m.get(ts)!.close);
+  }
+
+  /** Velas fecháveis para a postura. Nao entram no desk. */
+  bars5m(): Ohlc[] {
+    return [...this.candles5m.keys()].sort((a, b) => a - b).map((t) => this.candles5m.get(t)!);
+  }
+
+  bars1h(): Ohlc[] {
+    return [...this.candles1h.keys()].sort((a, b) => a - b).map((t) => this.candles1h.get(t)!);
   }
 
   get points(): PricePoint[] {
@@ -93,6 +104,8 @@ export class VenueChart {
     await Promise.all([
       this.pullCandles(coin, "15m", now - CHART_LOOKBACK_MS, now),
       this.pullCandles(coin, "1m", now - minuteSpan, now),
+      this.pullCandles(coin, "5m", now - CHART_LOOKBACK_MS, now),
+      this.pullCandles(coin, "1h", now - CHART_LOOKBACK_MS, now),
     ]);
   }
 
@@ -106,7 +119,10 @@ export class VenueChart {
     const rows = (await res.json()) as unknown;
     if (!Array.isArray(rows)) return;
     for (const row of rows) {
-      if (row && typeof row === "object") this.upsertCandle(row as { t?: unknown; o?: unknown; h?: unknown; l?: unknown; c?: unknown; i?: unknown });
+      if (!row || typeof row !== "object") continue;
+      const raw = row as { t?: unknown; o?: unknown; h?: unknown; l?: unknown; c?: unknown; i?: unknown };
+      if (interval === "5m" || interval === "1h") this.ingestStanceBar(interval, raw);
+      else this.upsertCandle({ ...raw, i: raw.i ?? interval });
     }
   }
 
@@ -133,6 +149,13 @@ export class VenueChart {
       }
     }
     this.dirty = true;
+  }
+
+  ingestStanceBar(interval: "5m" | "1h", raw: { t?: unknown; o?: unknown; h?: unknown; l?: unknown; c?: unknown }) {
+    const next = candleOhlc(raw);
+    if (!next) return;
+    const map = interval === "5m" ? this.candles5m : this.candles1h;
+    map.set(next.ts, next);
   }
 
   upsertCandle(raw: { t?: unknown; o?: unknown; h?: unknown; l?: unknown; c?: unknown; i?: unknown }) {
