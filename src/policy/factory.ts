@@ -15,7 +15,7 @@ export function createFusionPolicy(): Policy | null {
   if (config.policy === "jev") {
     assertJevCredentials(
       "jev",
-      config.jevProvider,
+      config.lab.jevProvider,
       process.env as { TYPESAFE_API_KEY?: string; AI_GATEWAY_API_KEY?: string },
     );
     return new JevPolicy();

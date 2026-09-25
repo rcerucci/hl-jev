@@ -66,7 +66,7 @@ interface Sample {
 
 /**
  * Familia da politica, nao o model id exacto. Uma falha do Jev sai com o
- * `config.jevModelId` (ex. "jev-latest") no campo `model`, e isso nao e uma
+ * `config.lab.jevModelId` (ex. "jev-latest") no campo `model`, e isso nao e uma
  * segunda politica de decisao: e o mesmo Jev sem resposta. Agrupar pelo id cru
  * abria uma coluna falsa no meio da comparacao.
  */
@@ -90,7 +90,7 @@ function readVerdictOf(line: DecisionLine): { act: string; conf: number } | null
   return { act: v.act, conf: v.act_conf };
 }
 
-export function summarise(samples: Sample[], confAct = config.confAct): PolicyStats[] {
+export function summarise(samples: Sample[], confAct = config.lab.confAct): PolicyStats[] {
   const byPolicy = new Map<string, PolicyStats>();
   for (const { decision, outcome } of samples) {
     const policy = policyOf(decision);
@@ -175,7 +175,7 @@ export function winrateAt050(stats: PolicyStats): number | null {
 const pct = (x: number | null) => (x === null ? "  --" : `${(x * 100).toFixed(1)}%`);
 const pad = (s: string, w: number) => s.padEnd(w);
 
-export function formatTable(stats: PolicyStats[], confAct = config.confAct): string[] {
+export function formatTable(stats: PolicyStats[], confAct = config.lab.confAct): string[] {
   const head = [
     pad("politica", 12),
     pad("ciclos", 8),

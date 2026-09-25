@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { SIGMA, SigmaPolicy, cycleTsMs, lastClosedH1, sigmaRaw, sigmaStep } from "../src/policy/sigma";
-import { resolvePolicy } from "../src/config";
+import { config, resolvePolicy } from "../src/config";
 import type { SigmaBar } from "../src/risk/types";
 
 const H = 3_600_000;
@@ -137,7 +137,7 @@ describe("sigma · ligacao", () => {
     expect(cycleTsMs("lixo")).toBe(0);
   });
 
-  test("SIGMA.EMA_N e a constante do H1, nao um numero solto", () => {
-    expect(SIGMA.EMA_N).toBe(24);
+  test("config.sigma.emaN e a constante do H1, nao um numero solto", () => {
+    expect(config.sigma.emaN).toBe(24);
   });
 });

@@ -66,7 +66,7 @@ export function outcomeFor(
   line: DecisionLine,
   marks: Marks,
   horizonSecs = config.outcomeHorizonSecs,
-  confAct = config.confAct,
+  confAct = config.lab.confAct,
 ): OutcomeLine | null {
   const verdict = readVerdict(line);
   if (!verdict || marks.then === null || marks.plus === null) return null;

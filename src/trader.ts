@@ -6,7 +6,7 @@ import { planFromRisk, planQuote, type QuotePlan } from "./plan";
 import { toSnapshot, toState } from "./risk/buckets";
 import { isFrozen, riskIntent, standsDown } from "./risk/intent";
 import type { Policy, PolicyCtx, Snapshot, StanceRaw, Verdict } from "./risk/types";
-import { SIGMA, SIGMA_FILL, lastClosedH1 } from "./policy/sigma";
+import { SIGMA, lastClosedH1 } from "./policy/sigma";
 import { stanceFeatures, type StanceBar } from "./policy/stance_features";
 import { cycleId, type Ledger } from "./ledger/jsonl";
 import { aggregateFills, emptySummary, takeLiveFills, takeSimFills, type Resting, type TradeFeed } from "./trades";
@@ -122,7 +122,7 @@ export class Trader {
         } else {
           const decision = await this.model.decide(this.buildState(block, book));
           this.totals.decisions++;
-          this.totals.jevUsd += (decision.inputTokens / 1e6) * config.jevUsdPerMTok;
+          this.totals.jevUsd += (decision.inputTokens / 1e6) * config.lab.jevUsdPerMTok;
           const plan = planQuote({
             intent: decision.intent,
             bias: decision.bias,
@@ -205,7 +205,7 @@ export class Trader {
       : await fusion.policy.decide(state, cid, ctx);
     if (verdict.raw) this.stancePrev.set(this.market.coin, verdict.raw);
     this.totals.decisions++;
-    this.totals.jevUsd += ((verdict.input_tokens ?? 0) / 1e6) * config.jevUsdPerMTok;
+    this.totals.jevUsd += ((verdict.input_tokens ?? 0) / 1e6) * config.lab.jevUsdPerMTok;
     const intent = riskIntent({ cycleId: cid, sleeve: this.market.coin, verdict, snap });
     const frozen = isFrozen(intent);
     const plan = planFromRisk(intent, this.position.sz, this.market.quoteSize(book.mid));
@@ -345,9 +345,9 @@ export class Trader {
    */
   private async sigmaEntryLeg(block: number, side: Side, sizeSz: number, book: Book, cid: string, mid: number) {
     const cancel = [...this.orders.keys()].filter((id) => id > 0);
-    let quote = await this.market.send(side, sizeSz, book, cancel, false, false, 0);
+    let quote = await this.market.send(side, sizeSz, book, cancel, false, false, config.sigma.quoteInsideTicks);
     if (quote.status === "reverted") {
-      quote = await this.market.send(side, sizeSz, book, cancel, false, false, -1);
+      quote = await this.market.send(side, sizeSz, book, cancel, false, false, config.sigma.quoteInsideTicks - 1);
     }
     this.applyPosted(block, quote);
     if (quote.status === "reverted" || !(quote.size > 0)) return;
@@ -358,12 +358,12 @@ export class Trader {
       size: quote.size,
       makerPx: quote.price,
       midAtSend: mid,
-      deadline: Date.now() + SIGMA_FILL.ALO_WAIT_MS,
+      deadline: Date.now() + config.sigma.aloWaitMs,
     });
   }
 
   /**
-   * F5 — o fim da operacao de entrada, aos `SIGMA_FILL.ALO_WAIT_MS` (constante no codigo, como o
+   * F5 — o fim da operacao de entrada, aos `config.sigma.aloWaitMs` (constante no codigo, como o
    * CB). Antes do prazo nao toca em nada: sem chase, sem segundo ALO e sem remarcar a cada tick.
    * Passado o prazo, o que ainda estiver aberto vai numa **unica** Ioc a mercado, mesmo lado, e a
    * operacao fecha com uma linha de `fill` no ledger.
@@ -393,8 +393,8 @@ export class Trader {
     const fillPx = total > 0 ? (makerPx * feitoMaker + (takerPx ?? makerPx) * takerFill) / total : st.midAtSend;
     const feeBps =
       total > 0
-        ? (SIGMA_FILL.MAKER_FEE_BPS * feitoMaker + SIGMA_FILL.TAKER_FEE_BPS * takerFill) / total
-        : SIGMA_FILL.MAKER_FEE_BPS;
+        ? (config.sigma.makerFeeBps * feitoMaker + config.sigma.takerFeeBps * takerFill) / total
+        : config.sigma.makerFeeBps;
     // Custo contra o mid: numa compra pagar acima e custo, numa venda receber abaixo tambem.
     const sinal = st.side === "buy" ? 1 : -1;
     fusion.ledger.writeFill({

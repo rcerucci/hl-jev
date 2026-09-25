@@ -320,7 +320,7 @@ let typesafe: TypeSafeClient | undefined;
 function typesafeClient(): TypeSafeClient {
   return (typesafe ??= new TypeSafeClient({
     apiKey: process.env.TYPESAFE_API_KEY,
-    defaultModel: config.jevModelId,
+    defaultModel: config.lab.jevModelId,
     retry: { maxRetries: 0 },
   }));
 }
@@ -341,9 +341,9 @@ async function callJev(state: TradeState): Promise<{ answers: JevAnswers; inputT
   const seen = marketFacing(state);
   const qs = jevQuestions(state);
   const run = async () => {
-    if (config.jevProvider === "gateway") {
+    if (config.lab.jevProvider === "gateway") {
       const r = await evaluate({
-        model: config.jevModelId,
+        model: config.lab.jevModelId,
         state: seen as never,
         questions: qs,
         maxRetries: 0,
@@ -352,7 +352,7 @@ async function callJev(state: TradeState): Promise<{ answers: JevAnswers; inputT
     }
     const r = await typesafeClient().systemOne(
       {
-        model: config.jevModelId,
+        model: config.lab.jevModelId,
         state: seen as never,
         questions: qs,
       },
@@ -422,8 +422,8 @@ export class MockModel implements Model {
 }
 
 export const createModel = (): Model => {
-  if (config.model !== "jev") return new MockModel();
-  assertJevCredentials(config.model, config.jevProvider, process.env);
+  if (config.lab.model !== "jev") return new MockModel();
+  assertJevCredentials(config.lab.model, config.lab.jevProvider, process.env);
   return new JevModel();
 };
 
@@ -435,7 +435,7 @@ export const createModel = (): Model => {
 
 let policyCache: PolicyFile | undefined;
 
-function policyOf(path = config.policyFile): PolicyFile {
+function policyOf(path = config.lab.policyFile): PolicyFile {
   return (policyCache ??= loadPolicyFile(path));
 }
 
@@ -445,7 +445,7 @@ const ACTS: readonly Act[] = ["buy", "sell", "hold"];
 function failedVerdict(cycleId: string, note: string): Verdict {
   return {
     cycle_id: cycleId,
-    model: config.jevModelId,
+    model: config.lab.jevModelId,
     latency_ms: 0,
     act: "hold",
     act_probs: { buy: 0, sell: 0, hold: 1 },
@@ -503,21 +503,21 @@ export type AskJev = (
 
 /** O cliente de sempre: TypeSafe `systemOne` ou o ramo Gateway. Uma por ciclo, sem retry. */
 const defaultAsk: AskJev = async (state, questions) => {
-  if (config.jevProvider === "gateway") {
+  if (config.lab.jevProvider === "gateway") {
     const r = await evaluate({
-      model: config.jevModelId,
+      model: config.lab.jevModelId,
       state: state as never,
       questions: questions as never,
       maxRetries: 0,
     });
     return {
       answers: r.answers as unknown as Record<string, unknown>,
-      model: config.jevModelId,
+      model: config.lab.jevModelId,
       tokens: r.usage?.inputTokens ?? 0,
     };
   }
   const r = await typesafeClient().systemOne(
-    { model: config.jevModelId, state, questions },
+    { model: config.lab.jevModelId, state, questions },
     { retry: { maxRetries: 0 } },
   );
   return {
@@ -540,7 +540,7 @@ export class JevPolicy implements Policy {
     const asset = cycleId.split("-").at(-1) ?? "?";
     const questions = askQuestions(this.policy, { asset, stance: stanceFromState(state) });
     try {
-      const r = await withDeadline(this.jev(state, questions), config.jevTimeoutMs);
+      const r = await withDeadline(this.jev(state, questions), config.lab.jevTimeoutMs);
       const act = readChoiceAnswer(r.answers.act);
       const hostile = readNoulAnswer(r.answers.too_hostile);
       if (!act || hostile === null) return failedVerdict(cycleId, "parse");
@@ -570,7 +570,7 @@ export function createPolicy(): Policy | null {
   if (config.policy === "jev") {
     assertJevCredentials(
       "jev",
-      config.jevProvider,
+      config.lab.jevProvider,
       process.env as { TYPESAFE_API_KEY?: string; AI_GATEWAY_API_KEY?: string },
     );
     return new JevPolicy();

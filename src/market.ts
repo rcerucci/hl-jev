@@ -74,7 +74,7 @@ export class Market {
    * cravado — a mesma regua que o `inventoryBucket` usa (`bankroll_usd`).
    */
   quoteSize(mid: number, notional?: number): number {
-    return lot((notional ?? config.quoteUsd) / Math.max(mid, 1e-9), this.szDecimals);
+    return lot((notional ?? config.lab.quoteUsd) / Math.max(mid, 1e-9), this.szDecimals);
   }
 
   /** Instante do ultimo livro recebido. Null antes do primeiro l2Book. */
