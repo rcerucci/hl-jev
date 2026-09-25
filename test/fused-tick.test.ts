@@ -15,9 +15,11 @@ import type { BlockEvent, Book, Quote, Side } from "../src/types";
 
 const DIR = "./data/test-fused";
 const POLICY_NO_DISCO = (config as { policy: string }).policy;
+const DISCO_NO_SALDO = (config as { bankrollUsd: number }).bankrollUsd;
 afterAll(() => rmSync(DIR, { recursive: true, force: true }));
 afterAll(() => {
   (config as { policy: string }).policy = POLICY_NO_DISCO;
+  (config as { bankrollUsd: number }).bankrollUsd = DISCO_NO_SALDO;
 });
 
 const book: Book = {
@@ -36,7 +38,8 @@ class FakeMarket {
   readonly pair = "BTC-USD";
   readonly label = "BTC";
   readonly wallet = null;
-  readonly account = null;
+  /** O saldo da sleeve: o F6 dimensiona por aqui (`bankroll_usd` do snapshot). */
+  account: { equityUsd: number; unrealizedUsd: number; leverage: number | null } | null = null;
   readonly szDecimals = 5;
   readonly maxLeverage = 40;
   readonly fillPrints: [] = [];
@@ -50,7 +53,7 @@ class FakeMarket {
   candleBars1h(): { ts: number; high: number; low: number; close?: number }[] { return []; }
   refresh() { return Promise.resolve(); }
   readBook() { return book; }
-  quoteSize() { return 0.01; }
+  quoteSize(_mid = 100, notional?: number) { return notional ? Math.round((notional / 100) * 1e5) / 1e5 : 0.01; }
   setLeverage(n: number) { this.leverages.push(n); return Promise.resolve(n); }
   async send(side: Side, size: number, _b: Book, _c: number[], reduceOnly = false, taker = false): Promise<Quote> {
     this.sends.push({ side, size, reduceOnly, taker });
@@ -264,6 +267,77 @@ function sigmaTrader(market: FakeMarket, ledger: Ledger) {
   );
 }
 
+test("sigma F6: equity 100 e lev 1 -> entrada de 1.0; com 110 o episodio seguinte abre 1.1", async () => {
+  const now = Date.now();
+  let bars = sigmaBars1h(now, 0, "up");
+  const market = new FakeMarket();
+  // O saldo da sleeve e a mesma regua que o produto ja usa (`bankroll_usd` do snapshot, que sai
+  // da equity do venue quando existe). Sem conta no duplo, a regua e o config.
+  (config as { bankrollUsd: number }).bankrollUsd = 100;
+  market.candleBars1h = () => bars;
+  market.candleBars5m = () => [];
+  const ledger = new Ledger(`${DIR}/${++seq}`);
+  const trader = sigmaTrader(market, ledger);
+  const feed = new TradeFeed();
+  trader.attachTradeFeed(feed);
+  await trader.onBlock(1);
+  await Bun.sleep(30);
+  expect(market.sends.length).toBe(1);
+  expect(market.sends[0]!.size).toBe(1); // 100 / mid 100
+  const d1 = ledger.read("BTC", today())[0] as { equity?: number; notional?: number; leverage?: number };
+  expect(d1.equity).toBe(100);
+  expect(d1.notional).toBe(100);
+  expect(d1.leverage).toBe(1);
+
+  // O primeiro episodio enche e o saldo sobe: o episodio seguinte dimensiona pelo saldo novo.
+  feed.setTick(2);
+  feed.pushPrint({ price: 99.9, size: 1, side: "sell" });
+  await trader.onBlock(2);
+  await Bun.sleep(60);
+  (config as { bankrollUsd: number }).bankrollUsd = 110;
+  bars = sigmaBars1h(now, 1, "down"); // H1 nova com o s virado: fecha o velho e abre o novo
+  market.sends = [];
+  await trader.onBlock(3);
+  await Bun.sleep(60);
+  expect(market.sends.length).toBe(2);
+  expect(market.sends[0]).toMatchObject({ side: "sell", reduceOnly: true, taker: true });
+  expect(market.sends[0]!.size).toBe(1); // desmonta o que esta — o tamanho antigo
+  expect(market.sends[1]).toMatchObject({ side: "sell", reduceOnly: false, taker: false });
+  expect(market.sends[1]!.size).toBe(1.1); // 110 / mid 100
+  const decisoes = ledger.read("BTC", today()).filter((l) => l.kind === "decision") as {
+    equity?: number; notional?: number;
+  }[];
+  expect(decisoes.at(-1)!.equity).toBe(110);
+  expect(decisoes.at(-1)!.notional).toBe(110);
+});
+
+test("sigma F6: caixa desmonta o que esta e nao abre nada, sem notional", async () => {
+  const now = Date.now();
+  let bars = sigmaBars1h(now, 0, "up");
+  const market = new FakeMarket();
+  (config as { bankrollUsd: number }).bankrollUsd = 100;
+  market.candleBars1h = () => bars;
+  market.candleBars5m = () => [];
+  const ledger = new Ledger(`${DIR}/${++seq}`);
+  const trader = sigmaTrader(market, ledger);
+  const feed = new TradeFeed();
+  trader.attachTradeFeed(feed);
+  await trader.onBlock(1);
+  await Bun.sleep(30);
+  feed.setTick(2);
+  feed.pushPrint({ price: 99.9, size: 1, side: "sell" });
+  await trader.onBlock(2);
+  await Bun.sleep(60);
+  bars = sigmaBarsFlat(now, 1);
+  market.sends = [];
+  await trader.onBlock(3);
+  await Bun.sleep(60);
+  expect(market.sends.length).toBe(1); // so o flatten
+  expect(market.sends[0]).toMatchObject({ reduceOnly: true, taker: true });
+  const d = ledger.read("BTC", today()).filter((l) => l.kind === "decision").at(-1) as { notional?: number };
+  expect(d.notional).toBeUndefined();
+});
+
 test("sigma F5: o preco do ALO e o touch; recusado, um tick para tras (continua maker)", () => {
   // A espera e uma constante do codigo, nao um knob de `.env`.
   expect(SIGMA_FILL.ALO_WAIT_MS).toBe(8000);
@@ -341,7 +415,7 @@ test("sigma F5: caixa com posicao -> um Ioc reduce-only, sem espera", async () =
   await Bun.sleep(60);
   expect(market.sends.length).toBe(1);
   expect(market.sends[0]).toMatchObject({ reduceOnly: true, taker: true });
-  expect(market.sends[0]!.size).toBe(0.01); // a posicao inteira que o ALO tinha aberto
+  expect(market.sends[0]!.size).toBeGreaterThan(0); // o que o ALO abriu, seja qual for o saldo
 });
 
 test("sigma F5 · F4: caixa repetido na MESMA H1 nao desmonta nada (o portao segura)", async () => {

@@ -35,6 +35,10 @@ export interface DecisionLine {
   cb_active?: boolean;
   cb_flips_12h?: number;
   cb_until?: number;
+  /** F6 — dimensao do episodio: o saldo da sleeve, o notional pedido e a alavancagem. */
+  equity?: number;
+  notional?: number;
+  leverage?: number;
   verdict: unknown;
   intent: unknown;
   fill: unknown;

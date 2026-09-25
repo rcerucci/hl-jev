@@ -55,10 +55,10 @@ describe("o executor nao foi reimplementado (spec 11)", () => {
   test("existe um unico sitio que chama market.send, e e o trader", () => {
     const callers = srcText().filter(([, t]) => t.includes("this.market.send(")).map(([f]) => f);
     expect(callers).toEqual(["trader.ts"]);
-    // F5: o trader chama quatro vezes — o ALO da entrada, o reenvio um tick para tras quando o
-    // venue o recusa, a Ioc do resto e o flatten dos outros modos. Continua a ser o unico sitio
-    // que submete ordem: a porta de baixo nao mudou.
-    expect(hits(read("src/trader.ts"), "this.market.send(")).toBe(4);
+    // O trader chama 5 vezes: o flatten das saidas, as duas pernas da entrada do sigma (o ALO
+    // no touch e o reenvio um tick para tras quando o venue o recusa) e a Ioc do resto. Continua
+    // a ser o unico sitio que submete ordem — a porta de baixo nao mudou.
+    expect(hits(read("src/trader.ts"), "this.market.send(")).toBe(5);
   });
 
   test("o trader continua a passar por planQuote e pelos dois desfechos", () => {
