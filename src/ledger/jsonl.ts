@@ -29,6 +29,8 @@ export interface DecisionLine {
   ema_h1?: number | null;
   raw?: string;
   signal?: string;
+  /** Sigma (F2): a barra H1 foi ignorada por so o wick ter cruzado a EMA. */
+  wick_veto?: boolean;
   verdict: unknown;
   intent: unknown;
   fill: unknown;

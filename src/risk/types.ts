@@ -69,6 +69,16 @@ export interface Verdict {
   raw?: StanceRaw;
   /** Evento publicado: hold sse raw == raw anterior. */
   signal?: StanceSignal;
+  /** Sigma (F2): esta barra H1 foi ignorada por so o wick ter cruzado a EMA. */
+  wick_veto?: boolean;
+}
+
+/** Vela H1 que o sigma consome: `hl2` sai de high/low, e o `close` decide o veto de pavio. */
+export interface SigmaBar {
+  t: number;
+  high: number;
+  low: number;
+  close: number;
 }
 
 /**
@@ -122,4 +132,6 @@ export interface PolicyCtx {
   s?: number;
   ema_h1?: number | null;
   raw_prev?: StanceRaw;
+  /** Sigma: as velas H1 cruas (com close). O sigma escolhe a ultima fechada pelo instante do ciclo. */
+  h1?: SigmaBar[];
 }
