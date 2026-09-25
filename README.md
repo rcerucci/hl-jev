@@ -106,8 +106,9 @@ and a **chop circuit breaker** (3 turns in 12 h → 6 h of `caixa`, then the sta
 Inventory: long while `s > 0`, short while `s < 0`, hold while `s` does not move. Execution posts at the
 touch and sends the rest to market; 1×, BTC first, re-sized at the episode close.
 
-It lands in slices (spec → plan → tasks → PR). **Until the mode resolves, `POLICY=sigma` is not runnable
-here** — nothing in this repo trades that account yet.
+It landed in slices (spec → plan → tasks → PR). **`POLICY=sigma` resolves and runs**: the `s` and the wick
+veto are live and the chop breaker arms 6 h of `caixa` on 3 turns in 12 h. The account itself is not traded
+yet — nothing here sends an order for it.
 
 ### Laboratory modes — no edge claimed, no recipe
 

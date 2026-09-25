@@ -66,6 +66,12 @@ export function riskIntent(input: RiskGateInput): RiskIntent {
 
   const reducing = reducingExisting(snap.pos_side, verdict.act);
 
+  // F3 — caixa do circuit breaker de chop: mesma saida do caixa (flatten IOC reduce-only em
+  // `planFromRisk`), razao propria para o ledger distinguir as duas causas.
+  if (verdict.cb_active) {
+    return hold(cycleId, sleeve, conf, "cb_chop");
+  }
+
   // Caixa = capital fora do mercado. Nao e hold de sinal.
   if (verdict.signal === "caixa" || verdict.raw === "caixa") {
     return hold(cycleId, sleeve, conf, "caixa");

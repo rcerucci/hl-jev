@@ -31,6 +31,10 @@ export interface DecisionLine {
   signal?: string;
   /** Sigma (F2): a barra H1 foi ignorada por so o wick ter cruzado a EMA. */
   wick_veto?: boolean;
+  /** Sigma (F3): circuit breaker de chop — activo, viradas nas 12 h e fim da caixa. */
+  cb_active?: boolean;
+  cb_flips_12h?: number;
+  cb_until?: number;
   verdict: unknown;
   intent: unknown;
   fill: unknown;

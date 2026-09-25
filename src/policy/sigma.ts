@@ -12,6 +12,12 @@
  *
  * raw    ∈ {buy, sell, caixa}        (caixa sse s == 0: preco exactamente na EMA)
  * signal ∈ {buy, sell, hold, caixa}  — hold sse raw == raw anterior
+ *
+ * F3 — circuit breaker de chop: 3 viradas em 12 h armam 6 h de caixa. A unidade e a **H1
+ * fechada**: o relogio do CB sao os timestamps das velas fechadas, e repetir a decisao dentro
+ * da mesma hora (tick de 5m) nao conta duas vezes. Virada = `signal` buy ou sell que muda de
+ * lado: `hold` e veto de pavio nao contam. Ao expirar, o `s` (+ veto) vigente volta a valer e o
+ * contador recomeca — o CB nao se alimenta das viradas que ele proprio provocou.
  */
 import type { Act, Policy, PolicyCtx, SigmaBar, StanceRaw, StanceSignal, Verdict } from "../risk/types";
 
@@ -21,6 +27,61 @@ export const SIGMA = {
   CONF_ON_HOLD: 0.5,
   HOSTILE_FALSE: 0.1,
 } as const;
+
+/** F3 — circuit breaker de chop. Constantes escritas antes da tabela, como as do N1. */
+export const CB_CHOP = {
+  FLIPS: 3,
+  WINDOW_MS: 12 * 3_600_000,
+  CAIXA_MS: 6 * 3_600_000,
+} as const;
+
+/** Estado do CB de um sleeve. `flips` guarda os instantes das H1 fechadas que viraram. */
+export interface CbState {
+  flips: number[];
+  until: number;
+  lastClosedAt: number;
+}
+
+export interface CbDecision {
+  active: boolean;
+  flips_12h: number;
+  until: number;
+}
+
+export function newCbState(): CbState {
+  return { flips: [], until: 0, lastClosedAt: 0 };
+}
+
+export function cbView(st: CbState): CbDecision {
+  return { active: st.until > st.lastClosedAt, flips_12h: st.flips.length, until: st.until };
+}
+
+/**
+ * Avanca o CB numa H1 fechada. Idempotente dentro da mesma hora: `closedAt` igual ao da ultima
+ * avaliacao devolve o estado sem contar nada — e o que impede o tick de 5m de virar inventario.
+ */
+export function cbStep(st: CbState, closedAt: number, flip: boolean): CbDecision {
+  if (closedAt === st.lastClosedAt) return cbView(st);
+  st.lastClosedAt = closedAt;
+  // Expirou: o s volta a valer, e o contador recomeca.
+  if (st.until !== 0 && closedAt >= st.until) {
+    st.until = 0;
+    st.flips = [];
+  }
+  if (flip && st.until === 0) {
+    st.flips = st.flips.filter((t) => t > closedAt - CB_CHOP.WINDOW_MS);
+    st.flips.push(closedAt);
+    if (st.flips.length >= CB_CHOP.FLIPS) st.until = closedAt + CB_CHOP.CAIXA_MS;
+  }
+  return cbView(st);
+}
+
+/** Uma virada e a mudanca de lado do evento: hold e veto nao contam. */
+export function isFlip(prev: StanceRaw | undefined, raw: StanceRaw): boolean {
+  if (prev !== "buy" && prev !== "sell") return false;
+  if (raw !== "buy" && raw !== "sell") return false;
+  return raw !== prev;
+}
 
 /** `hl2` da vela: o sigma compara a mediana do intervalo H1 contra a EMA. */
 export function hl2Of(b: SigmaBar): number {
@@ -83,7 +144,7 @@ export function sigmaStep(
   bars: SigmaBar[],
   atMs: number,
   sPrev: number,
-): { s: number; veto: boolean; hl2: number; close: number; ema: number } | null {
+): { s: number; veto: boolean; hl2: number; close: number; ema: number; closedAt: number } | null {
   const idx = lastClosedH1(bars, atMs);
   if (idx < SIGMA.EMA_N) return null; // precisa de EMA_N barras ANTERIORES a vela lida
   const at = bars[idx]!;
@@ -95,7 +156,7 @@ export function sigmaStep(
   const sClose = at.close > ema ? 1 : at.close < ema ? -1 : 0;
   const querVirar = sPrev !== 0 && sRaw !== 0 && sRaw !== sPrev;
   const veto = querVirar && sClose === sPrev; // so o wick cruzou: o close ficou no lado velho
-  return { s: veto ? sPrev : sRaw, veto, hl2, close: at.close, ema };
+  return { s: veto ? sPrev : sRaw, veto, hl2, close: at.close, ema, closedAt: at.t + 3_600_000 };
 }
 
 function actOf(signal: StanceSignal): Act {
@@ -107,16 +168,23 @@ export class SigmaPolicy implements Policy {
   readonly name = "sigma";
   private prevRaw = new Map<string, StanceRaw>();
   private sState = new Map<string, number>();
+  private cbState = new Map<string, CbState>();
 
   async decide(_state: string, cycleId: string, ctx?: PolicyCtx): Promise<Verdict> {
     const sleeve = cycleId.includes("-") ? cycleId.slice(cycleId.indexOf("-") + 1) : cycleId;
     const prev = ctx?.raw_prev ?? this.prevRaw.get(sleeve);
     const step = ctx?.h1 ? sigmaStep(ctx.h1, cycleTsMs(cycleId), this.sState.get(sleeve) ?? 0) : null;
+    const cb = this.cbState.get(sleeve) ?? newCbState();
+    this.cbState.set(sleeve, cb);
     let raw: StanceRaw;
+    let cbNow: CbDecision;
     if (!step) {
       raw = "caixa"; // sem features nao inventa lado
+      cbNow = cbView(cb);
     } else {
-      raw = sigmaRaw(step.s);
+      const lado = sigmaRaw(step.s); // o s (+ veto) vigente, antes do CB
+      cbNow = cbStep(cb, step.closedAt, isFlip(prev, lado));
+      raw = cbNow.active ? "caixa" : lado;
       this.sState.set(sleeve, step.s);
     }
     const signal = signalFrom(raw, prev);
@@ -140,7 +208,10 @@ export class SigmaPolicy implements Policy {
       raw,
       signal,
       wick_veto: step?.veto ?? false,
-      note: `sigma s=${step?.s ?? "na"} hl2=${step ? step.hl2.toFixed(2) : "na"} ema=${step ? step.ema.toFixed(2) : "na"} veto=${step?.veto ?? false}`,
+      cb_active: cbNow.active,
+      cb_flips_12h: cbNow.flips_12h,
+      cb_until: cbNow.until,
+      note: `sigma s=${step?.s ?? "na"} hl2=${step ? step.hl2.toFixed(2) : "na"} ema=${step ? step.ema.toFixed(2) : "na"} veto=${step?.veto ?? false} cb=${cbNow.active ? "caixa" : "livre"} flips12h=${cbNow.flips_12h}`,
     };
   }
 }
