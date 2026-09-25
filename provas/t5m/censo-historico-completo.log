@@ -1,0 +1,55 @@
+== 1. PROVA DE VOLUME (vela de 5 min crua do cliente) ==
+  campos: t, T, s, i, o, c, h, l, v, n
+  ultima vela 5m: t=1790250600000 T=1790250899999 o=84377.0 h=84415.0 l=84368.0 c=84414.0 v=0.02767 n=17
+  volume presente e positivo: SIM (v=0.02767 · n=17)
+  barras: 5m 5038 · 1h 913
+  AVISO: esperava ~8640 barras de 5m e vieram 5038 — historico curto nesta fonte.
+
+== 2. CENSO DAS ESTADIAS (BTC, 720 h = 30 dias de barras de 5 min) ==
+  barras de 5 min com H1 fechada disponivel: 5038
+  sinais: +1 2453 · -1 2585 · 0 0
+  ESTADIAS fechadas: 103 (3.4 por 24 h)
+  elegiveis (|mov| >= 20 bps e >= 2 barras): 23 (0.8 por 24 h)
+  |mov| das elegiveis: min 22.1 · mediana 35.4 · max 578.6 bps
+  sentidos das elegiveis: +1 11 · -1 12
+
+  tabela das estadias elegiveis (corte 20 bps):
+    de                 barras   horas  sign  |mov| bps  etiqueta
+    09-07 00:05            14    1.2     1       51.9  inverteu
+    09-07 05:45           216   18.0    -1       66.0  alinhou
+    09-08 10:30           172   14.3    -1       58.3  alinhou
+    09-09 18:00           138   11.5    -1       36.2  alinhou
+    09-10 06:15             7    0.6    -1       28.6  inverteu
+    09-10 07:00           306   25.5    -1      166.2  alinhou
+    09-11 09:00            44    3.7    -1       22.1  inverteu
+    09-11 16:25            19    1.6     1       35.4  inverteu
+    09-14 02:00           264   22.0     1      150.2  alinhou
+    09-15 00:00           428   35.7    -1      228.2  alinhou
+    09-16 18:05             2    0.2     1       31.8  inverteu
+    09-16 18:15            21    1.8    -1       24.0  inverteu
+    09-17 13:35             3    0.3    -1       32.8  inverteu
+    09-18 00:50             9    0.8     1       25.5  inverteu
+    09-18 01:35             2    0.2    -1       26.7  inverteu
+    09-18 01:45             4    0.3     1       24.7  inverteu
+    09-18 02:10           579   48.3     1      578.6  alinhou
+    09-20 02:35           137   11.4    -1       33.6  alinhou
+    09-20 14:35           494   41.2     1      575.0  alinhou
+    09-22 07:50           287   23.9     1      122.0  alinhou
+    09-23 07:50            11    0.9     1       28.9  inverteu
+    09-23 08:45            17    1.4    -1       23.6  inverteu
+    09-23 10:10             8    0.7     1      293.9  inverteu
+
+== 3. P — ELEGIVEIS, CORTE DIAGNOSTICO PELO PISO DE 6 h (72 barras) ==
+  todas as elegiveis  : n=23  alinhou 10 · inverteu 13  ->  43.5 %
+  LONGAS (>= 6 h)     : n=10  alinhou 10 · inverteu 0  ->  100.0 %
+  CURTAS (2-71 barras): n=13  alinhou 0 · inverteu 13  ->  0.0 %
+  binomial (p<0,05 unilateral): minimo 10 de 10 para as longas
+  => longas com n=10 < 12: sem potencia para decidir; le-se como diagnostico.
+
+== 4. P+V e V ==
+  so preco (todas): alinhou 10/23
+  P+V (entrada com sig_v = +1): 4/7 alinhou  ·  cortadas pelo V: 16/23
+  V: |mov| mediano com sig_v=+1: 150.2 bps (n=7)  ·  com sig_v!=+1: 35.4 bps (n=16)
+  guarda "os dois sentidos de preco": satisfeita
+
+  (read-only: nada foi escrito no ledger; so o historico publico foi lido)

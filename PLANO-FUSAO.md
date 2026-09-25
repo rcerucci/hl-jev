@@ -1494,36 +1494,67 @@ mas o sentido de "esforço" é mais fraco do que num livro real.
 ### 21.2 Censo antes da sessão — a unidade é rara demais para 12–24 h
 
 `provas/t5m/censo.ts` aplica as definições do §2 sobre o **histórico público** (o mesmo livro, mesmas barras
-de 5 min, EMA24 H1 só fechada), sem gastar uma hora de sessão:
+de 5 min, EMA24 H1 só fechada), sem gastar uma hora de sessão.
 
-| histórico | estadias P | estadias/24 h | **elegíveis** (\|mov\| ≥ 20 bps, ≥ 2 barras) | elegíveis/24 h |
-|---|---|---|---|---|
-| 7 dias | 29 | 4,1 | **12** | 1,7 |
-| 14 dias | 37 | 2,6 | **13** | 0,9 |
+**Correcção de método (24 set, ao paginar a fonte):** a primeira versão pedia o histórico numa só chamada, e o
+endpoint devolve janelas limitadas — as corridas rotuladas "7 d"/"14 d" vinham truncadas em ~2 000 barras
+(~7 dias), pelo que a de "14 dias" era na prática uma segunda leitura de 7 dias. A sonda passou a **paginar** e a
+**avisar quando recebe menos barras do que pediu** (foi o aviso que revelou o corte). Números da versão nova,
+sobre **todo o histórico que a fonte entrega**:
 
-**Uma sessão de 12–24 h produziria 1 a 2 estadias elegíveis** — contra o mínimo de **12** que o próprio desenho
-exige. Pelo critério do §2, ela fecharia **insuficiente** por construção. Chegar às 12 elegíveis pediria
-**~7 dias** de gravação (e as duas semanas só somaram 13: a taxa satura).
+| histórico | barras de 5 min | estadias P | estadias/24 h | **elegíveis** (\|mov\| ≥ 20 bps, ≥ 2 barras) | elegíveis/24 h |
+|---|---|---|---|---|---|
+| 7 dias (sem paginação, completo) | 2 017 | 29 | 4,1 | **12** | 1,7 |
+| 14 dias (sem paginação) | ~2 000 (truncado) | 37 | ~5,3 | **13** | ~1,9 |
+| **todo o disponível** (17,5 dias) | **5 038** | **103** | 5,9 | **23** | **1,3** |
 
-**A causa é estrutural, não é azar de janela.** `sign(hl2_5m − EMA24_H1)` é um sinal lento: as estadias estão
-dominadas por corridas de horas — 579 barras (48 h), 494 (41 h), 287 (24 h), 137 (11 h) — e só há ~4 mudanças
-de sinal por dia. A unidade "estadia" é um **regime**, e regimes não se repetem 12 vezes numa noite.
+**O que a fonte não dá:** pedidos de 30 e de 60 dias devolvem **as mesmas 5 038 barras** — o histórico público de
+5 min deste venue **acaba em ~17,5 dias**. A passagem a 30/60 dias que o §21.3 previa **não é possível neste
+TF nesta fonte** (a série horária vai mais atrás, mas isso é outro TF e outro ensaio).
 
-### 21.3 As três hipóteses, medidas de graça no histórico de 14 dias (n = 13 ≥ 12)
+**Uma sessão de 12–24 h produziria ~1 a 2 estadias elegíveis** — contra o mínimo de **12** que o próprio desenho
+exige. Fecharia **insuficiente por construção**; 12 elegíveis pediriam **~9 dias** de gravação.
 
-Com a amostra que a sessão levaria ~7 dias a produzir, o histórico responde já às três perguntas:
+**A causa é estrutural, não é azar de janela.** `sign(hl2_5m − EMA24_H1)` é um sinal lento: só ~6 mudanças de
+sinal por dia, e as estadias estão dominadas por corridas de horas — 579 barras (48 h), 494 (41 h), 287 (24 h),
+137 (11 h). A unidade "estadia" é um **regime**, e regimes não se repetem 12 vezes numa noite.
+
+### 21.3 As hipóteses no histórico completo (n = 23 elegíveis, acima do mínimo de 12)
 
 | hipótese | medido | critério do §2 | veredicto |
 |---|---|---|---|
-| **P** | **4/13** alinhou (30,8 %) | ≥ 10/13 (binomial) | **FAIL** |
-| **P+V** | 1/4 alinhou · **9 das 13 cortadas pelo V** | n ≥ 12 e ≥ tabela | **insuficiente** (n=4) |
-| **V** | `\|mov\|` mediano **32,8 bps** com `sig_v=+1` (n=4) vs **31,8 bps** com `sig_v≠+1` (n=9) | "≈ ⇒ volume não confirma" | **volume não confirma** |
+| **P** | **10/23** alinhou (43,5 %) | ≥ 17/23 (binomial) | **FAIL** |
+| **P+V** | 4/7 alinhou · **16 das 23 cortadas pelo V** | n ≥ 12 e ≥ tabela | **insuficiente** (n=7) |
+| **V** | `\|mov\|` mediano **150,2 bps** com `sig_v=+1` (n=7) vs **35,4 bps** com `sig_v≠+1` (n=16) | "≈ ⇒ não confirma" | **lê-se, mas não é estável** |
 
-Os dois sentidos de preço aparecem (guarda satisfeita). P+V não melhorou o P: das 13 elegíveis, o filtro de
-volume à entrada deixou passar **4**, e dessas alinhou **1**.
+Os dois sentidos de preço aparecem (guarda satisfeita). **O V é o ponto instável:** nesta janela o volume separa
+(150 vs 35 bps), mas na janela curta media **32,8 vs 31,8 bps** — praticamente iguais. Com n=7 de um lado, o
+mesmo par de números já deu "não confirma" e "confirma": **o bit de volume não tem leitura estável** neste livro.
 
-**Recomendação, e é dela que peço decisão:** **não gastar a noite.** O gravador `trend5` do §3 pode ir para o
-repo (é barato e fica para o futuro), mas a sessão de 12–24 h, pelo censo, entrega 1–2 elegíveis e fecha
-insuficiente — o mesmo desfecho do N1, com o dobro do custo. Se a hipótese interessa, o caminho com poder é
-**medir em histórico** (o censo já é isso, e pode estender-se a 30/60 dias por duas chamadas públicas), não
-gravar mais uma noite do mesmo livro lento.
+**Recomendação, e é dela que peço decisão:** **não gastar a noite.** O gravador `trend5` do §3 fica por escrever
+enquanto a sessão não tiver potência — e pelo censo não tem: 1–2 elegíveis numa noite, contra um mínimo de 12,
+com o mesmo desfecho do N1 e o dobro do custo.
+
+### 21.4 Passagem diagnóstica pedida pelo dono — piso de 6 h (declarado antes de correr)
+
+Regra escrita antes de medir: separar as elegíveis em **longas** (≥ 72 barras = 6 h, a estadia-regime) e
+**curtas** (2–71 barras, o cruzamento curto), para responder a uma pergunta só — *"o FAIL é o cruzamento curto
+ou a regra inteira?"*. A coluna **não promove** nada.
+
+| subconjunto | n | alinhou | inverteu | % |
+|---|---|---|---|---|
+| todas as elegíveis | 23 | 10 | 13 | 43,5 % |
+| **LONGAS (≥ 6 h)** | **10** | **10** | **0** | **100 %** |
+| **CURTAS (2–71 barras)** | **13** | **0** | **13** | **0 %** |
+
+A separação é total, e é por isso que **não se promove**: com n=10 (abaixo do piso de 12 que o dono fixou) isto é
+**diagnóstico**, não resultado. E há uma circularidade a declarar antes de qualquer ensaio novo — a estadia
+**acaba num cruzamento**, logo a curta é, quase por construção, um rompimento rejeitado (movimento invertido) e a
+longa uma tendência (movimento na direcção). Um "corte de duração" corre o risco de ser **reafirmação da mesma
+regra**, não hipótese nova.
+
+**Fica dito o que se pode e o que não se pode concluir daqui:** pode-se concluir que o FAIL do P **não é
+uniforme** — as curtas carregam-no inteiro e as longas não o têm. Não se pode concluir que "estadias longas
+alinham": n=10, num livro que só oferece 17,5 dias de história, e com o mecanismo do parágrafo acima por
+controlar. Se o dono quiser levar isto adiante, é **outro ensaio declarado** — e tem de nascer com a duração
+definida **ex ante** (não pelo fim da estadia), senão mede a regra de novo.
