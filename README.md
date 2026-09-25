@@ -13,7 +13,18 @@ Perp na **Hyperliquid**. Um modo de operação: `POLICY=sigma`.
 - **Execução**: a entrada é um **ALO no touch** (compra no best bid, venda no best ask); o que não
   encher em **8 s** vai numa única Ioc a mercado. A saída (`caixa` / `cb_chop`) é Ioc taker
   reduce-only da posição inteira, sem espera.
-- **Tamanho**: `notional = equity da sleeve × LEVERAGE` (hoje 1×), reaplicado no fecho do episódio.
+
+**Tamanho**
+
+O processo **não** abre posição no `start`. Espera o primeiro fecho H1 com `s ≠ 0`.
+
+Nessa primeira abertura, e em **cada** fecho ou virada a seguir:
+
+`notional = equity da sleeve × LEVERAGE` (hoje 1×).
+
+Não há tamanho de arranque à parte. `QUOTE_USD` não dimensiona o sigma.
+
+Se o venue ainda não deu equity (dry run), a régua é `BANKROLL_USD` do config. No live, é a equity real da sleeve. O notional da linha de comando não existe — não se passa tamanho no `bun run start`.
 
 ## Arrancar, parar, ler
 
