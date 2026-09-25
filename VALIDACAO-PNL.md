@@ -5,6 +5,19 @@ A solda A+B+C está no `main` (`8422dcc`, 23 set 2026). Isto guia **aferir, corr
 
 Não é autorização de mainnet. Não é Fase D. Não é "Laya mata o Jev".
 
+---
+
+## ⚰️ TÚMULO — 25 set 2026
+
+Este documento **não** candidata — nem autoriza como aresta — `stance`, o `u`, o canal L=130 (chão 0,15 /
+tecto 0,85) ou a caixa no tecto-chão. O `u` foi medido no livro real e **come tendência**; a coluna do
+`stance` vale como comparação de laboratório no ledger, não como caminho de conta.
+
+O motor da conta de **US$ 100** é o modo **`POLICY=sigma`** (relógio H1; `s = sign(hl2 − EMA24)` da vela
+fechada, sem lookahead; veto de pavio; CB de chop 3 viradas/12 h → 6 h de caixa), desenhado nas fatias
+seguintes. Fora do caminho: decisão a cada 5 min, T-5m e filhos (extremos, flip-na-faixa,
+suporte/resistência), histerese/ATR/σ, e Jev/`dumb`/Laya como motor desta conta. Ver `PLANO-FUSAO.md`.
+
 - Repo de execução: <https://github.com/rcerucci/hl-jev>
 - Base: `main` @ `8422dcc` — ou o `HEAD` da `main` na hora de abrir o branch. `7b3df4a` **não** se congela.
 - Upstream intacto: `aowang-ai/jev-trade` @ `a3f2f83`

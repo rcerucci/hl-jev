@@ -36,6 +36,20 @@ bun test
 
 ## The core message (do not break this)
 
+## What this file governs, and what it does not
+
+The claim block below is the **upstream demo's** rulebook: it governs the legacy `MODEL` path and the live
+desk site, and it stays true for them. It is **not** the account's rulebook.
+
+The account in this fork trades **one** mode: `POLICY=sigma` — H1 decision clock; `s = sign(hl2 − EMA24)` of
+the **already closed** H1 candle; wick veto; chop breaker (3 turns in 12 h → 6 h of `caixa`). There, **code
+decides, not Jev**, and the clock is the **H1 close, not every tick**. `jev`, `dumb`, `numeric` and `stance`
+are laboratory modes. Tombstoned, do not implement: 5m decision families (T-5m, extremes, flip-in-band,
+support/resistance), the `u` channel as box or filter, hysteresis/ATR/σ, and Jev/`dumb`/Laya as the engine
+of this account. See the tombstone block in `PLANO-FUSAO.md`.
+
+---
+
 The demo is a live Jev trading bot on Hyperliquid. Every design or strategy change must keep these claims true:
 
 > I built a trading bot with Jev!

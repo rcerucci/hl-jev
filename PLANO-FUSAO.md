@@ -6,6 +6,32 @@ Branch: `fusao/policy-risk-venue`. Publicado em `rcerucci/hl-jev` (remoto `origi
 Estado: **Fase A+B implementada** (T003-T017) na branch `fusao/policy-risk-venue`. Nenhuma ordem foi
 enviada, nenhum segredo foi lido, copiado ou registado. Decisoes D1-D8 fechadas pelo dono em 23 set 2026.
 
+---
+
+## ⚰️ TÚMULOS — 25 set 2026. Não implementar nada do que se segue nesta lista.
+
+O motor da conta de **US$ 100** é o modo **`POLICY=sigma`**: relógio **H1**; um único estado
+`s = sign(hl2 − EMA24)` da vela H1 **já fechada** (EMA da barra anterior, sem lookahead); **veto de pavio**
+(a virada em que só o wick cruzou e o close ficou do lado velho é ignorada); **CB de chop** (3 viradas em
+12 h → 6 h de caixa, depois volta o `s` vigente); inventário long com `s > 0`, short com `s < 0`, hold
+enquanto `s` não muda; execução posto no touch e o resto a mercado; 1×, BTC, redimensionado no fecho do
+episódio. O desenho entra neste plano na fatia seguinte (`F1`); as fatias são spec → plan → tasks → PR.
+
+Encerrado — **não implementar**, nem para esta conta nem como caminho vivo:
+
+- **Fases C / D / E** deste plano (§10, §11 e adiante) — cada uma com o seu túmulo.
+- **Decisão a cada 5 min** (`trend5`, T-5m, `last20`/`numeric`): o relógio de decisão é o **fecho H1**; o
+  tick de 5 min pode ingerir barra, nunca virar inventário.
+- **Ensaio T-5m** (§21) e os filhos — §22 extremos (short no tecto / long no chão), §23 flip-na-faixa,
+  §24 suporte-resistência: todos com o veredicto que lá está (FAIL / insuficiente).
+- **Canal `u`** (L=130, chão 0,15 / tecto 0,85) como caixa ou como filtro — medido no livro real, **come
+  tendência**.
+- **Histerese de banda, ATR/σ, persist 2–3 h, slope da EMA, long-only como regra.**
+- **Jev, `dumb` e Laya como motor desta conta** — continuam como modos de laboratório, sem receita.
+
+O `stance` **fica no código** (os testes gold isolam o museu) até o CI do `sigma` estar verde; nesta fatia
+(`F0`) deixa de ser documentado como caminho vivo no README e no `.env.example`.
+
 ## Veredicto
 
 A spec é **boa no essencial e executável**: o mapa do repo está certo (conferi função a função) e a fatia
@@ -296,6 +322,8 @@ travar; passou a exigir número real em `noul`, em cada probabilidade e em `conf
 
 ## 10. Sonda da Fase D (API DeepSeek) — 23 set 2026
 
+> ⚰️ **TÚMULO (25 set 2026): encerrado — não implementar.** Ver a lista de túmulos no topo deste plano.
+
 A Fase D **não** está implementada. O dono configurou `NIGHT_API_KEY` e indicou a API
 (`https://api.deepseek.com`, `deepseek-flash`, `reasoning_effort=high`, thinking enabled), por isso a sonda
 descartável respondeu, com **uma** chamada real e o system prompt da §7.4, o que a Fase D precisa de saber
@@ -328,6 +356,8 @@ A proposta reescrita foi substantiva (moveu "Pumping flow means hold" para dentr
 está dentro do papel da editora e é precisamente por isso que o gate humano não é opcional.
 
 ## 11. Fase C e a metade de venue do T018 — 23 set 2026
+
+> ⚰️ **TÚMULO (25 set 2026): encerrado — não implementar.** Ver a lista de túmulos no topo deste plano.
 
 ### O que passou a existir
 
@@ -1447,6 +1477,8 @@ PR **#17** fundido (`a7e6a95`): o cano `numeric` / `returns_bps` / `PolicyCtx` *
 parado. `POLICY=jev` e `POLICY=numeric` (last20) **não** correm na sessão T-5m.
 
 ## 21. Ensaio T-5m — preço × volume (especificação do dono, colada)
+
+> ⚰️ **TÚMULO (25 set 2026): encerrado — não implementar.** Ver a lista de túmulos no topo deste plano.
 
 > **Uma sessão, três leituras offline. Decisão a cada 5 min. Sem Jev. Sem chop.**
 >
