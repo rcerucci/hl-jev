@@ -1,0 +1,247 @@
+[
+ {
+  "tipo": "short",
+  "t_in": 1789018800000,
+  "t_in_iso": "2026-09-10T05:40:00.000Z",
+  "mid_in": 78652,
+  "u_in": 0.8918,
+  "s_in": -1,
+  "R1": {
+   "H12": {
+    "h": 12,
+    "mid_out": 78503.5,
+    "mov_bps": -18.880638763159233,
+    "etiqueta": "alinhou"
+   },
+   "H36": {
+    "h": 36,
+    "mid_out": 78350.5,
+    "mov_bps": -38.33341809489905,
+    "etiqueta": "alinhou"
+   },
+   "H72": {
+    "h": 72,
+    "mid_out": 78004.5,
+    "mov_bps": -82.3246707013172,
+    "etiqueta": "alinhou"
+   }
+  },
+  "R2": {
+   "mid_out": 78741,
+   "mov_bps": 11.315669023038193,
+   "ate_idx": 773,
+   "barras": 6,
+   "etiqueta": "inverteu"
+  }
+ },
+ {
+  "tipo": "short",
+  "t_in": 1789117200000,
+  "t_in_iso": "2026-09-11T09:00:00.000Z",
+  "mid_in": 77194,
+  "u_in": 0.8187,
+  "s_in": -1,
+  "R1": {
+   "H12": {
+    "h": 12,
+    "mid_out": 76957.5,
+    "mov_bps": -30.63709614736897,
+    "etiqueta": "alinhou"
+   },
+   "H36": {
+    "h": 36,
+    "mid_out": 77030,
+    "mov_bps": -21.245174495427104,
+    "etiqueta": "alinhou"
+   },
+   "H72": {
+    "h": 72,
+    "mid_out": 78348,
+    "mov_bps": 149.49348394952975,
+    "etiqueta": "inverteu"
+   }
+  },
+  "R2": {
+   "mid_out": 77364.5,
+   "mov_bps": 22.087208850428787,
+   "ate_idx": 1139,
+   "barras": 44,
+   "etiqueta": "inverteu"
+  }
+ },
+ {
+  "tipo": "short",
+  "t_in": 1789198200000,
+  "t_in_iso": "2026-09-12T07:30:00.000Z",
+  "mid_in": 77131.5,
+  "u_in": 0.7761,
+  "s_in": -1,
+  "R1": {
+   "H12": {
+    "h": 12,
+    "mid_out": 77098.5,
+    "mov_bps": -4.278407654460239,
+    "etiqueta": "sem_relacao"
+   },
+   "H36": {
+    "h": 36,
+    "mid_out": 77141,
+    "mov_bps": 1.2316628096173419,
+    "etiqueta": "sem_relacao"
+   },
+   "H72": {
+    "h": 72,
+    "mid_out": 77007,
+    "mov_bps": -16.14126524182727,
+    "etiqueta": "alinhou"
+   }
+  },
+  "R2": {
+   "mid_out": 77147,
+   "mov_bps": 2.0095551104282947,
+   "ate_idx": 1379,
+   "barras": 14,
+   "etiqueta": "sem_relacao"
+  }
+ },
+ {
+  "tipo": "long",
+  "t_in": 1789871400000,
+  "t_in_iso": "2026-09-20T02:30:00.000Z",
+  "mid_in": 81314.5,
+  "u_in": 0.1479,
+  "s_in": 1,
+  "R1": {
+   "H12": {
+    "h": 12,
+    "mid_out": 80685,
+    "mov_bps": -77.41546710611269,
+    "etiqueta": "inverteu"
+   },
+   "H36": {
+    "h": 36,
+    "mid_out": 80907.5,
+    "mov_bps": -50.052573649226154,
+    "etiqueta": "inverteu"
+   },
+   "H72": {
+    "h": 72,
+    "mid_out": 80645.5,
+    "mov_bps": -82.27314931531276,
+    "etiqueta": "inverteu"
+   }
+  },
+  "R2": {
+   "mid_out": 81283,
+   "mov_bps": -3.87384783771652,
+   "ate_idx": 3610,
+   "barras": 1,
+   "etiqueta": "sem_relacao"
+  }
+ },
+ {
+  "tipo": "long",
+  "t_in": 1790149800000,
+  "t_in_iso": "2026-09-23T07:50:00.000Z",
+  "mid_in": 86994,
+  "u_in": 0.1594,
+  "s_in": 1,
+  "R1": {
+   "H12": {
+    "h": 12,
+    "mid_out": 86554,
+    "mov_bps": -50.57820079545716,
+    "etiqueta": "inverteu"
+   },
+   "H36": {
+    "h": 36,
+    "mid_out": 86740,
+    "mov_bps": -29.197415913741178,
+    "etiqueta": "inverteu"
+   },
+   "H72": {
+    "h": 72,
+    "mid_out": 86532,
+    "mov_bps": -53.10711083523002,
+    "etiqueta": "inverteu"
+   }
+  },
+  "R2": {
+   "mid_out": 86742.5,
+   "mov_bps": -28.910039772857896,
+   "ate_idx": 4548,
+   "barras": 11,
+   "etiqueta": "inverteu"
+  }
+ },
+ {
+  "tipo": "short",
+  "t_in": 1790294400000,
+  "t_in_iso": "2026-09-25T00:00:00.000Z",
+  "mid_in": 85005,
+  "u_in": 0.8779,
+  "s_in": -1,
+  "R1": {
+   "H12": {
+    "h": 12,
+    "mid_out": null,
+    "mov_bps": null,
+    "etiqueta": null
+   },
+   "H36": {
+    "h": 36,
+    "mid_out": null,
+    "mov_bps": null,
+    "etiqueta": null
+   },
+   "H72": {
+    "h": 72,
+    "mid_out": null,
+    "mov_bps": null,
+    "etiqueta": null
+   }
+  },
+  "R2": {
+   "mid_out": 85055,
+   "mov_bps": 5.88200694076819,
+   "ate_idx": 5020,
+   "barras": 1,
+   "etiqueta": "sem_relacao"
+  }
+ },
+ {
+  "tipo": "short",
+  "t_in": 1790295600000,
+  "t_in_iso": "2026-09-25T00:20:00.000Z",
+  "mid_in": 84970.5,
+  "u_in": 0.8659,
+  "s_in": -1,
+  "R1": {
+   "H12": {
+    "h": 12,
+    "mid_out": null,
+    "mov_bps": null,
+    "etiqueta": null
+   },
+   "H36": {
+    "h": 36,
+    "mid_out": null,
+    "mov_bps": null,
+    "etiqueta": null
+   },
+   "H72": {
+    "h": 72,
+    "mid_out": null,
+    "mov_bps": null,
+    "etiqueta": null
+   }
+  },
+  "R2": {
+   "mid_out": 85061,
+   "mov_bps": 10.650755262120382,
+   "ate_idx": 5027,
+   "barras": 4,
+   "etiqueta": "inverteu"
+  }
+ }
+]

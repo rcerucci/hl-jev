@@ -1598,3 +1598,43 @@ binomial, que devolvia sempre `n`).
 **Limites, declarados:** um livro (testnet BTC), uma janela de 17,5 dias (a fonte não dá mais a 5 min), 167
 visitas, e o subconjunto E1 é fino (10–14 elegíveis). Nada aqui é PnL: sem fill, sem taxa, sem signer — e sem
 `trend5`, que continua por escrever.
+
+## 23. Ensaio flip-na-faixa — entrada só no flip dentro da faixa do extremo (25 set 2026)
+
+Especificação do consultor: o gatilho é o **flip na faixa**, não o toque. Evento = `s` muda de sinal **e**, na
+mesma barra, o mid está no extremo — `u ≤ 0,25` com flip para `+1` → **long**; `u ≥ 0,75` com flip para `−1` →
+**short**. Toque no extremo **sem** flip não é evento (foi o #20, não se repete) e flip no meio do canal também
+não. Dois rótulos sobre os **mesmos** eventos: **R1** holding fixo em 12/36/72 barras e **R2** até o próximo flip
+de `s` (qualquer flip, mesmo no meio). `FLAT = 10 bps`, binomial igual ao N1.
+
+### 23.1 A regra quase não dispara
+
+| contagem | |
+|---|---|
+| flips de `s` no período | **101** |
+| **flips na faixa** (eventos) | **7** |
+| flips no meio do canal (descartados) | **94** |
+| **% na faixa** | **6,9 %** |
+
+### 23.2 As quatro leituras — todas insuficientes
+
+| leitura | fechados | long/short | elegíveis | alinhou | inverteu | razão | veredicto |
+|---|---|---|---|---|---|---|---|
+| R1 holding 12 barras | 5 | 2/2 | 4 | 2 | 2 | 0,500 | **insuficiente** |
+| R1 holding 36 barras | 5 | 2/2 | 4 | 2 | 2 | 0,500 | **insuficiente** |
+| R1 holding 72 barras | 5 | 2/3 | 5 | 2 | 3 | 0,400 | **insuficiente** |
+| R2 até o próximo flip | 7 | 1/3 | 4 | 0 | 4 | 0,000 | **insuficiente** |
+
+### 23.3 Leitura
+
+**Insuficiente por construção** — e agora sabe-se porquê, com número: em 17,5 dias a regra disparou **7 vezes**;
+chegar às 12 elegíveis pediria **~30 dias**, e a fonte pública de 5 min deste venue só oferece 17,5. Não é a
+amostra que falta — é o **gatilho** que é raro: **93 % dos flips de `s` acontecem no meio do canal**, não na
+faixa.
+
+O único número que aponta para algum lado é o de R2 (0 alinhou em 4 elegíveis), e com n=4 **não se lê** — como
+não se leu o 3/3 do §22. Nada aqui é PnL: sem fill, sem taxa, sem signer.
+
+**Testes do consultor (§G): 7/7 verdes.** O primeiro, na sua primeira versão, reprovava comportamento
+**correcto**: um flip-na-faixa dentro do warmup é descartado e contado, não é falha — a asserção passou a ser
+sobre os **eventos** (nenhum com `t_in` no warmup), e o descarte ficou impresso.

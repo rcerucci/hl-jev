@@ -1,0 +1,100 @@
+{
+ "contagens": {
+  "flips_totais": 101,
+  "na_faixa": 7,
+  "no_meio": 94,
+  "pct_faixa": 6.9
+ },
+ "blocos": {
+  "R1_H12": {
+   "leitura": "R1 holding 12 barras",
+   "n_eventos_fechados": 5,
+   "n_long": 2,
+   "n_short": 2,
+   "elegiveis": 4,
+   "alinhou": 2,
+   "inverteu": 2,
+   "razao": 0.5,
+   "mediana_mov_long": -50.6,
+   "mediana_mov_short": -18.9,
+   "n_abertos": 2,
+   "minimo_binomial": null,
+   "veredicto": "insuficiente",
+   "_ets": [
+    "alinhou",
+    "alinhou",
+    "sem_relacao",
+    "inverteu",
+    "inverteu"
+   ]
+  },
+  "R1_H36": {
+   "leitura": "R1 holding 36 barras",
+   "n_eventos_fechados": 5,
+   "n_long": 2,
+   "n_short": 2,
+   "elegiveis": 4,
+   "alinhou": 2,
+   "inverteu": 2,
+   "razao": 0.5,
+   "mediana_mov_long": -29.2,
+   "mediana_mov_short": -21.2,
+   "n_abertos": 2,
+   "minimo_binomial": null,
+   "veredicto": "insuficiente",
+   "_ets": [
+    "alinhou",
+    "alinhou",
+    "sem_relacao",
+    "inverteu",
+    "inverteu"
+   ]
+  },
+  "R1_H72": {
+   "leitura": "R1 holding 72 barras",
+   "n_eventos_fechados": 5,
+   "n_long": 2,
+   "n_short": 3,
+   "elegiveis": 5,
+   "alinhou": 2,
+   "inverteu": 3,
+   "razao": 0.4,
+   "mediana_mov_long": -53.1,
+   "mediana_mov_short": -16.1,
+   "n_abertos": 2,
+   "minimo_binomial": null,
+   "veredicto": "insuficiente",
+   "_ets": [
+    "alinhou",
+    "inverteu",
+    "alinhou",
+    "inverteu",
+    "inverteu"
+   ]
+  },
+  "R2": {
+   "leitura": "R2 ate ao proximo flip de s",
+   "n_eventos_fechados": 7,
+   "n_long": 1,
+   "n_short": 3,
+   "elegiveis": 4,
+   "alinhou": 0,
+   "inverteu": 4,
+   "razao": 0,
+   "mediana_mov_long": -28.9,
+   "mediana_mov_short": 11.3,
+   "n_abertos": 0,
+   "minimo_binomial": null,
+   "veredicto": "insuficiente",
+   "_ets": [
+    "inverteu",
+    "inverteu",
+    "sem_relacao",
+    "sem_relacao",
+    "inverteu",
+    "sem_relacao",
+    "inverteu"
+   ]
+  }
+ }
+}

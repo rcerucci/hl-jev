@@ -1,0 +1,24 @@
+{
+ "venue": "hyperliquid-testnet",
+ "coin": "BTC",
+ "cache": "provas/t5m/extremos/velas-5m.json",
+ "barras": 5030,
+ "pedidas_solicitadas": 5760,
+ "barras_recebidas": 5030,
+ "truncada": true,
+ "primeira_iso": "2026-09-07T13:45:00.000Z",
+ "ultima_iso": "2026-09-25T00:50:00.000Z",
+ "L": 130,
+ "CHAO": 0.25,
+ "TECTO": 0.75,
+ "FLAT": 10,
+ "horizontes_barras": [
+  12,
+  36,
+  72
+ ],
+ "sha_serie": "1a6a1d833c434c63",
+ "commit": "b56abe9",
+ "gerado_em": "2026-09-25T01:04:39.005Z",
+ "regra": "evento = s muda de sinal E (u<=CHAO para long) ou (u>=TECTO para short); toque sem flip nao entra"
+}

@@ -7,3 +7,5 @@ docs/
 
 # Cache de velas das sondas T-5m (re-fetchavel; o SHA fica no meta.json da sonda)
 provas/t5m/extremos/velas-5m.json
+
+provas/t5m/velas-5m.json
