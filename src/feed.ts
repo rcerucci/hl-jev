@@ -50,6 +50,7 @@ export class Feed {
     setInterval(() => { if (!this.ws || this.ws.readyState !== WebSocket.OPEN) this.snapshot().catch(() => {}); }, 2_000);
     setInterval(() => this.pollTrades().catch(() => {}), 2_000);
     setInterval(() => this.pollAssetCtx().catch(() => {}), 15_000);
+    setInterval(() => this.chart.loadCandles(this.coin).catch(() => {}), 5 * 60_000);
     this.pollTrades().catch(() => {});
   }
 
@@ -85,6 +86,8 @@ export class Feed {
         this.send({ method: "subscribe", subscription: { type: "l2Book", coin: this.coin, fast: true } });
         this.send({ method: "subscribe", subscription: { type: "trades", coin: this.coin } });
         this.send({ method: "subscribe", subscription: { type: "candle", coin: this.coin, interval: CHART_INTERVAL } });
+        this.send({ method: "subscribe", subscription: { type: "candle", coin: this.coin, interval: "5m" } });
+        this.send({ method: "subscribe", subscription: { type: "candle", coin: this.coin, interval: "1h" } });
         this.send({ method: "subscribe", subscription: { type: "activeAssetCtx", coin: this.coin } });
         this.subscribeUser();
         if (this.ping) clearInterval(this.ping);
@@ -131,7 +134,10 @@ export class Feed {
     }
     if (m.channel === "candle") {
       const rows = Array.isArray(m.data) ? m.data : m.data ? [m.data] : [];
-      for (const c of rows) this.chart.upsertCandle(c);
+      for (const c of rows) {
+        if (c?.i === "5m" || c?.i === "1h") this.chart.ingestStanceBar(c.i, c);
+        else this.chart.upsertCandle(c);
+      }
       return;
     }
     if (m.channel === "activeAssetCtx" && m.data) {
