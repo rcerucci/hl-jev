@@ -6,7 +6,7 @@ import { planFromRisk, planQuote, type QuotePlan } from "./plan";
 import { toSnapshot, toState } from "./risk/buckets";
 import { isFrozen, riskIntent, standsDown } from "./risk/intent";
 import type { Policy, PolicyCtx, Snapshot, StanceRaw, Verdict } from "./risk/types";
-import { SIGMA, lastClosedH1 } from "./policy/sigma";
+import { SIGMA, SIGMA_FILL, lastClosedH1 } from "./policy/sigma";
 import { stanceFeatures, type StanceBar } from "./policy/stance_features";
 import { cycleId, type Ledger } from "./ledger/jsonl";
 import { aggregateFills, emptySummary, takeLiveFills, takeSimFills, type Resting, type TradeFeed } from "./trades";
@@ -43,6 +43,19 @@ export interface Fusion {
 type Decidable = Pick<ModelDecision, "action" | "probabilities" | "upIn10" | "latencyMs"> &
   Partial<Pick<ModelDecision, "intent" | "bias" | "leverage" | "inputTokens" | "state12" | "act" | "act_conf" | "too_hostile" | "reason">>;
 
+/** F5 — a operacao de entrada do sigma em curso. */
+interface SigmaFillState {
+  cycleId: string;
+  block: number;
+  side: Side;
+  /** Tamanho pedido no ALO (ja lotado pelo venue). */
+  size: number;
+  /** Preco do ALO, para o preco medio do fill. */
+  makerPx: number | null;
+  midAtSend: number;
+  deadline: number;
+}
+
 export class Trader {
   readonly history: BlockEvent[] = [];
   private mids: number[] = [];
@@ -59,6 +72,8 @@ export class Trader {
   private stancePrev = new Map<string, StanceRaw>();
   /** F4 — a H1 fechada que ja foi decidida, por moeda. O portao do relogio le e escreve aqui. */
   private h1Decided = new Map<string, number>();
+  /** F5 — a operacao de entrada do sigma em curso, por moeda (ALO no touch + espera + resto). */
+  private sigmaFill = new Map<string, SigmaFillState>();
 
   constructor(
     private market: Market,
@@ -176,6 +191,8 @@ export class Trader {
    */
   private async fusedTick(block: number, book: Book, timing: Timing, t0: number, fusion: Fusion) {
     const now = Date.now();
+    // F5 — fechar a operacao de entrada anterior (se o prazo passou) antes de decidir de novo.
+    if (config.policy === "sigma") await this.sigmaFillStep(block, book, fusion);
     const snap = this.buildSnapshot(now, book);
     const state = toState(snap);
     const cid = cycleId(new Date(now), this.market.coin);
@@ -218,7 +235,18 @@ export class Trader {
       // quando ele existe, com o mesmo cycle_id. Ver a nota do PR.
       fill: null,
     });
-    if (plan) this.enqueueQuote(block, plan, book, config.leverage);
+    // F5 — o sigma tem mecanica de ordem propria. A saida (`caixa` / `cb_chop`) e o flatten de
+    // hoje, sem espera. A entrada e um ALO no touch com espera, e o resto vai a mercado depois.
+    // Numa virada as duas coisas acontecem por ordem — primeiro fecha o lado velho (o proprio
+    // plano, ja Ioc reduce-only), depois abre o novo. Nao se fundem num so Ioc "atraves".
+    if (config.policy === "sigma") {
+      if (intent.reason === "caixa" || intent.reason === "cb_chop") {
+        if (plan) this.enqueueQuote(block, plan, book, config.leverage);
+      } else if (plan) {
+        if (plan.reduceOnly) this.enqueueQuote(block, plan, book, config.leverage);
+        this.enqueueSigmaEntry(block, plan.side, this.market.quoteSize(book.mid), book, cid, book.mid);
+      }
+    } else if (plan) this.enqueueQuote(block, plan, book, config.leverage);
     else if (standsDown(intent)) this.enqueueStandDown();
     // Congelado (timeout/JSON invalido/livro velho): sem ordem nova **e** sem
     // cancelar. Nao ha mais nada a fazer neste tick — e a decisao D3.
@@ -264,9 +292,88 @@ export class Trader {
       raw_ok: true,
       raw: prev === "buy" || prev === "sell" ? prev : "caixa",
       signal: "hold",
+      clock_hold: true,
       wick_veto: false,
       note: "sigma: sem H1 fechada nova (portao do relogio)",
     };
+  }
+
+  /**
+   * F5 — abre (ou vira para) o lado novo com **uma** ordem ALO no touch: compra no best bid,
+   * venda no best ask. Se o venue a recusar (cruzar o spread), reenvia **uma vez** um tick para
+   * tras do touch — continua maker. Depois fica a espera; quem fecha a operacao e o
+   * `sigmaFillStep`.
+   */
+  private enqueueSigmaEntry(block: number, side: Side, sizeSz: number, book: Book, cid: string, mid: number) {
+    const seq = ++this.sendSeq;
+    this.exchangeTail = this.exchangeTail.catch(() => {}).then(async () => {
+      if (seq !== this.sendSeq) return;
+      const cancel = [...this.orders.keys()].filter((id) => id > 0);
+      let quote = await this.market.send(side, sizeSz, book, cancel, false, false, 0);
+      if (quote.status === "reverted") {
+        quote = await this.market.send(side, sizeSz, book, cancel, false, false, -1);
+      }
+      if (seq !== this.sendSeq) return;
+      this.applyPosted(block, quote);
+      if (quote.status === "reverted" || !(quote.size > 0)) return;
+      this.sigmaFill.set(this.market.coin, {
+        cycleId: cid,
+        block,
+        side,
+        size: quote.size,
+        makerPx: quote.price,
+        midAtSend: mid,
+        deadline: Date.now() + SIGMA_FILL.ALO_WAIT_MS,
+      });
+    });
+  }
+
+  /**
+   * F5 — o fim da operacao de entrada, aos `SIGMA_FILL.ALO_WAIT_MS` (constante no codigo, como o
+   * CB). Antes do prazo nao toca em nada: sem chase, sem segundo ALO e sem remarcar a cada tick.
+   * Passado o prazo, o que ainda estiver aberto vai numa **unica** Ioc a mercado, mesmo lado, e a
+   * operacao fecha com uma linha de `fill` no ledger.
+   */
+  private async sigmaFillStep(block: number, book: Book, fusion: Fusion) {
+    const st = this.sigmaFill.get(this.market.coin);
+    if (!st) return;
+    const now = Date.now();
+    if (now < st.deadline) return;
+    const aberto = this.restingSz(st.side);
+    const feitoMaker = Math.max(0, st.size - aberto);
+    let takerFill = 0;
+    let takerPx: number | null = null;
+    if (aberto > 0) {
+      const cancel = [...this.orders.keys()].filter((id) => id > 0);
+      const quote = await this.market.send(st.side, aberto, book, cancel, false, true);
+      this.applyPosted(block, quote);
+      if (quote.status !== "reverted") {
+        takerFill = quote.size;
+        takerPx = quote.price;
+      }
+    }
+    this.sigmaFill.delete(this.market.coin);
+    const role = feitoMaker <= 0 ? "taker" : aberto <= 0 ? "maker" : "mixed";
+    const total = feitoMaker + takerFill;
+    const makerPx = st.makerPx ?? st.midAtSend;
+    const fillPx = total > 0 ? (makerPx * feitoMaker + (takerPx ?? makerPx) * takerFill) / total : st.midAtSend;
+    const feeBps =
+      total > 0
+        ? (SIGMA_FILL.MAKER_FEE_BPS * feitoMaker + SIGMA_FILL.TAKER_FEE_BPS * takerFill) / total
+        : SIGMA_FILL.MAKER_FEE_BPS;
+    const sinal = st.side === "buy" ? 1 : -1;
+    fusion.ledger.writeFill({
+      kind: "fill",
+      cycle_id: st.cycleId,
+      ts: now,
+      sleeve: this.market.coin,
+      fill_role: role,
+      fill_px: fillPx,
+      mid_at_send: st.midAtSend,
+      fill_bps: st.midAtSend > 0 ? ((fillPx - st.midAtSend) / st.midAtSend) * 10_000 * sinal : 0,
+      unfilled: aberto,
+      fee_bps: feeBps,
+    });
   }
 
   private policyCtx(snap: Snapshot, now: number): PolicyCtx {

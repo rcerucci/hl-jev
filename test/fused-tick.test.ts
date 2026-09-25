@@ -1,17 +1,24 @@
 import { afterAll, expect, test } from "bun:test";
 import { rmSync } from "node:fs";
+import { config } from "../src/config";
 import { Ledger } from "../src/ledger/jsonl";
 import type { Market } from "../src/market";
 import { MockModel, type Model } from "../src/model";
 import { DumbPolicy } from "../src/policy/dumb";
-import { SigmaPolicy } from "../src/policy/sigma";
+import { quotePrice } from "../src/book";
+import { SIGMA_FILL, SigmaPolicy } from "../src/policy/sigma";
+import { TradeFeed } from "../src/trades";
 import { StancePolicy } from "../src/policy/stance";
 import type { Policy, Verdict } from "../src/risk/types";
 import { Trader } from "../src/trader";
 import type { BlockEvent, Book, Quote, Side } from "../src/types";
 
 const DIR = "./data/test-fused";
+const POLICY_NO_DISCO = (config as { policy: string }).policy;
 afterAll(() => rmSync(DIR, { recursive: true, force: true }));
+afterAll(() => {
+  (config as { policy: string }).policy = POLICY_NO_DISCO;
+});
 
 const book: Book = {
   block: 1,
@@ -227,6 +234,13 @@ function sigmaBars1h(now: number, newer = 0, lado: "up" | "down" = "up") {
   });
 }
 
+/** F5 — serie plana: hl2 = 95 = a propria EMA, logo s = 0 (caixa). `newer = 1` = H1 nova. */
+function sigmaBarsFlat(now: number, newer = 0) {
+  const step1h = 3_600_000;
+  const last1h = Math.floor(now / step1h) * step1h - (2 - newer) * step1h;
+  return Array.from({ length: 30 }, (_, i) => ({ ts: last1h - (29 - i) * step1h, high: 96, low: 94, close: 95 }));
+}
+
 /** Doze velas de 5m dentro da mesma H1: o sigma nao as le, mas o tick corre nelas. */
 function sigmaBars5m(now: number) {
   const step5 = 300_000;
@@ -234,7 +248,12 @@ function sigmaBars5m(now: number) {
   return Array.from({ length: 12 }, (_, i) => ({ ts: last5 - (11 - i) * step5, high: 110, low: 90, close: 100 }));
 }
 
+/**
+ * O `.env` do clone traz `POLICY=jev`, e o portao do F4 e a mecanica do F5 so correm com o
+ * sigma ligado. Os testes deste bloco ligam-no aqui — e o `afterAll` no fim do ficheiro repoe.
+ */
 function sigmaTrader(market: FakeMarket, ledger: Ledger) {
+  (config as { policy: string }).policy = "sigma";
   return new Trader(
     market as unknown as Market,
     new MockModel() as unknown as Model,
@@ -244,6 +263,155 @@ function sigmaTrader(market: FakeMarket, ledger: Ledger) {
     { policy: new SigmaPolicy(), ledger },
   );
 }
+
+test("sigma F5: o preco do ALO e o touch; recusado, um tick para tras (continua maker)", () => {
+  // A espera e uma constante do codigo, nao um knob de `.env`.
+  expect(SIGMA_FILL.ALO_WAIT_MS).toBe(8000);
+  expect(SIGMA_FILL.MAKER_FEE_BPS).toBe(1.5);
+  expect(SIGMA_FILL.TAKER_FEE_BPS).toBe(4.5);
+  const b: Book = { ...book, bid: 99.9, ask: 100.1 };
+  expect(quotePrice("buy", b, 5, 0)).toBe(99.9); // best bid
+  expect(quotePrice("sell", b, 5, 0)).toBe(100.1); // best ask
+  expect(quotePrice("buy", b, 5, -1)).toBeLessThan(99.9); // um tick para tras
+  expect(quotePrice("sell", b, 5, -1)).toBeGreaterThan(100.1);
+  expect(quotePrice("buy", b, 5, -1)).toBeLessThan(b.ask); // continua maker
+  expect(quotePrice("sell", b, 5, -1)).toBeGreaterThan(b.bid);
+});
+
+test("sigma F5: ALO no touch que enche -> sem segundo envio e fill_role=maker", async () => {
+  const prevWait = SIGMA_FILL.ALO_WAIT_MS;
+  SIGMA_FILL.ALO_WAIT_MS = 40;
+  try {
+    const now = Date.now();
+    const market = new FakeMarket();
+    market.candleBars1h = () => sigmaBars1h(now);
+    market.candleBars5m = () => [];
+    const ledger = new Ledger(`${DIR}/${++seq}`);
+    const trader = sigmaTrader(market, ledger);
+    const feed = new TradeFeed();
+    trader.attachTradeFeed(feed);
+    await trader.onBlock(1);
+    await Bun.sleep(30);
+    expect(market.sends.length).toBe(1); // o ALO
+
+    // O ALO esta no bid: um print ao bid enche-o (o sim fill do dry run).
+    feed.setTick(2);
+    feed.pushPrint({ price: 99.9, size: 1, side: "sell" });
+    await trader.onBlock(2);
+    await Bun.sleep(90); // passa o prazo de espera
+    await trader.onBlock(3);
+    await Bun.sleep(60);
+    expect(market.sends.length).toBe(1); // nenhum segundo envio
+    const fills = ledger.read("BTC", today()).filter((l) => l.kind === "fill") as {
+      fill_role?: string; unfilled?: number; fee_bps?: number; fill_bps?: number; mid_at_send?: number;
+    }[];
+    expect(fills.length).toBe(1);
+    expect(fills[0]!.fill_role).toBe("maker");
+    expect(fills[0]!.unfilled).toBe(0);
+    expect(fills[0]!.fee_bps).toBe(SIGMA_FILL.MAKER_FEE_BPS);
+    expect(typeof fills[0]!.mid_at_send).toBe("number");
+  } finally {
+    SIGMA_FILL.ALO_WAIT_MS = prevWait;
+  }
+});
+
+test("sigma F5: caixa com posicao -> um Ioc reduce-only, sem espera", async () => {
+  const now = Date.now();
+  let bars = sigmaBars1h(now, 0, "up");
+  const market = new FakeMarket();
+  market.candleBars1h = () => bars;
+  market.candleBars5m = () => [];
+  const ledger = new Ledger(`${DIR}/${++seq}`);
+  const trader = sigmaTrader(market, ledger);
+  const feed = new TradeFeed();
+  trader.attachTradeFeed(feed);
+  await trader.onBlock(1);
+  await Bun.sleep(30);
+  expect(market.sends.length).toBe(1); // entrada ALO
+
+  feed.setTick(2);
+  feed.pushPrint({ price: 99.9, size: 1, side: "sell" }); // o ALO enche: fica posicao
+  await trader.onBlock(2);
+  await Bun.sleep(60);
+
+  // H1 nova com o s exactamente na EMA (s=0 -> caixa), com posicao aberta: flatten de hoje.
+  bars = sigmaBarsFlat(now, 1);
+  market.sends = [];
+  await trader.onBlock(3);
+  await Bun.sleep(60);
+  expect(market.sends.length).toBe(1);
+  expect(market.sends[0]).toMatchObject({ reduceOnly: true, taker: true });
+  expect(market.sends[0]!.size).toBe(0.01); // a posicao inteira que o ALO tinha aberto
+});
+
+test("sigma F5 · F4: caixa repetido na MESMA H1 nao desmonta nada (o portao segura)", async () => {
+  const now = Date.now();
+  let bars = sigmaBars1h(now, 0, "up");
+  const market = new FakeMarket();
+  market.candleBars1h = () => bars;
+  market.candleBars5m = () => [];
+  const ledger = new Ledger(`${DIR}/${++seq}`);
+  const trader = sigmaTrader(market, ledger);
+  const feed = new TradeFeed();
+  trader.attachTradeFeed(feed);
+  await trader.onBlock(1);
+  await Bun.sleep(30);
+  feed.setTick(2);
+  feed.pushPrint({ price: 99.9, size: 1, side: "sell" }); // abre posicao
+  await trader.onBlock(2);
+  await Bun.sleep(60);
+
+  bars = sigmaBarsFlat(now, 1); // H1 nova com s=0: a decisao manda caixa
+  market.sends = [];
+  await trader.onBlock(3);
+  await Bun.sleep(60);
+  expect(market.sends.length).toBe(1); // o flatten da H1 nova (o caso legitimo)
+  expect(market.sends[0]).toMatchObject({ reduceOnly: true, taker: true });
+
+  // O MESMO bloco outra vez: sem H1 nova, o portao segura — sem ALO e sem taker. Sem o portao,
+  // o sigma voltaria a mandar caixa e isto era um segundo flatten.
+  market.sends = [];
+  await trader.onBlock(4);
+  await Bun.sleep(60);
+  await trader.onBlock(5);
+  await Bun.sleep(60);
+  expect(market.sends.length).toBe(0);
+  // Sem H1 nova o tick e um hold: nem ALO nem taker. (A linha do fill do ALO so sai quando a
+  // espera real de 8 s passa — este teste e do portao, nao da mecanica.)
+});
+
+test("sigma F5: ALO que nao enche -> exactamente uma Ioc do resto (taker)", async () => {
+  const prevWait = SIGMA_FILL.ALO_WAIT_MS;
+  SIGMA_FILL.ALO_WAIT_MS = 40;
+  try {
+    const now = Date.now();
+    const market = new FakeMarket();
+    market.candleBars1h = () => sigmaBars1h(now);
+    market.candleBars5m = () => [];
+    const ledger = new Ledger(`${DIR}/${++seq}`);
+    const trader = sigmaTrader(market, ledger);
+    await trader.onBlock(1);
+    await Bun.sleep(30);
+    expect(market.sends.length).toBe(1);
+
+    await Bun.sleep(60); // passa o prazo
+    await trader.onBlock(2);
+    await Bun.sleep(60);
+    expect(market.sends.length).toBe(2); // ALO + uma Ioc
+    expect(market.sends[1]).toMatchObject({ side: "buy", taker: true, reduceOnly: false });
+    expect(market.sends[1]!.size).toBe(market.sends[0]!.size); // o resto = o que nao encheu
+    const fills = ledger.read("BTC", today()).filter((l) => l.kind === "fill") as { fill_role?: string; unfilled?: number }[];
+    expect(fills.length).toBe(1);
+    expect(fills[0]!.fill_role).toBe("taker"); // o ALO nao encheu nada
+    expect(fills[0]!.unfilled).toBeGreaterThan(0);
+
+    await trader.onBlock(3);
+    await Bun.sleep(60);
+    expect(market.sends.length).toBe(2); // e so uma: sem chase, sem segundo ALO
+  } finally {
+    SIGMA_FILL.ALO_WAIT_MS = prevWait;
+  }
+});
 
 test("sigma F4: a primeira H1 fechada nova decide como hoje (s -> buy)", async () => {
   const now = Date.now();

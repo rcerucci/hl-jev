@@ -55,7 +55,30 @@ export interface OutcomeLine {
   horizon_secs: number;
 }
 
-export type LedgerLine = DecisionLine | OutcomeLine;
+/**
+ * F5 — o fill da operacao de entrada do sigma, com o **mesmo `cycle_id`** da decisao que a
+ * mandou (a juncao e por id, como no outcome). Sao os campos que so existem depois de a ordem
+ * acabar: como encheu, a que preco, contra que mid, e o que ficou aberto aos 8 s.
+ */
+export interface FillLine {
+  kind: "fill";
+  cycle_id: string;
+  ts: number;
+  sleeve: string;
+  /** maker = o ALO encheu tudo; taker = foi tudo a mercado; mixed = as duas coisas. */
+  fill_role: "maker" | "taker" | "mixed";
+  fill_px: number;
+  /** Mid no instante em que o ALO saiu. */
+  mid_at_send: number;
+  /** (fill - mid) em bps com o sinal do lado: positivo e melhor que o mid. */
+  fill_bps: number;
+  /** O que continuava aberto aos 8 s (0 se o ALO encheu tudo). */
+  unfilled: number;
+  /** Taxa assumida no paper, tier 0: 1,5 maker / 4,5 taker, ponderada no mixed. Sem rebate. */
+  fee_bps: number;
+}
+
+export type LedgerLine = DecisionLine | OutcomeLine | FillLine;
 
 const pad = (n: number, w = 2) => String(n).padStart(w, "0");
 
@@ -95,6 +118,15 @@ export class Ledger {
   }
 
   writeDecision(line: DecisionLine): string {
+    return this.append(line);
+  }
+
+  /**
+   * F5 — a linha do **fill** da operacao do sigma, com o mesmo `cycle_id` da decisao que a
+   * mandou. E aqui que vivem os campos que so se sabem depois de a ordem acabar: como encheu
+   * (maker/taker/mixed), a que preco, contra que mid, e o que ficou aberto aos 8 s.
+   */
+  writeFill(line: FillLine): string {
     return this.append(line);
   }
 
@@ -148,7 +180,9 @@ export class Ledger {
     for (const line of this.read(sleeve, day)) {
       const slot = byId.get(line.cycle_id) ?? {};
       if (line.kind === "decision") slot.decision = line;
-      else slot.outcome = line;
+      // F5 — a linha de `fill` nao entra nesta juncao (ela nao e um outcome): fica no ficheiro,
+      // ligada pelo mesmo `cycle_id`, para quem a for ler.
+      else if (line.kind === "outcome") slot.outcome = line;
       byId.set(line.cycle_id, slot);
     }
     return [...byId.values()]

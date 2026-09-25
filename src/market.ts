@@ -191,7 +191,15 @@ export class Market {
   }
 
   /** Entries rest post-only. Exits cross as Ioc so they do not wait on a taker. */
-  async send(side: Side, sizeSz: number, book: Book, cancel: number[], reduceOnly = false, taker = false): Promise<Quote> {
+  async send(
+    side: Side,
+    sizeSz: number,
+    book: Book,
+    cancel: number[],
+    reduceOnly = false,
+    taker = false,
+    quoteInside?: number,
+  ): Promise<Quote> {
     const size = lot(sizeSz, this.szDecimals);
     const base: QuoteBase = { side, reduceOnly, capped: false, taker };
     if (size <= 0) {
@@ -199,16 +207,25 @@ export class Market {
     }
     const px = taker
       ? Number(formatPrice(takerPrice(side, book, this.szDecimals), this.szDecimals))
-      : this.restingPx(side, book);
+      : this.restingPx(side, book, quoteInside);
     if (!this.ex) {
       return { ...base, price: px, size, txHash: null, cancel, status: "sim", orderId: null };
     }
     return taker ? this.sendTaker(size, px, base) : this.sendMaker(size, px, cancel, base);
   }
 
-  /** Post-only price, clamped so it can never cross and get rejected. */
-  private restingPx(side: Side, book: Book): number {
-    let px = Number(formatPrice(quotePrice(side, book, this.szDecimals), this.szDecimals));
+  /**
+   * Post-only price, clamped so it can never cross and get rejected. `inside` escolhe a
+   * distancia ao touch: `undefined` = o default da casa (`QUOTE_INSIDE_TICKS`); `0` = no touch
+   * (entrada do sigma); negativo = um tick para tras do touch, ainda maker (F5).
+   */
+  private restingPx(side: Side, book: Book, inside?: number): number {
+    let px = Number(
+      formatPrice(
+        inside === undefined ? quotePrice(side, book, this.szDecimals) : quotePrice(side, book, this.szDecimals, inside),
+        this.szDecimals,
+      ),
+    );
     if (side === "sell" && px <= book.bid) px = Number(formatPrice(book.ask, this.szDecimals));
     if (side === "buy" && px >= book.ask) px = Number(formatPrice(book.bid, this.szDecimals));
     return px;

@@ -71,7 +71,12 @@ export interface Verdict {
   signal?: StanceSignal;
   /** Sigma (F2): esta barra H1 foi ignorada por so o wick ter cruzado a EMA. */
   wick_veto?: boolean;
-  /** Sigma (F3): o circuit breaker de chop esta a segurar o capital fora do mercado. */
+  /**
+   * F5 — hold do **portao do relogio**: a postura nao mudou e nao houve evento nenhum. Nao e
+   * caixa (nao desmonta nada) nem hold de sinal: e o tick a passar sem uma H1 fechada nova.
+   */
+  clock_hold?: boolean;
+  /** F3 — o circuit breaker de chop esta a segurar o capital fora do mercado. */
   cb_active?: boolean;
   /** Viradas de lado nas ultimas 12 h de H1 fechadas (0 quando o CB acabou de expirar). */
   cb_flips_12h?: number;

@@ -44,6 +44,12 @@ export interface Fill {
   feeUsd?: number;
   closedPnl?: number;
   dir?: "open" | "close" | "flip";
+  /** F5 — como a operacao do sigma encheu: maker (o ALO bastou), taker (foi tudo a mercado) ou as duas. */
+  role?: "maker" | "taker" | "mixed";
+  /** F5 — mid no instante do envio do ALO. */
+  mid_at_send?: number;
+  /** F5 — o que ainda estava aberto aos 8 s (0 se o ALO encheu tudo). */
+  unfilled?: number;
 }
 
 /** Compact tape print. Candles carry o/h/l/c. Fills sit on this series. */
