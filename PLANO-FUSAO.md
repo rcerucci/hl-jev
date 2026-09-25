@@ -1558,3 +1558,43 @@ uniforme** — as curtas carregam-no inteiro e as longas não o têm. Não se po
 alinham": n=10, num livro que só oferece 17,5 dias de história, e com o mecanismo do parágrafo acima por
 controlar. Se o dono quiser levar isto adiante, é **outro ensaio declarado** — e tem de nascer com a duração
 definida **ex ante** (não pelo fim da estadia), senão mede a regra de novo.
+
+## 22. Ensaio dos extremos — short no tecto, long no chão, horizonte **fixo**
+
+Especificação do consultor, com as definições pinadas: `mid = (h+l)/2`; `hi/lo` dos últimos **L = 130**;
+`u = clip((mid−lo)/(hi−lo))`; **CHAO = 0,15** e **TECTO = 0,85**; `s` = sinal do mid contra a **EMA 24 do H1
+fechado (seed SMA 24)**; visita = primeiro `u ≤ CHAO` depois de `u > CHAO` (e o simétrico no tecto), uma visita
+= uma linha, `t_in` na primeira barra; horizontes **12 / 36 / 72 barras** (1/3/6 h), **FLAT = 10 bps**.
+Nada disto se afina depois de ver a tabela, e nada de `src/`: a sonda é `provas/t5m/extremos/medir.ts`, com os
+testes do consultor a correr **antes** da leitura (6/6 verdes — e um deles apanhou um defeito meu na função do
+binomial, que devolvia sempre `n`).
+
+### 22.1 Resultado — 5 030 barras de 5 min, 2026-09-07 → 2026-09-25 (~17,5 dias), 167 visitas
+
+| horizonte | leitura | elegíveis | alinhou | inverteu | razão | mínimo k/n | veredicto |
+|---|---|---|---|---|---|---|---|
+| H12 (1 h) | E0 todos | 126 | 59 | 67 | 0,468 | 73 | **FAIL** |
+| H12 | E1 `s` a favor | 10 | 5 | 5 | 0,500 | — | insuficiente |
+| H12 | E2 `s` contra | 116 | 54 | 62 | 0,466 | 68 | **FAIL** |
+| H36 (3 h) | E0 todos | 136 | 68 | 68 | 0,500 | 79 | **FAIL** |
+| H36 | E1 `s` a favor | **12** | 8 | 4 | **0,667** | 10 | **FAIL** |
+| H36 | E2 `s` contra | 124 | 60 | 64 | 0,484 | 72 | **FAIL** |
+| H72 (6 h) | E0 todos | 150 | 63 | 87 | 0,420 | 86 | **FAIL** |
+| H72 | E1 `s` a favor | 14 | 7 | 7 | 0,500 | 11 | **FAIL** |
+| H72 | E2 `s` contra | 136 | 56 | 80 | 0,412 | 79 | **FAIL** |
+
+### 22.2 Leitura
+
+- **Todos os quadrantes com n ≥ 12 reprovam.** Os extremos sozinhos (E0) ficam entre 0,420 e 0,500 — moeda ao
+  ar, e a pior ponta é o horizonte mais longo. **Short no tecto e long no chão não pagam mais do que o acaso
+  neste livro, nestas três janelas.**
+- O corner `s` a favor (E1) é o melhor, com **8/12 = 0,667 no H36** — e mesmo aí fica abaixo do mínimo 10/12. A
+  regra pré-registada ("E1 melhor que E0 só se a razão subir **e** n_E1 ≥ 12") declara E1 melhor que E0 no H36 e
+  no H72, mas **melhor que E0 não é PASS**: nos dois casos o binomial ainda diz FAIL.
+- **91 % das visitas são "s contra"** (151 de 166): neste livro, chegar ao extremo acontece quase sempre com o
+  preço do lado de baixo da média — o chão é visitado em queda, não em dip de alta.
+- `s = 0` nunca ocorreu; os abertos são 1–2 por horizonte (os últimos toques, sem horizonte cumprido).
+
+**Limites, declarados:** um livro (testnet BTC), uma janela de 17,5 dias (a fonte não dá mais a 5 min), 167
+visitas, e o subconjunto E1 é fino (10–14 elegíveis). Nada aqui é PnL: sem fill, sem taxa, sem signer — e sem
+`trend5`, que continua por escrever.

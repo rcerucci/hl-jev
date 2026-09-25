@@ -1,0 +1,25 @@
+{
+ "venue": "hyperliquid-testnet",
+ "coin": "BTC",
+ "barras": 5030,
+ "pedidas_solicitadas": 5760,
+ "barras_recebidas": 5030,
+ "truncada": true,
+ "nota_truncagem": "A fonte publica de 5 min deste venue acaba em ~5 030 barras (~17,5 dias): pedir 20 dias devolve-o todo. Nao se chama a isto a janela pedida, e nao serve para 30/60 dias.",
+ "primeira_ts": 1788788700000,
+ "ultima_ts": 1790297400000,
+ "primeira_iso": "2026-09-07T13:45:00.000Z",
+ "ultima_iso": "2026-09-25T00:50:00.000Z",
+ "L": 130,
+ "CHAO": 0.15,
+ "TECTO": 0.85,
+ "FLAT": 10,
+ "horizontes_barras": [
+  12,
+  36,
+  72
+ ],
+ "sha_serie": "1a6a1d833c434c63",
+ "commit": "76a743b",
+ "gerado_em": "2026-09-25T00:52:23.843Z"
+}

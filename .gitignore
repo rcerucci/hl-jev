@@ -4,3 +4,6 @@ data/
 docs/
 .wallets.json
 .cursor/
+
+# Cache de velas das sondas T-5m (re-fetchavel; o SHA fica no meta.json da sonda)
+provas/t5m/extremos/velas-5m.json
