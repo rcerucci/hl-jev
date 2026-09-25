@@ -46,6 +46,14 @@ export class Market {
     return this.feed.chart.closes(limit);
   }
 
+  candleBars5m() {
+    return this.feed.chart.bars5m();
+  }
+
+  candleBars1h() {
+    return this.feed.chart.bars1h();
+  }
+
   constructor(private feed: Feed, sleeve: SleeveConfig) {
     this.coin = sleeve.coin;
     this.pair = sleeve.pair;
