@@ -74,7 +74,7 @@ export function planQuote(opts: {
  * reduz, nao ha ordem.
  */
 export function planFromRisk(intent: RiskIntent, positionSz: number, quoteSz: number): QuotePlan | null {
-  if (intent.reason === "caixa") {
+  if (intent.reason === "caixa" || intent.reason === "cb_chop") {
     if (positionSz > 0) return { side: "sell", size: Math.abs(positionSz), reduceOnly: true, taker: true };
     if (positionSz < 0) return { side: "buy", size: Math.abs(positionSz), reduceOnly: true, taker: true };
     return null;

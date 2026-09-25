@@ -71,6 +71,12 @@ export interface Verdict {
   signal?: StanceSignal;
   /** Sigma (F2): esta barra H1 foi ignorada por so o wick ter cruzado a EMA. */
   wick_veto?: boolean;
+  /** Sigma (F3): o circuit breaker de chop esta a segurar o capital fora do mercado. */
+  cb_active?: boolean;
+  /** Viradas de lado nas ultimas 12 h de H1 fechadas (0 quando o CB acabou de expirar). */
+  cb_flips_12h?: number;
+  /** Fim da caixa do CB, em ms epoch. 0 quando nao ha CB armado. */
+  cb_until?: number;
 }
 
 /** Vela H1 que o sigma consome: `hl2` sai de high/low, e o `close` decide o veto de pavio. */
@@ -100,6 +106,7 @@ export type IntentReason =
   | "frozen_raw"
   | "frozen_stale"
   | "caixa"
+  | "cb_chop"
   | "stance_hold"
   | "stance_act";
 

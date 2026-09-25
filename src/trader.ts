@@ -201,6 +201,9 @@ export class Trader {
       raw: verdict.raw,
       signal: verdict.signal,
       wick_veto: verdict.wick_veto,
+      cb_active: verdict.cb_active,
+      cb_flips_12h: verdict.cb_flips_12h,
+      cb_until: verdict.cb_until,
       verdict,
       intent,
       // O fill chega assincrono (userFills/dry-run): a linha do fill e escrita
