@@ -207,3 +207,5 @@ assets/        README shots of the live desk
 ## License
 
 MIT. Copyright 2026 aowang. Includes MIT code originally published as jev-trader by Jarrod Watts.
+
+Ensaios antigos: archive/. Não implementar.
