@@ -395,6 +395,7 @@ export class Trader {
       total > 0
         ? (SIGMA_FILL.MAKER_FEE_BPS * feitoMaker + SIGMA_FILL.TAKER_FEE_BPS * takerFill) / total
         : SIGMA_FILL.MAKER_FEE_BPS;
+    // Custo contra o mid: numa compra pagar acima e custo, numa venda receber abaixo tambem.
     const sinal = st.side === "buy" ? 1 : -1;
     fusion.ledger.writeFill({
       kind: "fill",
