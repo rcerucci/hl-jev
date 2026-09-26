@@ -763,3 +763,63 @@ test("sigma #45: o `s` gravado produz o `raw` gravado, e o lado enviado e esse",
   expect(market.sends.length).toBe(1);
   expect(market.sends[0]!.side).toBe(linha.raw); // e o que sai e o que se gravou
 });
+
+/**
+ * F2 — o veto de pavio, no TICK FUNDIDO: o lado mantem-se, o evento e `hold`, e o ledger marca
+ * `wick_veto`. O `wick_veto` so estava testado a `false` (`sigma F4`, acima): o campo existia mas
+ * nunca se via a `true` a sair do motor.
+ *
+ * A serie tem uma historia de tres H1 fechadas, e cada bloco so ve ate a barra que ja fechou (nada
+ * de futuro a vista):
+ *   1) confirma para cima  -> s = +1, raw = buy, signal = buy
+ *   2) PAVIO para baixo (hl2 abaixo da EMA, close acima) -> s mantem-se +1, signal = hold, wick_veto
+ *   3) confirma para baixo -> flipa: s = -1, raw = sell, wick_veto = false
+ */
+function sigmaBars1hPavio(now: number, ate: 28 | 29 | 30) {
+  const step = 3_600_000;
+  // As barras da historia tem instantes FIXOS (ancorados no fim da historia, nao na ultima visivel):
+  // so assim cada bloco ve uma H1 fechada NOVA (senao o portao do relogio segura e nao ha decisao).
+  const fim = Math.floor(now / step) * step - step; // a hora mais recente que ja fechou
+  const historia = [
+    ...Array.from({ length: 28 }, () => ({ high: 96, low: 94, close: 95 })), // planas: hl2 = 95
+    { high: 110, low: 100, close: 108 }, // 28: confirma para cima (hl2 105)
+    { high: 98, low: 72, close: 100 }, // 29: o PAVIO (hl2 85, close fica em cima)
+    { high: 95, low: 89, close: 90 }, // 30: confirma para baixo (hl2 92)
+  ];
+  return historia.slice(0, ate + 1).map((b, i) => ({ ts: fim - (30 - i) * step, ...b }));
+}
+
+test("sigma F2: o pavio mantem o lado, o close a confirmar flipa, e o ledger diz wick_veto", async () => {
+  const now = Date.now();
+  let fase: 28 | 29 | 30 = 28; // ate onde a historia ja fechou (nada de futuro a vista)
+  const market = new FakeMarket();
+  market.candleBars1h = () => sigmaBars1hPavio(now, fase);
+  market.candleBars5m = () => sigmaBars5m(now);
+  const ledger = new Ledger(`${DIR}/${++seq}`);
+  const trader = sigmaTrader(market, ledger, false);
+
+  await trader.onBlock(1);
+  await Bun.sleep(60);
+  const l1 = ledger.read("BTC", today())[0] as { raw?: string; s?: number; wick_veto?: boolean };
+  expect(l1.s).toBe(1);
+  expect(l1.raw).toBe("buy");
+  expect(l1.wick_veto).toBe(false);
+
+  fase = 29; // o pavio
+  await trader.onBlock(2);
+  await Bun.sleep(60);
+  const l2 = ledger.read("BTC", today())[1] as { raw?: string; s?: number; signal?: string; wick_veto?: boolean };
+  expect(l2.s).toBe(1); // o `s` NAO virou
+  expect(l2.raw).toBe("buy"); // o lado manteve-se
+  expect(l2.signal).toBe("hold"); // e nao ha evento novo
+  expect(l2.wick_veto).toBe(true); // o campo diz porque
+
+  fase = 30; // o close que confirma
+  await trader.onBlock(3);
+  await Bun.sleep(60);
+  const l3 = ledger.read("BTC", today())[2] as { raw?: string; s?: number; signal?: string; wick_veto?: boolean };
+  expect(l3.s).toBe(-1); // agora flipou
+  expect(l3.raw).toBe("sell");
+  expect(l3.signal).toBe("sell");
+  expect(l3.wick_veto).toBe(false);
+});
