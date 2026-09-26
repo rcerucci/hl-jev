@@ -12,6 +12,7 @@ import type { BlockEvent, Fill, Meta, Quote, Timing } from "./types";
 
 const specs = loadSleeves();
 if (!specs.length) throw new Error("no sleeves");
+config.pairs = specs.length;
 
 /**
  * H4 — o porteiro. Uma corrida que nao e a do alfa nao arranca: exit, nao warn. Corre por sleeve

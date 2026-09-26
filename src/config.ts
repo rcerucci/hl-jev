@@ -110,6 +110,8 @@ export const config = {
   privateKey: env("PRIVATE_KEY"),
   leverage: Number(env("LEVERAGE", "1")),
   bankrollUsd: Number(env("BANKROLL_USD", "200")),
+  /** Pares deste processo. O start poe o length de HL_COINS; testes ficam em 1. */
+  pairs: 1,
   maxLiveEquityUsd: 100,
   sigma,
   lab,

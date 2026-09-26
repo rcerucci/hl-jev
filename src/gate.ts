@@ -82,6 +82,7 @@ export function bootLine(r: ResolvedRun, coin: string): string {
     `dry=${r.dryRun}`,
     `lev=${r.leverage}`,
     `cap=$${r.maxLiveEquityUsd}`,
+    `pares=${r.coins.length}`,
     `cbFlips=${config.sigma.cbFlips} (${config.sigma.cbFlipsSource})`,
     `quoteInside=${config.sigma.quoteInsideTicks}`,
     `aloWait=${config.sigma.aloWaitMs}ms`,
