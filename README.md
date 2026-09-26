@@ -50,6 +50,11 @@ são o motor desta conta e não têm receita aqui.
 
 `web/` é o painel Next (desk) e **não** sobe com o `start`: use `bun run dev:web`.
 
+## TradingView
+
+O `s` do motor, em espelho, para acompanhar no TV: `tv/sigma.pine` — leia `tv/README.md` (o que confere, com
+que vectores, e o que não pode divergir). Não é uma variante: é para dar o mesmo número.
+
 Ensaios antigos: archive/. Não implementar.
 
 ## Licença

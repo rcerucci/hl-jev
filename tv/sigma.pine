@@ -1,0 +1,144 @@
+//@version=5
+// -------------------------------------------------------------------------------------------------
+// SIGMA - espelho fiel do nucleo `s` do motor (Hyperliquid, POLICY=sigma)
+//
+// Regra do motor (src/policy/sigma.ts:140-157 e a decisao em :170-188):
+//   s = sign( hl2 - EMA24(hl2) )  da ULTIMA H1 **FECHADA**, com a EMA calculada sobre as barras
+//   **ANTERIORES** a essa (sem lookahead).
+//   Veto de pavio (F2): se o `s` quer virar e so o pavio cruzou a EMA - o `hl2` passou para o lado
+//   novo e o `close` ficou no lado velho - a barra e ignorada e o `s` mantem-se.
+//   Relogio (F4): a decisao nasce no **fecho da H1**; dentro da hora o `s` fica congelado.
+//   Circuit breaker de chop (F3): N viradas em 12 h armam 6 h de `caixa` (nao muda o `s`, muda o
+//   que o motor faz com ele).
+//
+// Este script NAO e uma variante: e para dar O MESMO numero do motor. Para isso ele
+//   1) le `hl2` e `close` da H1 FECHADA (nao do preco vivo do grafico) e a EMA das barras
+//      ANTERIORES a essa H1 -> `ta.ema(hl2, maLen)[1]` dentro do request.security;
+//   2) so decide quando uma H1 fecha (`h1Time` muda) e mantem o `s` no resto da hora;
+//   3) aplica o veto de pavio e a caixa do CB.
+//
+// O que o script ANTIGO fazia de diferente (medido, 30 dias de H1 reais, SOL e BTC):
+//   - comparava o `hl2` do grafico VIVO (intra-hora) com a MA, em vez do `hl2` da H1 FECHADA.
+//     Numa hora em que o motor decidiu um lado, o TV mostrou o lado OPOSTO em 48 de 418 horas
+//     (11,5 %) em SOL e 64 de 419 (15,3 %) em BTC - 3,7 % e 4,5 % das barras de 5 min. Era isto que
+//     fazia a leitura do dono nao bater com o motor. No instante do fecho da H1 os dois coincidem.
+//   - recalculava `sig` em cada barra do grafico (repinta), enquanto o motor decide UMA vez por
+//     fecho de H1 e congela o `s` no resto da hora: o TV mostrava o CANDIDATO, nao o `s` do motor.
+//   - nao tinha o veto de pavio (18 vezes em 30 dias) nem a caixa do CB.
+//   - `maType`/`srcH1`/`useChartMid` permitiam estados que divergem por desenho (ex. MA sobre o
+//     `close`, ou sinal pelo `close` do grafico). A MA incluir ou nao a H1 fechada NAO era
+//     problema: com `lookahead_off` a request.security ja devolve a MA da H1 fechada anterior, que
+//     e exactamente a "das barras anteriores" que o motor usa.
+// Esta versao tira os botoes que podiam divergir e fica so com as constantes do motor.
+//
+// Semente da EMA: o motor usa SMA das primeiras 24 barras da janela de 7 dias que carrega ao
+// arranque; o TV usa a semente dele, sobre um historico muito maior. Medido: a diferenca entre as
+// duas sementes e <= 1,6e-5 (SOL) e 4,0e-3 (BTC), enquanto o menor |hl2 - EMA| em 697 barras e
+// 0,018 (SOL) e 0,38 (BTC) - mil vezes maior. A semente nao pode virar um lado.
+//
+// Arranque do script: `sVigente` comeca em 0, logo a PRIMEIRA H1 fechada depois de carregar o
+// script nao tem veto (nao ha lado a proteger). E o mesmo buraco que o motor tem ao arrancar -
+// issue #51 - e nao um defeito do espelho.
+//
+// CONFERIR CONTRA O MOTOR (1 minuto, no primeiro fecho de H1 depois de colar o script):
+//   no ledger, a linha do ciclo do fecho (a PRIMEIRA linha depois da hora cheia, ex. 12:00:01Z)
+//   tem `s` e `ema_h1`. Compare com o `s do motor` e o `EMA24 H1` deste script (janela de dados).
+//   Iguais = alinhado. Se o `EMA24 H1` for o da H1 ANTERIOR, a leitura esta uma hora atras.
+//
+// Armadilha do Pine que este script evita (medida a 26 set 2026): o `and` NAO curto-circuita.
+// `while array.size(x) > 0 and array.get(x, 0) <= limite` rebenta com "Runtime error RE10045
+// index 0 is out of bounds, array size is 0" - o segundo operando e avaliado sempre. Nada de
+// indice de array em condicao: a janela do CB e um contador que um push incrementa e um shift
+// (que devolve o que saiu) decrementa.
+// -------------------------------------------------------------------------------------------------
+indicator("Sigma · s do motor (HL, H1 fechada + veto de pavio)", overlay = true, max_labels_count = 500)
+
+maLen     = input.int(24,  "EMA (barras H1)", minval = 2, tooltip = "O motor usa 24 (config.sigma.emaN)")
+usarCB    = input.bool(true, "Reproduzir a caixa do CB de chop (F3)")
+cbFlips   = input.int(4,   "CB: viradas que armam a caixa", minval = 2, tooltip = "A conta de teste corre 4 (VPS). O default do repo e 3 - issue #37.")
+cbJanelaH = input.int(12,  "CB: janela (horas)", minval = 1)
+cbCaixaH  = input.int(6,   "CB: caixa (horas)", minval = 1)
+rotular   = input.bool(true, "Rotular o fecho de H1 lido")
+
+f_seg(expr) => request.security(syminfo.tickerid, "60", expr, barmerge.gaps_off, barmerge.lookahead_off)
+
+// --- a H1 FECHADA (barra n) e a EMA das barras ANTERIORES a ela --------------------------------
+h1Hl2   = f_seg(hl2)
+h1Close = f_seg(close)
+h1Ema   = f_seg(ta.ema(hl2, maLen)[1])
+h1Time  = f_seg(time)
+
+pronta = not na(h1Hl2) and not na(h1Ema) and not na(h1Time)
+var int h1Vista = 0
+// `h1Time` e o instante de ABERTURA da ultima H1 fechada: muda exactamente quando uma H1 fecha.
+novaH1 = pronta and h1Time != h1Vista
+
+delta  = h1Hl2 - h1Ema
+sRaw   = delta > 0 ? 1 : delta < 0 ? -1 : 0
+dClose = h1Close - h1Ema
+sClose = dClose > 0 ? 1 : dClose < 0 ? -1 : 0
+
+// --- o `s` do motor: veto de pavio, uma decisao por H1 fechada, congelado no resto da hora ------
+var int sVigente    = 0     // o `s` vigente (0 = ainda sem estado, como no arranque do motor)
+var int rawAnterior = 0     // o `raw` da decisao anterior (0 = caixa) - e o que o CB le
+var bool veto       = false
+var float cbUntil   = 0.0
+// A janela do CB sao as ultimas `cbJanelaH` H1 FECHADAS: uma entrada por fecho (true = virada), e
+// o contador acompanha-a - um push por H1, uma poda por H1. Sem `while`, sem `for` e sem indice
+// em condicao: o `and` do Pine NAO curto-circuita, logo `array.get` dentro de uma condicao
+// rebenta em array vazio (Runtime error RE10045, medido a 26 set 2026).
+var array<bool> cbJanela = array.new<bool>()
+var int cbViradas   = 0     // viradas dentro da janela, mantidas pelo contador (nao somadas)
+var bool emCaixa    = false
+
+if novaH1
+    h1Vista := h1Time
+    cbFechou = h1Time + 60 * 60 * 1000                  // instante do FECHO da H1 lida
+    // F2 - veto de pavio, antes do CB (a ordem do motor)
+    querVirar = sVigente != 0 and sRaw != 0 and sRaw != sVigente
+    veto := querVirar and sClose == sVigente
+    s = veto ? sVigente : sRaw
+    // F3 - CB de chop: expira primeiro, conta a virada deste fecho, arma ao atingir o limiar
+    if cbUntil != 0 and cbFechou >= cbUntil
+        cbUntil := 0
+        array.fill(cbJanela, false)
+        cbViradas := 0
+    virada = rawAnterior != 0 and s != 0 and s != rawAnterior
+    array.push(cbJanela, virada)
+    if virada
+        cbViradas += 1
+    if array.size(cbJanela) > cbJanelaH
+        if array.shift(cbJanela)                // o que sai da janela deixa de contar
+            cbViradas -= 1
+    if cbUntil == 0 and cbViradas >= cbFlips
+        cbUntil := cbFechou + cbCaixaH * 60 * 60 * 1000
+    emCaixa := usarCB and cbUntil > cbFechou
+    rawAnterior := emCaixa ? 0 : s
+    sVigente := s
+
+// --- o que se ve ---------------------------------------------------------------------------------
+// Marcas SO na barra em que uma H1 fechou (a decisao); entre fechos o `s` fica congelado.
+plotshape(novaH1 and sVigente == 1,  title = "long",  style = shape.triangleup,   location = location.belowbar, size = size.tiny, color = color.new(color.teal, 0))
+plotshape(novaH1 and sVigente == -1, title = "short", style = shape.triangledown, location = location.abovebar, size = size.tiny, color = color.new(color.red, 0))
+plotshape(novaH1 and veto,           title = "veto de pavio (manteve o s)", style = shape.xcross, location = location.abovebar, size = size.tiny, color = color.new(color.orange, 0))
+
+barcolor(sVigente == 1 ? color.new(color.teal, 70) : sVigente == -1 ? color.new(color.red, 70) : color.new(color.gray, 70))
+bgcolor(emCaixa ? color.new(color.gray, 88) : na, title = "caixa do CB")
+
+plot(sVigente, "s do motor", color = color.new(color.blue, 0), style = plot.style_stepline, linewidth = 2)
+plot(h1Ema, "EMA24 H1 (barras anteriores)", color = color.new(color.blue, 55), linewidth = 1)
+
+// diagnostico, so na janela de dados
+plot(delta,   "hl2 - EMA24",                 color = color.new(color.gray, 100),   display = display.data_window)
+plot(h1Hl2,   "hl2 da H1 fechada",           color = color.new(color.gray, 100),   display = display.data_window)
+plot(h1Close, "close da H1 fechada",         color = color.new(color.gray, 100),   display = display.data_window)
+plot(sRaw,    "candidato (antes do veto/CB)", color = color.new(color.orange, 100), display = display.data_window)
+plot(sClose,  "s do close (veto)",           color = color.new(color.orange, 100), display = display.data_window)
+plot(cbViradas, "CB: viradas na janela",     color = color.new(color.orange, 100), display = display.data_window)
+plot(emCaixa ? 1 : 0, "caixa do CB (0/1)",   color = color.new(color.orange, 100), display = display.data_window)
+
+if novaH1 and rotular
+    label.new(bar_index, sVigente == 1 ? low : high,
+              text = str.format("{0} UTC  s={1}{2}", str.format_time(h1Time, "yyyy-MM-dd HH:mm", "UTC"), sVigente, veto ? "  VETO" : ""),
+              style = sVigente == 1 ? label.style_label_up : label.style_label_down,
+              color = color.new(color.black, 85), textcolor = color.new(color.white, 0), size = size.tiny)
