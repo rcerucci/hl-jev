@@ -11,23 +11,41 @@ export interface HeaderProps {
   balance: number | null;
   unrealized: number | null;
   realized: number | null;
+  /** Sem conta para ler (dry run), o balanco nao existe: diz-se, em vez de carregar para sempre. */
+  dryRun?: boolean;
 }
 
+/**
+ * Conta: `balance` e a conta da venue quando ela responde. Em dry run nao ha conta para ler, e
+ * entao diz-se isso em texto, em vez de deixar um esqueleto eterno a fingir que esta a carregar.
+ */
 function Score({
   label,
   value,
   signed = true,
+  empty,
 }: {
   label: string;
   value: number | null;
   signed?: boolean;
+  empty?: string;
 }) {
   const color = !signed || value == null ? undefined : value >= 0 ? "var(--pnl-pos)" : "var(--pnl-neg)";
   return (
     <span className={styles.score}>
       <span className={styles.scoreKey}>{label}</span>
       <span className={styles.scoreVal} style={color ? { color } : undefined}>
-        {value == null ? <Bone w={64} h={16} /> : signed ? fmtSignedUsd(value, 2) : fmtUsd(value, 2)}
+        {value != null ? (
+          signed ? (
+            fmtSignedUsd(value, 2)
+          ) : (
+            fmtUsd(value, 2)
+          )
+        ) : empty ? (
+          <span className={styles.scoreEmpty}>{empty}</span>
+        ) : (
+          <Bone w={64} h={16} />
+        )}
       </span>
     </span>
   );
@@ -75,15 +93,15 @@ function ThemeToggle() {
   );
 }
 
-export default function Header({ connection, balance, unrealized, realized }: HeaderProps) {
+export default function Header({ connection, balance, unrealized, realized, dryRun = false }: HeaderProps) {
   const live = connection === "live";
 
   return (
     <div className={styles.header}>
       <span className={styles.brandLockup}>
         <Logo size={20} />
-        <h1 className={styles.brand}>Jev × Hyperliquid</h1>
-        <p className={styles.tagline}>fusao · testnet</p>
+        <h1 className={styles.brand}>Sigma × Hyperliquid</h1>
+        <p className={styles.tagline}>s = sign(hl2 - EMA24) na H1</p>
         <span className={styles.links}>
           <a
             className={styles.link}
@@ -102,7 +120,7 @@ export default function Header({ connection, balance, unrealized, realized }: He
         <span>{live ? "Live" : "Offline"}</span>
       </span>
       <span className={styles.scores}>
-        <Score label="balance" value={balance} signed={false} />
+        <Score label="balance" value={balance} signed={false} empty={dryRun ? "-- dry run" : undefined} />
         <Score label="unrealized" value={unrealized} />
         <Score label="realized" value={realized} />
       </span>

@@ -11,22 +11,22 @@ const plex = IBM_Plex_Mono({
 });
 
 const site = "https://www.jev-trade.com";
-const title = "Jev x Hyperliquid | fusao em testnet";
+const title = "Sigma x Hyperliquid | testnet";
 const description =
-  "Desk da fusao: politica tipada (Jev, com gate humano) sobre o executor Hyperliquid. Testnet. Nao e um sinal de compra nem prova de edge.";
+  "Desk do sigma: s = sign(hl2 - EMA24) da H1 fechada, sobre o executor Hyperliquid. Testnet. Nao e um sinal de compra nem prova de edge.";
 
 const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
     {
       "@type": "WebSite",
-      name: "Jev Trade",
+      name: "Sigma x Hyperliquid",
       url: `${site}/`,
       description,
     },
     {
       "@type": "WebApplication",
-      name: "Jev Trade",
+      name: "Sigma x Hyperliquid",
       url: `${site}/`,
       applicationCategory: "FinanceApplication",
       operatingSystem: "Web",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(site),
   title,
   description,
-  applicationName: "Jev Trade",
+  applicationName: "Sigma x Hyperliquid",
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },
   icons: {
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
     title,
     description,
     url: "/",
-    siteName: "Jev Trade",
+    siteName: "Sigma x Hyperliquid",
     type: "website",
     images: [{ url: "/og.png", width: 1200, height: 630, alt: title }],
   },

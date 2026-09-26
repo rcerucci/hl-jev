@@ -34,6 +34,25 @@
 
   --ink: #2b2b27;
   --ink-2: #45443f;
+  /**
+   * Tinta das VELAS do grafico. Nao e texto: no escuro a tinta do texto (#d9d5c9) deixa as velas
+   * a 11,9:1 contra o fundo, e um grafico cheio de barras acesas cansa a vista. Aqui e um degrau
+   * abaixo (7,9:1), que continua nitido. No claro fica igual a tinta, porque a paleta do papel ja
+   * foi aprovada assim.
+   */
+  --candle: #2b2b27;
+  /** Barra de titulo dos paineis. No claro e a tinta; no escuro tem de ser escura, senao fica
+   * uma barra quase branca acesa no meio do ecra. */
+  --rail-bg: #2b2b27;
+  --rail-fg: #f1e9cf;
+  /**
+   * A COR DO FILL (a ordem que ENCHEU). Fora da familia calma do `--buy`/`--sell` (o `s` fica
+   * nessa), porque o fill e dinheiro que andou e tem de saltar a vista. Medido no papel: verde
+   * #0b7a3b 4,48:1 e vermelho #bf2a22 4,85:1 (a barra de marcas graficas e 3:1), com saturacao 0,91
+   * e 0,82 contra 0,32 e 0,60 do `s`. E a saturacao, e nao a luminosidade, que se le como destaque.
+   */
+  --fill-buy: #0b7a3b;
+  --fill-sell: #bf2a22;
   --muted: #69665b;
   --muted-2: #69665b;
   --link-muted: #45443f;
@@ -91,6 +110,17 @@
 
   --ink: #d9d5c9;
   --ink-2: #b3afa3;
+  /** Tinta das velas no escuro: um degrau abaixo da tinta do texto (7,9:1 em vez de 11,9:1). */
+  --candle: #b3afa3;
+  --rail-bg: #22211e;
+  --rail-fg: #d9d5c9;
+  /**
+   * A COR DO FILL no escuro: aqui o vivo ajuda em vez de atrapalhar (o fundo e escuro). Medido:
+   * verde #22c55e 7,64:1 e vermelho #ff5c4d 5,71:1, contra 5,67:1 e 5,34:1 do `s` calmo, e
+   * saturacao 0,83 e 0,70 contra 0,18 e 0,40 do `s`.
+   */
+  --fill-buy: #22c55e;
+  --fill-sell: #ff5c4d;
   --muted: #8d8a81;
   --muted-2: #8d8a81;
   --link-muted: #b3afa3;
