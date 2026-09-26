@@ -8,8 +8,7 @@
  import { planFromRisk, planQuote, type QuotePlan } from "./plan";
  import { toSnapshot, toState } from "./risk/buckets";
  import { isFrozen, riskIntent, standsDown } from "./risk/intent";
-@@ -280,7 +281,10 @@
-     const flattenSo = Boolean(querEntrar && plan?.reduceOnly);
+@@ -280,7 +281,9 @@
      const abre = querEntrar && this.liberadoParaEntrar.get(this.market.coin) === true;
      if (querEntrar && !abre) verdict.clock_hold = true;
      const equity = snap.bankroll_usd;
