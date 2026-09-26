@@ -65,6 +65,13 @@ export interface Verdict {
   /** Diagnostico apenas: nao faz parte da decisao. */
   note?: string;
   input_tokens?: number;
+  /**
+   * #45 — o `s` que a **policy usou** para decidir, e a EMA dele. O ledger grava este, nao uma
+   * segunda computacao do mesmo sinal: enquanto `ctx.s` e o `s` do decisor vierem de sitios
+   * diferentes, o motor tem duas verdades e o que regista nao e o que executa.
+   */
+  s?: number;
+  ema_h1?: number | null;
   /** Postura de inventário (POLICY=stance). Ausente nas outras policies. */
   raw?: StanceRaw;
   /** Evento publicado: hold sse raw == raw anterior. */

@@ -204,6 +204,10 @@ export class SigmaPolicy implements Policy {
       raw_ok: true,
       raw,
       signal,
+      // #45 — o `s` e a EMA que ESTA decisao usou. O ledger grava estes: o que se regista passa
+      // a ser o que executa, e nao uma segunda computacao do mesmo sinal.
+      s: step?.s,
+      ema_h1: step?.ema ?? null,
       wick_veto: step?.veto ?? false,
       cb_active: cbNow.active,
       cb_flips_12h: cbNow.flips_12h,
