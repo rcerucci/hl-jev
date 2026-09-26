@@ -47,6 +47,8 @@ function palette() {
   return {
     fundo: v("--bg", "#f1e9cf"),
     tinta: v("--ink", "#2b2b27"),
+    /** As velas: no escuro um degrau abaixo da tinta do texto, para nao ofuscar. */
+    vela: v("--candle", "#2b2b27"),
     texto: v("--muted", "#69665b"),
     grelha: v("--grid", "#d9d2ba"),
     borda: v("--border", "#2f2f2b"),
@@ -58,15 +60,18 @@ function palette() {
 
 type Palette = ReturnType<typeof palette>;
 
-/** Velas monocromaticas: alta cheia, baixa oca, contorno sempre na tinta. */
+/** Velas monocromaticas: alta cheia, baixa oca, contorno sempre na tinta das velas. */
 function seriesOptions(p: Palette) {
   return {
-    upColor: p.tinta,
+    upColor: p.vela,
     downColor: p.fundo,
-    borderUpColor: p.tinta,
-    borderDownColor: p.tinta,
-    wickUpColor: p.tinta,
-    wickDownColor: p.tinta,
+    borderUpColor: p.vela,
+    borderDownColor: p.vela,
+    wickUpColor: p.vela,
+    wickDownColor: p.vela,
+    // A linha do ultimo preco vinha branca no escuro (a cor da serie): passa a discreta.
+    priceLineColor: p.texto,
+    priceLineStyle: LineStyle.Dashed,
   };
 }
 

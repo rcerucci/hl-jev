@@ -34,6 +34,17 @@
 
   --ink: #2b2b27;
   --ink-2: #45443f;
+  /**
+   * Tinta das VELAS do grafico. Nao e texto: no escuro a tinta do texto (#d9d5c9) deixa as velas
+   * a 11,9:1 contra o fundo, e um grafico cheio de barras acesas cansa a vista. Aqui e um degrau
+   * abaixo (7,9:1), que continua nitido. No claro fica igual a tinta, porque a paleta do papel ja
+   * foi aprovada assim.
+   */
+  --candle: #2b2b27;
+  /** Barra de titulo dos paineis. No claro e a tinta; no escuro tem de ser escura, senao fica
+   * uma barra quase branca acesa no meio do ecra. */
+  --rail-bg: #2b2b27;
+  --rail-fg: #f1e9cf;
   --muted: #69665b;
   --muted-2: #69665b;
   --link-muted: #45443f;
@@ -91,6 +102,10 @@
 
   --ink: #d9d5c9;
   --ink-2: #b3afa3;
+  /** Tinta das velas no escuro: um degrau abaixo da tinta do texto (7,9:1 em vez de 11,9:1). */
+  --candle: #b3afa3;
+  --rail-bg: #22211e;
+  --rail-fg: #d9d5c9;
   --muted: #8d8a81;
   --muted-2: #8d8a81;
   --link-muted: #b3afa3;

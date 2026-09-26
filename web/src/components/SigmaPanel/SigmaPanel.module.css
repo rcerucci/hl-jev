@@ -13,8 +13,8 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  background: var(--ink);
-  color: var(--bg);
+  background: var(--rail-bg, var(--ink));
+  color: var(--rail-fg, var(--bg));
   font-weight: 700;
   font-size: 12px;
   line-height: 1;
