@@ -1,0 +1,150 @@
+.panel {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.section {
+  border-bottom: 1px solid var(--border);
+}
+
+.railHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--rail-bg, var(--ink));
+  color: var(--rail-fg, var(--bg));
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  padding: 8px 12px;
+}
+
+.railNote {
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  opacity: 0.7;
+}
+
+.body {
+  padding: 12px 14px 14px;
+}
+
+.headline {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.headlineWord {
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+}
+
+.metaLine {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 3px 10px;
+  font-size: 12px;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+
+.gridLabel {
+  color: var(--muted);
+}
+
+.gridValue {
+  font-weight: 700;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  margin-top: 10px;
+}
+
+.flag {
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  padding: 3px 6px;
+  border: 1px solid var(--border-2);
+  color: var(--muted);
+}
+
+.flagOn {
+  border-color: var(--late);
+  color: var(--late-ink);
+  font-weight: 700;
+}
+
+.foot {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 3px 10px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+
+.empty {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/** Roda de um numero do motor: diz de onde ele veio, sem competir com ele. */
+.off {
+  font-weight: 500;
+  color: var(--muted);
+}
+
+@media (max-width: 899.98px) {
+  .body {
+    padding: 8px 12px 10px;
+  }
+
+  .headline {
+    margin-bottom: 6px;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .headlineWord {
+    font-size: 16px;
+  }
+
+  .metaLine {
+    margin: 0;
+    font-size: 11px;
+  }
+
+  .grid,
+  .foot {
+    grid-template-columns: 84px 1fr;
+    font-size: 11px;
+  }
+
+  .flags {
+    margin-top: 6px;
+  }
+}

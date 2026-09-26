@@ -8,9 +8,9 @@ export default function Logo({ size = 22 }: { size?: number }) {
       height={size}
       viewBox="0 0 32 32"
       role="img"
-      aria-label="Jev Trade"
+      aria-label="Sigma x Hyperliquid"
     >
-      <title>Jev Trade</title>
+      <title>Sigma x Hyperliquid</title>
       <rect width="32" height="32" fill="#000" />
       <path fill="#fff" d="M17.1 5.2h5.2v12.8c0 4.7-3.1 7.6-8.6 7.6H7.4v-4.3h5.8c2.4 0 3.9-1.3 3.9-3.6V5.2z" />
       <path

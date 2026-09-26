@@ -3,51 +3,91 @@
    * Paleta de tinta electronica (e-ink): papel quente em vez de branco puro,
    * preto suave em vez de preto puro, acentos dessaturados. Os contrastes
    * estao medidos no PLANO §12; nao inventar cores fora daqui.
+   *
+   * 26 set 2026 - o papel era #f4f1e7 e continuava a doer a vista (pedido do dono: "mais
+   * puxado para o papel amarelado"). Passou a #f1e9cf: amarelamento medido em saturacao HSV
+   * 5,3 % -> 14,1 % (R-B: 13 -> 34). Os neutros foram RE-DERIVADOS do papel novo pela mesma
+   * razao de contraste que tinham (nao escolhidos a mao): o "fill" tem de continuar a ver-se.
+   *
+   *   token              antes     depois    razao antes  razao depois
+   *   papel              #f4f1e7   #f1e9cf          -           -
+   *   panel-2            #efebe0   #ece5cb        1.05        1.04
+   *   track / grid       #ded9cb   #d9d2ba        1.25        1.25
+   *   surface-hover      #eae5d9   #e5dec5        1.11        1.11
+   *   hold-cell          #e4e0d3   #e0d9c0        1.17        1.16
+   *   late-cell          #e6ddc4   #ddd5be        1.20        1.21
+   *   buy-bar-dim        #c9d0c2   #c5c9ad        1.40        1.40
+   *   sell-bar-dim       #ddcac3   #dcc2ac        1.40        1.40
+   *   muted              #6a6961   #69665b        4.88        4.74
+   *
+   * Texto sobre o papel novo (WCAG: 4.5 = AA, 7 = AAA): ink 11,71 · ink-2 8,04 · muted 4,74 ·
+   * buy-ink 5,36 · sell-ink 5,93 · late-ink 4,90 · link 6,49 · bordas 11,07 e 4,48 (UI precisa 3).
+   * Um papel mais amarelo ainda (#eee4c2, saturacao 18,5 %) derruba `muted` para 4,3: so entra
+   * com o `muted` escurecido na mesma medida.
    */
-  --bg: #f4f1e7;
-  --panel: #f4f1e7;
-  --panel-2: #efebe0;
+  --bg: #f1e9cf;
+  --panel: #f1e9cf;
+  --panel-2: #ece5cb;
   --border: #2f2f2b;
   --border-2: #6b6a61;
-  --track: #ded9cb;
+  --track: #d9d2ba;
 
   --ink: #2b2b27;
   --ink-2: #45443f;
-  --muted: #6a6961;
-  --muted-2: #6a6961;
+  /**
+   * Tinta das VELAS do grafico. Nao e texto: no escuro a tinta do texto (#d9d5c9) deixa as velas
+   * a 11,9:1 contra o fundo, e um grafico cheio de barras acesas cansa a vista. Aqui e um degrau
+   * abaixo (7,9:1), que continua nitido. No claro fica igual a tinta, porque a paleta do papel ja
+   * foi aprovada assim.
+   */
+  --candle: #2b2b27;
+  /** Barra de titulo dos paineis. No claro e a tinta; no escuro tem de ser escura, senao fica
+   * uma barra quase branca acesa no meio do ecra. */
+  --rail-bg: #2b2b27;
+  --rail-fg: #f1e9cf;
+  /**
+   * A COR DO FILL (a ordem que ENCHEU). Fora da familia calma do `--buy`/`--sell` (o `s` fica
+   * nessa), porque o fill e dinheiro que andou e tem de saltar a vista. Medido no papel: verde
+   * #0b7a3b 4,48:1 e vermelho #bf2a22 4,85:1 (a barra de marcas graficas e 3:1), com saturacao 0,91
+   * e 0,82 contra 0,32 e 0,60 do `s`. E a saturacao, e nao a luminosidade, que se le como destaque.
+   */
+  --fill-buy: #0b7a3b;
+  --fill-sell: #bf2a22;
+  --muted: #69665b;
+  --muted-2: #69665b;
   --link-muted: #45443f;
 
   --buy: #4d7150;
   --buy-ink: #436645;
   --buy-bar: #4d7150;
-  --buy-bar-dim: #c9d0c2;
+  --buy-bar-dim: #c5c9ad;
   --sell: #9a4a3e;
   --sell-ink: #8a4237;
   --sell-bar: #9a4a3e;
-  --sell-bar-dim: #ddcac3;
+  --sell-bar-dim: #dcc2ac;
 
   --late: #8a6a24;
   --late-ink: #7d5f1f;
-  --late-cell: #e6ddc4;
-  --hold-cell: #e4e0d3;
+  --late-cell: #ddd5be;
+  --hold-cell: #e0d9c0;
   --up-bar: #4d7150;
   --down-bar: #9a4a3e;
   --link: #3f5273;
 
   --badge-jev-bg: #2b2b27;
-  --badge-jev-fg: #f4f1e7;
+  --badge-jev-fg: #f1e9cf;
   --badge-standin-bg: #2b2b27;
-  --badge-standin-fg: #f4f1e7;
+  --badge-standin-fg: #f1e9cf;
   --live-dot: #4d7150;
   --pnl-pos: #436645;
   --pnl-neg: #8a4237;
-  --grid: #ded9cb;
-  --surface-hover: #eae5d9;
+  --grid: #d9d2ba;
+  --surface-hover: #e5dec5;
 
   --font-sans: var(--font-plex), "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-mono: var(--font-plex), "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --page-bg: #f4f1e7;
+  --page-bg: #f1e9cf;
   --card-radius: 0;
   --card-max: none;
 }
@@ -70,6 +110,17 @@
 
   --ink: #d9d5c9;
   --ink-2: #b3afa3;
+  /** Tinta das velas no escuro: um degrau abaixo da tinta do texto (7,9:1 em vez de 11,9:1). */
+  --candle: #b3afa3;
+  --rail-bg: #22211e;
+  --rail-fg: #d9d5c9;
+  /**
+   * A COR DO FILL no escuro: aqui o vivo ajuda em vez de atrapalhar (o fundo e escuro). Medido:
+   * verde #22c55e 7,64:1 e vermelho #ff5c4d 5,71:1, contra 5,67:1 e 5,34:1 do `s` calmo, e
+   * saturacao 0,83 e 0,70 contra 0,18 e 0,40 do `s`.
+   */
+  --fill-buy: #22c55e;
+  --fill-sell: #ff5c4d;
   --muted: #8d8a81;
   --muted-2: #8d8a81;
   --link-muted: #b3afa3;

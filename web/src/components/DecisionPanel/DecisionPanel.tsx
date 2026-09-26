@@ -150,7 +150,7 @@ export default function DecisionPanel({ latest, waiting = false }: DecisionPanel
   return (
     <div className={styles.panel}>
       <section className={styles.section}>
-        <div className={styles.railHead}>{fusion ? "JEV · POLICY" : "CALL"}</div>
+        <div className={styles.railHead}>{fusion ? "POLICY" : "CALL"}</div>
         <div className={styles.body}>
           <div className={styles.headline}>
             <span className={styles.headlineWord} style={{ color: headlineColor }}>
@@ -159,7 +159,7 @@ export default function DecisionPanel({ latest, waiting = false }: DecisionPanel
             {decided && decision ? (
               <span className={styles.metaLine}>
                 {fusion
-                  ? `conf ${num(decision.act_conf)} · hostile ${num(decision.too_hostile)} · ${decision.latencyMs} ms`
+                  ? `conf ${num(decision.act_conf)}, hostile ${num(decision.too_hostile)}, ${decision.latencyMs} ms`
                   : `${decision.latencyMs} ms`}
               </span>
             ) : null}

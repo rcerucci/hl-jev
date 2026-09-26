@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { BlockEvent, Meta, PricePoint } from "@/lib/types";
 import { fmtCall, fmtPrice } from "@/lib/format";
 import { barsForView, fillMarks, type BarSize } from "@/lib/ohlc";
+import { sigmaMarks } from "@/lib/sigma";
 import { Bone } from "@/components/Skeleton/Skeleton";
 import CandlePane from "./CandlePane";
 import styles from "./FlowChart.module.css";
@@ -18,7 +19,7 @@ const INTERVALS: { id: BarSize; label: string }[] = [
   { id: "1H", label: "1H" },
 ];
 
-const DEFAULT_INTERVAL: BarSize = "5m";
+const DEFAULT_INTERVAL: BarSize = "1H";
 const VISIBLE_BARS = 80;
 
 export default function FlowChart({
@@ -35,6 +36,12 @@ export default function FlowChart({
   onNeedMoreTape?: () => void;
 }) {
   const [interval, setIntervalId] = useState<BarSize>(DEFAULT_INTERVAL);
+  /**
+   * Quanto o grafico ocupa com os seus eixos. A legenda tem de ficar DENTRO da area das velas, por
+   * isso as margens vem medidas do proprio grafico (ver `CandlePane.reportInsets`), e nao escritas
+   * a mao: a escala de preco alarga e estreita com os digitos.
+   */
+  const [insets, setInsets] = useState({ right: 84, bottom: 36 });
 
   useEffect(() => {
     setIntervalId(DEFAULT_INTERVAL);
@@ -53,6 +60,10 @@ export default function FlowChart({
       marks: fillMarks(src, interval),
     };
   }, [tape, interval]);
+
+  // As marcas do sigma saem dos EVENTOS (uma por H1 fechada) e nao das velas: a vela do grafico e
+  // agregada dos prints de 1 s e nao e a H1 que o motor leu.
+  const sm = useMemo(() => sigmaMarks(events), [events]);
 
   const shown = latest ?? events[events.length - 1] ?? null;
   const d = shown?.decision ?? null;
@@ -103,11 +114,15 @@ export default function FlowChart({
               key={coin}
               candles={model.candles}
               marks={model.marks}
+              sigma={sm}
               entry={entry}
               rangeKey={`${coin}:${interval}`}
               visibleBars={VISIBLE_BARS}
               secondsVisible={interval === "1s"}
               formatPrice={fmtPrice}
+              onInsets={(i) =>
+                setInsets((prev) => (prev.right === i.right && prev.bottom === i.bottom ? prev : i))
+              }
             />
             <div className={styles.tl}>
               <div className={styles.price}>{fmtPrice(lastPx)}</div>
@@ -124,12 +139,14 @@ export default function FlowChart({
                 {word}
               </div>
             </div>
-            <div className={styles.legend} aria-hidden="true">
+            <div className={styles.legend} style={{ right: insets.right, bottom: insets.bottom }} aria-hidden="true">
               <span className={styles.legUp}>up</span>
               <span className={styles.legDown}>down</span>
               <span className={styles.legBuy}>buy</span>
               <span className={styles.legSell}>sell</span>
               <span className={styles.legEntry}>entry</span>
+              <span className={styles.legS}>s</span>
+              <span className={styles.legVeto}>veto</span>
             </div>
           </>
         )}
