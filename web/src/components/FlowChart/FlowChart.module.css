@@ -42,52 +42,34 @@
   bottom: 22px;
   z-index: 2;
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px 12px;
+  max-width: calc(100% - 32px);
   font: 400 11px var(--font-mono), monospace;
   color: var(--muted);
   pointer-events: none;
 }
 
-.legS::before,
-.legVeto::before {
+/**
+ * A legenda: TODOS os itens levam a mesma casa de 10x10 para o icone, com 5px ate ao texto.
+ * Sem isso, cada forma avancava um tanto (quadrado 10px, seta 6px, disco 7px) e os textos
+ * ficavam desalinhados. O `entry` nem tinha regra base, e como elemento inline ignorava o
+ * `width`: o traco da linha nao aparecia.
+ */
+.legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend > span::before {
   content: "";
-  display: inline-block;
-  margin-right: 4px;
-  vertical-align: 1px;
-}
-
-/* O `s`: seta no lado que a regra quer. */
-.legS::before {
-  width: 0;
-  height: 0;
-  border-left: 3px solid transparent;
-  border-right: 3px solid transparent;
-  border-bottom: 5px solid var(--buy);
-}
-
-/* O veto de pavio: disco ambar (a cor do "bloqueado" no tema). */
-.legVeto::before {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--late);
-}
-
-.legUp::before,
-.legDown::before,
-.legBuy::before,
-.legSell::before {
-  content: "";
-  display: inline-block;
-  margin-right: 4px;
-  vertical-align: 1px;
-}
-
-.legUp::before,
-.legDown::before {
-  width: 8px;
-  height: 8px;
-  border: 1px solid var(--ink);
+  display: block;
+  flex: none;
+  width: 10px;
+  height: 10px;
 }
 
 .legUp::before {
@@ -96,30 +78,31 @@
 
 .legDown::before {
   background: var(--bg);
+  border: 1px solid var(--ink);
+  box-sizing: border-box;
 }
 
+/* O `s`: seta no lado que a regra quer. */
 .legBuy::before,
-.legSell::before {
-  width: 0;
-  height: 0;
-  border-left: 3px solid transparent;
-  border-right: 3px solid transparent;
-}
-
-.legBuy::before {
-  border-bottom: 5px solid var(--buy);
+.legS::before {
+  background: var(--buy);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
 }
 
 .legSell::before {
-  border-top: 5px solid var(--sell);
+  background: var(--sell);
+  clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
 }
 
+/* A linha da entrada em aberto. */
 .legEntry::before {
-  width: 10px;
-  height: 0;
-  border: 0;
-  border-top: 2px solid var(--ink);
-  vertical-align: 3px;
+  background: linear-gradient(to bottom, transparent 0 4px, var(--ink) 4px 6px, transparent 6px 10px);
+}
+
+/* O veto de pavio: disco ambar (a cor do "bloqueado" no tema). */
+.legVeto::before {
+  background: var(--late);
+  border-radius: 50%;
 }
 
 .grid {
