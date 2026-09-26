@@ -3,12 +3,15 @@
 import { useMemo, useState } from "react";
 import Book from "@/components/Book/Book";
 import DecisionPanel from "@/components/DecisionPanel/DecisionPanel";
+import Episodes from "@/components/Episodes/Episodes";
 import Feed from "@/components/Feed/Feed";
 import FlowChart from "@/components/FlowChart/FlowChart";
 import Header from "@/components/Header/Header";
 import SleeveStrip from "@/components/SleeveStrip/SleeveStrip";
+import SigmaPanel from "@/components/SigmaPanel/SigmaPanel";
 import { lastMeaningfulCall } from "@/lib/format";
 import { portfolioBalance, portfolioPnl } from "@/lib/pnl";
+import { isSigmaDecision, isSigmaFeed, sideWord } from "@/lib/sigma";
 import { useFeed } from "@/lib/useFeed";
 import type { BlockEvent, Meta, SleeveFeed } from "@/lib/types";
 import styles from "./page.module.css";
@@ -54,14 +57,26 @@ export default function Page() {
     return out;
   }, [coins, feed.byCoin]);
 
+  // Faixa de mercado: sob o sigma o que interessa e o LADO VIGENTE da regra (BUY/SELL/CAIXA), e
+  // nao a ultima "call" do modelo, que sob o sigma e sempre HOLD e nao diz nada.
   const lastCallByCoin = useMemo(() => {
     const out: Record<string, string> = {};
     for (const c of coins) {
       const s = feed.byCoin[c];
-      out[c] = lastMeaningfulCall(s?.events ?? [], s?.latest ?? null);
+      const d = s?.latest?.decision;
+      out[c] = isSigmaDecision(d)
+        ? sideWord(d?.s)
+        : lastMeaningfulCall(s?.events ?? [], s?.latest ?? null);
     }
     return out;
   }, [coins, feed.byCoin]);
+
+  // O painel e o da regra quando o fio traz o sigma. Decide-se pelos DADOS, nao por um flag de
+  // ambiente: a mesma pagina serve qualquer policy, e o que o motor escreve escolhe o painel.
+  const sigmaFeed = useMemo(
+    () => isSigmaFeed(sleeve.events, sleeve.latest),
+    [sleeve.events, sleeve.latest],
+  );
 
   const pnl = useMemo(() => portfolioPnl(latestByCoin), [latestByCoin]);
   const balance = useMemo(() => portfolioBalance(latestByCoin), [latestByCoin]);
@@ -75,6 +90,7 @@ export default function Page() {
         balance={hasBooks ? balance : null}
         unrealized={hasBooks ? pnl.unrealized : null}
         realized={hasBooks ? pnl.realized : null}
+        dryRun={feed.meta?.dryRun ?? false}
       />
       <SleeveStrip
         sleeves={feed.meta?.sleeves ?? []}
@@ -97,8 +113,16 @@ export default function Page() {
           </div>
         </div>
         <div className={styles.right}>
-          <DecisionPanel latest={sleeve.latest} meta={meta} waiting={waiting} />
-          <Feed events={sleeve.events} meta={meta} waiting={waiting} />
+          {sigmaFeed ? (
+            <SigmaPanel latest={sleeve.latest} waiting={waiting} />
+          ) : (
+            <DecisionPanel latest={sleeve.latest} meta={meta} waiting={waiting} />
+          )}
+          {sigmaFeed ? (
+            <Episodes events={sleeve.events} coin={coin} meta={meta} waiting={waiting} />
+          ) : (
+            <Feed events={sleeve.events} meta={meta} waiting={waiting} />
+          )}
         </div>
       </div>
       <Book

@@ -192,6 +192,13 @@
   }
 }
 
+.scoreEmpty {
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+
 @media (max-width: 359px) {
   .brand {
     font-size: 12px;

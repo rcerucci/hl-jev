@@ -131,7 +131,7 @@ export default function Feed({
               detailMuted = quote.status === "reverted";
             } else if (decided && kind === "hold") {
               // Na fusao interessa *porque* travou: o gate escreve o motivo.
-              const gate = decision?.reason && decision.reason !== "jev_act" ? `${decision.reason} · ` : "";
+              const gate = decision?.reason && decision.reason !== "jev_act" ? `${decision.reason} ` : "";
               detail = `${gate}${event.position.side === "flat" ? "flat, no order" : "position held"}`;
               detailMuted = true;
             } else if (decided && decision?.intent === "close" && event.position.side === "flat") {

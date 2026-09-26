@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   CandlestickSeries,
   ColorType,
@@ -18,6 +18,7 @@ import {
   type UTCTimestamp,
 } from "lightweight-charts";
 import type { Candle, FillMark } from "@/lib/ohlc";
+import type { SigmaSide, SigmaVeto } from "@/lib/sigma";
 
 export type EntryLine = {
   price: number;
@@ -27,11 +28,18 @@ export type EntryLine = {
 type Props = {
   candles: Candle[];
   marks: FillMark[];
+  /** As marcas do sigma (o `s` e os vetos de pavio). Sai dos eventos, nao das velas. */
+  sigma?: { sides: SigmaSide[]; vetoes: SigmaVeto[] };
   entry: EntryLine | null;
   rangeKey: string;
   visibleBars: number;
   secondsVisible: boolean;
   formatPrice: (n: number) => string;
+  /**
+   * As margens que o grafico ocupa com os seus proprios eixos (escala de preco a direita, eixo do
+   * tempo em baixo). A legenda vive DENTRO da area de vela, por isso tem de saber onde ela acaba.
+   */
+  onInsets?: (i: { right: number; bottom: number }) => void;
 };
 
 /**
@@ -42,27 +50,36 @@ function palette() {
   const cs = getComputedStyle(document.documentElement);
   const v = (nome: string, alt: string) => cs.getPropertyValue(nome).trim() || alt;
   return {
-    fundo: v("--bg", "#f4f1e7"),
+    fundo: v("--bg", "#f1e9cf"),
     tinta: v("--ink", "#2b2b27"),
-    texto: v("--muted", "#6a6961"),
-    grelha: v("--grid", "#ded9cb"),
+    /** As velas: no escuro um degrau abaixo da tinta do texto, para nao ofuscar. */
+    vela: v("--candle", "#2b2b27"),
+    /** O fill (ordem que encheu): a cor mais viva do ecra. O `s` fica no tom calmo. */
+    fillBuy: v("--fill-buy", "#0b7a3b"),
+    fillSell: v("--fill-sell", "#bf2a22"),
+    texto: v("--muted", "#69665b"),
+    grelha: v("--grid", "#d9d2ba"),
     borda: v("--border", "#2f2f2b"),
     buy: v("--buy", "#4d7150"),
     sell: v("--sell", "#9a4a3e"),
+    late: v("--late", "#8a6a24"),
   };
 }
 
 type Palette = ReturnType<typeof palette>;
 
-/** Velas monocromaticas: alta cheia, baixa oca, contorno sempre na tinta. */
+/** Velas monocromaticas: alta cheia, baixa oca, contorno sempre na tinta das velas. */
 function seriesOptions(p: Palette) {
   return {
-    upColor: p.tinta,
+    upColor: p.vela,
     downColor: p.fundo,
-    borderUpColor: p.tinta,
-    borderDownColor: p.tinta,
-    wickUpColor: p.tinta,
-    wickDownColor: p.tinta,
+    borderUpColor: p.vela,
+    borderDownColor: p.vela,
+    wickUpColor: p.vela,
+    wickDownColor: p.vela,
+    // A linha do ultimo preco vinha branca no escuro (a cor da serie): passa a discreta.
+    priceLineColor: p.texto,
+    priceLineStyle: LineStyle.Dashed,
   };
 }
 
@@ -93,14 +110,48 @@ function toBars(rows: Candle[]): CandlestickData<Time>[] {
   }));
 }
 
-function toMarkers(rows: FillMark[], p: Palette): SeriesMarker<Time>[] {
-  return rows.map((m) => ({
+/**
+ * As marcas do grafico: os fills (setas), o `s` de cada H1 fechada (setas) e os vetos de pavio
+ * (disco com `x`). O `lightweight-charts` v5 nao tem forma de cruz, por isso o veto e um disco
+ * ambar com o `x` escrito ao lado: a cor `--late` e a que o tema ja usa para "bloqueado".
+ *
+ * A ordem TEM de ser crescente no tempo, senao a biblioteca recusa a lista.
+ */
+function toMarkers(
+  rows: FillMark[],
+  sigma: { sides: SigmaSide[]; vetoes: SigmaVeto[] } | undefined,
+  p: Palette,
+): SeriesMarker<Time>[] {
+  const out: SeriesMarker<Time>[] = rows.map((m) => ({
     time: asTime(m.time),
     position: m.side === "buy" ? "belowBar" : "aboveBar",
     shape: m.side === "buy" ? "arrowUp" : "arrowDown",
-    color: m.side === "buy" ? p.buy : p.sell,
-    size: 0.8,
+    // O fill leva a cor viva e a seta maior: e a ordem que encheu, o unico marcador que e dinheiro.
+    color: m.side === "buy" ? p.fillBuy : p.fillSell,
+    size: 1.1,
   }));
+  for (const m of sigma?.sides ?? []) {
+    // O `s` e uma SETA FORA da barra, no tom calmo e mais pequena: e a leitura da hora, nao dinheiro.
+    out.push({
+      time: asTime(m.time),
+      position: m.side === "buy" ? "belowBar" : "aboveBar",
+      shape: m.side === "buy" ? "arrowUp" : "arrowDown",
+      color: m.side === "buy" ? p.buy : p.sell,
+      size: 0.7,
+    });
+  }
+  for (const v of sigma?.vetoes ?? []) {
+    out.push({
+      time: asTime(v.time),
+      position: "aboveBar",
+      shape: "circle",
+      color: p.late,
+      size: 0.7,
+      text: "x",
+    });
+  }
+  out.sort((a, b) => Number(a.time) - Number(b.time));
+  return out;
 }
 
 function stemOf(rows: Candle[]): string {
@@ -118,11 +169,13 @@ function showLatest(chart: IChartApi | null, count: number, visibleBars: number)
 export default function CandlePane({
   candles,
   marks,
+  sigma,
   entry,
   rangeKey,
   visibleBars,
   secondsVisible,
   formatPrice,
+  onInsets,
 }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -133,6 +186,24 @@ export default function CandlePane({
   const rangeRef = useRef("");
   const formatRef = useRef(formatPrice);
   formatRef.current = formatPrice;
+  const onInsetsRef = useRef(onInsets);
+  onInsetsRef.current = onInsets;
+
+  /**
+   * A area que os eixos do grafico ocupam (escala de preco a direita e eixo do tempo em baixo).
+   * A legenda vive DENTRO da area das velas, por isso tem de saber onde ela acaba, em vez de ficar
+   * sobre o eixo no canto do painel. Medido no grafico, nao escrito a mao: a largura da escala de
+   * preco muda com os digitos dos precos.
+   */
+  const reportInsets = useCallback(() => {
+    requestAnimationFrame(() => {
+      const chart = chartRef.current;
+      if (!chart) return;
+      const right = Math.round(chart.priceScale("right").width()) + 10;
+      const bottom = Math.round(chart.timeScale().height()) + 10;
+      onInsetsRef.current?.({ right, bottom });
+    });
+  }, []);
   /** Gatilho: muda a cada troca de tema, para as cores do canvas serem relidas. */
   const [tema, setTema] = useState(0);
 
@@ -164,6 +235,7 @@ export default function CandlePane({
       const r = entries[0]?.contentRect;
       if (!r) return;
       chart.resize(Math.max(1, Math.round(r.width)), Math.max(1, Math.round(r.height)));
+      reportInsets();
     });
     ro.observe(el);
     chartRef.current = chart;
@@ -222,11 +294,13 @@ export default function CandlePane({
       rangeRef.current = rangeKey;
       showLatest(chartRef.current, bars.length, visibleBars);
     }
-  }, [candles, rangeKey, visibleBars]);
+    // Os digitos dos precos mudam a largura da escala a direita: a legenda tem de saber.
+    reportInsets();
+  }, [candles, rangeKey, visibleBars, reportInsets]);
 
   useEffect(() => {
-    markersRef.current?.setMarkers(toMarkers(marks, palette()));
-  }, [marks, tema]);
+    markersRef.current?.setMarkers(toMarkers(marks, sigma, palette()));
+  }, [marks, sigma, tema]);
 
   useEffect(() => {
     const series = seriesRef.current;
