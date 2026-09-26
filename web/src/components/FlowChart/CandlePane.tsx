@@ -28,33 +28,22 @@ export type EntryLine = {
 type Props = {
   candles: Candle[];
   marks: FillMark[];
-  /** As marcas do sigma (o `s` e os vetos de pavio). Sai dos eventos, nao das velas. */
   sigma?: { sides: SigmaSide[]; vetoes: SigmaVeto[] };
   entry: EntryLine | null;
   rangeKey: string;
   visibleBars: number;
   secondsVisible: boolean;
   formatPrice: (n: number) => string;
-  /**
-   * As margens que o grafico ocupa com os seus proprios eixos (escala de preco a direita, eixo do
-   * tempo em baixo). A legenda vive DENTRO da area de vela, por isso tem de saber onde ela acaba.
-   */
   onInsets?: (i: { right: number; bottom: number }) => void;
 };
 
-/**
- * O grafico pinta em canvas e nao ve as CSS vars: le-as do documento para nao
- * manter uma segunda paleta a mao. Chamado so no cliente (dentro de efeitos).
- */
 function palette() {
   const cs = getComputedStyle(document.documentElement);
   const v = (nome: string, alt: string) => cs.getPropertyValue(nome).trim() || alt;
   return {
     fundo: v("--bg", "#f1e9cf"),
     tinta: v("--ink", "#2b2b27"),
-    /** As velas: no escuro um degrau abaixo da tinta do texto, para nao ofuscar. */
     vela: v("--candle", "#2b2b27"),
-    /** O fill (ordem que encheu): a cor mais viva do ecra. O `s` fica no tom calmo. */
     fillBuy: v("--fill-buy", "#0b7a3b"),
     fillSell: v("--fill-sell", "#bf2a22"),
     texto: v("--muted", "#69665b"),
@@ -68,7 +57,6 @@ function palette() {
 
 type Palette = ReturnType<typeof palette>;
 
-/** Velas monocromaticas: alta cheia, baixa oca, contorno sempre na tinta das velas. */
 function seriesOptions(p: Palette) {
   return {
     upColor: p.vela,
@@ -77,7 +65,6 @@ function seriesOptions(p: Palette) {
     borderDownColor: p.vela,
     wickUpColor: p.vela,
     wickDownColor: p.vela,
-    // A linha do ultimo preco vinha branca no escuro (a cor da serie): passa a discreta.
     priceLineColor: p.texto,
     priceLineStyle: LineStyle.Dashed,
   };
@@ -111,11 +98,8 @@ function toBars(rows: Candle[]): CandlestickData<Time>[] {
 }
 
 /**
- * As marcas do grafico: os fills (setas), o `s` de cada H1 fechada (setas) e os vetos de pavio
- * (disco com `x`). O `lightweight-charts` v5 nao tem forma de cruz, por isso o veto e um disco
- * ambar com o `x` escrito ao lado: a cor `--late` e a que o tema ja usa para "bloqueado".
- *
- * A ordem TEM de ser crescente no tempo, senao a biblioteca recusa a lista.
+ * Fills = setas vivas. `s` = circulo no tom calmo (nao se confunde com sell).
+ * Veto = circulo ambar com x.
  */
 function toMarkers(
   rows: FillMark[],
@@ -126,16 +110,14 @@ function toMarkers(
     time: asTime(m.time),
     position: m.side === "buy" ? "belowBar" : "aboveBar",
     shape: m.side === "buy" ? "arrowUp" : "arrowDown",
-    // O fill leva a cor viva e a seta maior: e a ordem que encheu, o unico marcador que e dinheiro.
     color: m.side === "buy" ? p.fillBuy : p.fillSell,
     size: 1.1,
   }));
   for (const m of sigma?.sides ?? []) {
-    // O `s` e uma SETA FORA da barra, no tom calmo e mais pequena: e a leitura da hora, nao dinheiro.
     out.push({
       time: asTime(m.time),
       position: m.side === "buy" ? "belowBar" : "aboveBar",
-      shape: m.side === "buy" ? "arrowUp" : "arrowDown",
+      shape: "circle",
       color: m.side === "buy" ? p.buy : p.sell,
       size: 0.7,
     });
@@ -189,12 +171,6 @@ export default function CandlePane({
   const onInsetsRef = useRef(onInsets);
   onInsetsRef.current = onInsets;
 
-  /**
-   * A area que os eixos do grafico ocupam (escala de preco a direita e eixo do tempo em baixo).
-   * A legenda vive DENTRO da area das velas, por isso tem de saber onde ela acaba, em vez de ficar
-   * sobre o eixo no canto do painel. Medido no grafico, nao escrito a mao: a largura da escala de
-   * preco muda com os digitos dos precos.
-   */
   const reportInsets = useCallback(() => {
     requestAnimationFrame(() => {
       const chart = chartRef.current;
@@ -204,7 +180,6 @@ export default function CandlePane({
       onInsetsRef.current?.({ right, bottom });
     });
   }, []);
-  /** Gatilho: muda a cada troca de tema, para as cores do canvas serem relidas. */
   const [tema, setTema] = useState(0);
 
   useEffect(() => {
@@ -254,7 +229,6 @@ export default function CandlePane({
     };
   }, []);
 
-  // Tema trocado: o canvas nao segue CSS, tem de ser reaplicado a mao.
   useEffect(() => {
     const chart = chartRef.current;
     const series = seriesRef.current;
@@ -294,7 +268,6 @@ export default function CandlePane({
       rangeRef.current = rangeKey;
       showLatest(chartRef.current, bars.length, visibleBars);
     }
-    // Os digitos dos precos mudam a largura da escala a direita: a legenda tem de saber.
     reportInsets();
   }, [candles, rangeKey, visibleBars, reportInsets]);
 

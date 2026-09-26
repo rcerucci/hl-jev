@@ -52,12 +52,6 @@
   pointer-events: none;
 }
 
-/**
- * A legenda: TODOS os itens levam a mesma casa de 10x10 para o icone, com 5px ate ao texto.
- * Sem isso, cada forma avancava um tanto (quadrado 10px, seta 6px, disco 7px) e os textos
- * ficavam desalinhados. O `entry` nem tinha regra base, e como elemento inline ignorava o
- * `width`: o traco da linha nao aparecia.
- */
 .legend > span {
   display: inline-flex;
   align-items: center;
@@ -82,7 +76,6 @@
   box-sizing: border-box;
 }
 
-/* O FILL (ordem que encheu): a cor viva, para saltar a vista. */
 .legBuy::before {
   background: var(--fill-buy);
   clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
@@ -93,18 +86,15 @@
   clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
 }
 
-/* O `s` (a leitura da hora): seta fora da barra, no tom calmo do desk. */
 .legS::before {
   background: var(--buy);
-  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  border-radius: 50%;
 }
 
-/* A linha da entrada em aberto. */
 .legEntry::before {
   background: linear-gradient(to bottom, transparent 0 4px, var(--ink) 4px 6px, transparent 6px 10px);
 }
 
-/* O veto de pavio: disco ambar (a cor do "bloqueado" no tema). */
 .legVeto::before {
   background: var(--late);
   border-radius: 50%;

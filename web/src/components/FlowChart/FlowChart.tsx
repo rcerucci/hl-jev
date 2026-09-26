@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { BlockEvent, Meta, PricePoint } from "@/lib/types";
 import { fmtCall, fmtPrice } from "@/lib/format";
 import { barsForView, fillMarks, type BarSize } from "@/lib/ohlc";
-import { sigmaMarks } from "@/lib/sigma";
+import { sigmaHistoryFromH1, sigmaMarks } from "@/lib/sigma";
 import { Bone } from "@/components/Skeleton/Skeleton";
 import CandlePane from "./CandlePane";
 import styles from "./FlowChart.module.css";
@@ -36,11 +36,6 @@ export default function FlowChart({
   onNeedMoreTape?: () => void;
 }) {
   const [interval, setIntervalId] = useState<BarSize>(DEFAULT_INTERVAL);
-  /**
-   * Quanto o grafico ocupa com os seus eixos. A legenda tem de ficar DENTRO da area das velas, por
-   * isso as margens vem medidas do proprio grafico (ver `CandlePane.reportInsets`), e nao escritas
-   * a mao: a escala de preco alarga e estreita com os digitos.
-   */
   const [insets, setInsets] = useState({ right: 84, bottom: 36 });
 
   useEffect(() => {
@@ -61,9 +56,11 @@ export default function FlowChart({
     };
   }, [tape, interval]);
 
-  // As marcas do sigma saem dos EVENTOS (uma por H1 fechada) e nao das velas: a vela do grafico e
-  // agregada dos prints de 1 s e nao e a H1 que o motor leu.
-  const sm = useMemo(() => sigmaMarks(events), [events]);
+  const sm = useMemo(() => {
+    const h1 = barsForView(tape ?? [], "1H");
+    const fromBars = sigmaHistoryFromH1(h1);
+    return fromBars.sides.length ? fromBars : sigmaMarks(events);
+  }, [tape, events]);
 
   const shown = latest ?? events[events.length - 1] ?? null;
   const d = shown?.decision ?? null;
