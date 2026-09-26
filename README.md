@@ -1,6 +1,6 @@
 # Hyperliquid Sigma
 
-Perp na **Hyperliquid**. Um modo de operação: `POLICY=sigma`.
+Perp na **Hyperliquid**. Motor **sigma**.
 (O repositório no git não se renomeia.)
 
 ## O que é
@@ -18,28 +18,77 @@ Perp na **Hyperliquid**. Um modo de operação: `POLICY=sigma`.
 
 O processo **não** abre posição no `start`. Espera o primeiro fecho H1 com `s ≠ 0`.
 
-Nessa primeira abertura, e em **cada** fecho ou virada a seguir:
+Nessa abertura, e em cada fecho ou virada: nocional = `(equity / n pares) × LEVERAGE`.
+`n` é o número de moedas em `HL_COINS`. `QUOTE_USD` não dimensiona o sigma.
 
-`notional = equity da sleeve × LEVERAGE` (hoje 1×).
-
-Não há tamanho de arranque à parte. `QUOTE_USD` não dimensiona o sigma.
-
-Se o venue ainda não deu equity (dry run), a régua é `BANKROLL_USD` do config. No live, é a equity real da sleeve. O notional da linha de comando não existe — não se passa tamanho no `bun run start`.
+No live a equity é a da carteira. No dry run, sem venue, a régua é `BANKROLL_USD`.
 
 ## Arrancar, parar, ler
 
-```bash
-# arrancar (dry run, sem signer) e guardar o PID para poder parar depois
-POLICY=sigma DRY_RUN=true HL_COINS=BTC LEVERAGE=1 bun run start & echo $! > /tmp/sigma.pid
+O motor é **sigma**. Não é preciso `POLICY`.
 
-# parar: por PID, nunca por padrão (um pkill -f mata o próprio shell)
-kill "$(cat /tmp/sigma.pid)"
+### Contas
 
-# o relatório do fill, lido do ledger
-bun run src/tools/relatorio-fill.ts
+No `.env`:
+
+```
+PRIVATE_KEY_1=0x…     # conta 1 (default)
+PRIVATE_KEY_2=0x…     # conta 2
 ```
 
+`PRIVATE_KEY` antigo ainda vale e vence a `_1`. A chave **não** se imprime:
+
+```bash
+bun run contas
+```
+
+### Um processo
+
+Um par usa o **saldo inteiro** da carteira deste processo:
+
+```bash
+HL_COINS=BTC LEVERAGE=1 PORT=3000 bun run start
+```
+
+Dois pares no mesmo processo: o saldo **parte-se** (`/2`, `/3`, `/4`):
+
+```bash
+HL_COINS=BTC,SOL LEVERAGE=1 PORT=3000 bun run start
+```
+
+Nocional de cada par = `(saldo / n pares) × LEVERAGE`.
+
+### Duas contas (dois depósitos)
+
+Dois processos. Cada um lê a equity **daquela** carteira e, com um par, entra com o saldo todo.
+
+```bash
+HL_COINS=BTC LEVERAGE=1 PORT=3000 bun run start
+ACCOUNT=2 HL_COINS=SOL LEVERAGE=1 PORT=3001 bun run start
+```
+
+### Dry run e parar
+
+```bash
+DRY_RUN=true HL_COINS=BTC bun run start & echo $! > /tmp/sigma.pid
+kill "$(cat /tmp/sigma.pid)"
+```
+
+Por PID, nunca `pkill -f`. Relatório do fill: `bun run src/tools/relatorio-fill.ts`.
+
 `bun run dev` é o mesmo motor com `--watch`. `bun test` corre a suíte.
+
+### O que cada env faz
+
+| Env | Efeito |
+|---|---|
+| `HL_COINS` | Pares deste processo. `BTC` = saldo inteiro; `BTC,SOL` = metade cada. |
+| `ACCOUNT` | `1` (omisso) ou `2`… escolhe `PRIVATE_KEY_N`. |
+| `LEVERAGE` | Multiplica a fatia. O alfa **live** ainda só aceita `1`. |
+| `PORT` | HTTP de leitura. Segundo processo = outra porta. |
+| `DRY_RUN=true` | Sem ordem real. Sem signer. |
+
+O risco fino é o saldo na Hyperliquid: queres operar `$500` de `$1000`, tiras `$500` do perps.
 
 ## Laboratório
 
@@ -118,7 +167,7 @@ git log -1 --format='%h %s'                                    # tem de ser o co
 Ao subir, a primeira linha do log tem de continuar a bater certo (é o `bootLine` do `src/gate.ts`):
 
 ```
-sigma · policy=sigma · coin=SOL · net=mainnet · dry=false · lev=1 · cap=$100 · cbFlips=4 (config) · ...
+sigma · policy=sigma · coin=SOL · net=mainnet · dry=false · lev=1 · cap=$100 · pares=1 · cbFlips=4 (config) · ...
 ```
 
 O `cbFlips` traz a **origem** entre parênteses: `(config)` quando é o default do `config.ts`, `(env)`
