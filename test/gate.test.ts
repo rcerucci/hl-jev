@@ -2,7 +2,6 @@ import { expect, test } from "bun:test";
 import { config } from "../src/config";
 import { ALFA_COINS, alphaRefusal, assertAlphaRun, bootLine, type ResolvedRun } from "../src/gate";
 
-/** A corrida do alfa: sigma, BTC, testnet, dry, 1x, sem chave. */
 const base: ResolvedRun = {
   policy: "sigma",
   coins: ["BTC"],
@@ -72,9 +71,10 @@ test("a recusa levanta com a razao", () => {
 
 test("a linha de arranque traz o objecto resolvido", () => {
   const l = bootLine(base, "BTC");
-  for (const t of ["policy=sigma", "coin=BTC", "net=testnet", "dry=true", "lev=1", "cap=$100", "cbFlips=4 (config)", "quoteInside=0", "aloWait=8000ms"]) {
+  for (const t of ["policy=sigma", "coin=BTC", "net=testnet", "dry=true", "lev=1", "cap=$100", "pares=1", "cbFlips=4 (config)", "quoteInside=0", "aloWait=8000ms"]) {
     expect(l).toContain(t);
   }
+  expect(bootLine({ ...base, coins: ["BTC", "SOL"] }, "SOL")).toContain("pares=2");
 });
 
 test("cbFlips fora de banda e recusado (#37)", () => {
