@@ -560,4 +560,142 @@ test("sigma F4: uma H1 fechada nova reabre a decisao e a virada e' executada", a
   const linhas = ledger.read("BTC", today()) as { raw?: string; signal?: string }[];
   expect(linhas[1]!.signal).toBe("hold"); // o bloco da mesma H1
   expect(linhas[2]!.signal).toBe("sell"); // a H1 nova com o s virado
+  });
+
+/** FIX-42 — o venue recusa as N primeiras tentativas de ALO com este motivo (o do campo). */
+const RECUSA_ALO = "Post only order would have immediately matched";
+
+/**
+* FIX-42 — o campo, 26 set: no fecho das 10:00Z o `s` virou e as **duas** ALO da entrada foram
+* recusadas. O motor fechava e nao abria: sem `sigmaFill` nao havia Ioc, nem linha, e a entrada
+* morria em silencio. Agora: o pedido inteiro vai a mercado no tick seguinte, no mesmo ciclo.
+*/
+test("sigma FIX-42: duas ALO recusadas -> uma Ioc do pedido inteiro, sem esperar os 8 s", async () => {
+const now = Date.now();
+const market = new FakeMarket();
+market.candleBars1h = () => sigmaBars1h(now);
+market.candleBars5m = () => [];
+const ledger = new Ledger(`${DIR}/${++seq}`);
+const trader = sigmaTrader(market, ledger);
+
+let recusas = 0;
+const real = market.send.bind(market);
+market.send = async (side, size, b, c, reduceOnly = false, taker = false) => {
+const q = await real(side, size, b, c, reduceOnly, taker);
+if (!taker && recusas < 2) {
+  recusas++;
+  return { ...q, price: 0, size: 0, status: "reverted" as const, orderId: null, reason: RECUSA_ALO };
+}
+return q;
+};
+
+await trader.onBlock(1);
+await Bun.sleep(30);
+expect(market.sends.length).toBe(2); // a ALO e o reenvio, ambos recusados
+expect(market.sends.every((s) => !s.taker)).toBe(true);
+const pedido = market.sends[0]!.size;
+
+market.sends = [];
+await trader.onBlock(2); // o prazo nasceu vencido: e neste tick que a Ioc sai
+await Bun.sleep(60);
+expect(market.sends.length).toBe(1); // exactamente uma Ioc
+expect(market.sends[0]).toMatchObject({ taker: true, reduceOnly: false });
+expect(market.sends[0]!.size).toBe(pedido); // o pedido inteiro — nao ha "resto" para medir
+const fills = ledger.read("BTC", today()).filter((l) => l.kind === "fill") as { fill_role?: string }[];
+expect(fills.length).toBe(1);
+expect(fills[0]!.fill_role).toBe("taker"); // o maker nao entrou nada
+
+market.sends = [];
+await trader.onBlock(3);
+await Bun.sleep(60);
+expect(market.sends.length).toBe(0); // e so uma: sem chase, sem segundo ALO
+});
+
+/**
+* FIX-42 — "silencio proibido": se a propria Ioc tambem for recusada, a entrada nao se concretiza
+* e fica registada com a razao. Nunca zero linhas.
+*/
+test("sigma FIX-42: entrada recusada ate na Ioc -> linha entry_rejected, nunca zero linhas", async () => {
+const now = Date.now();
+const market = new FakeMarket();
+market.candleBars1h = () => sigmaBars1h(now);
+market.candleBars5m = () => [];
+const ledger = new Ledger(`${DIR}/${++seq}`);
+const trader = sigmaTrader(market, ledger);
+
+let tentativas = 0;
+const real = market.send.bind(market);
+market.send = async (side, size, b, c, reduceOnly = false, taker = false) => {
+const q = await real(side, size, b, c, reduceOnly, taker);
+tentativas++;
+return { ...q, price: 0, size: 0, status: "reverted" as const, orderId: null, reason: RECUSA_ALO };
+};
+
+await trader.onBlock(1);
+await Bun.sleep(30);
+market.sends = [];
+await trader.onBlock(2);
+await Bun.sleep(60);
+expect(tentativas).toBeGreaterThanOrEqual(3); // ALO + reenvio + Ioc
+const rejeitadas = ledger.read("BTC", today()).filter((l) => l.kind === "entry_rejected") as {
+reason?: string;
+side?: string;
+}[];
+expect(rejeitadas.length).toBe(1);
+expect(rejeitadas[0]!.reason).toContain("Post only");
+expect(rejeitadas[0]!.side).toBe("buy");
+// E nenhuma linha de fill: o relatorio nao conta um episodio que nao encheu.
+expect(ledger.read("BTC", today()).filter((l) => l.kind === "fill").length).toBe(0);
+});
+
+/**
+* FIX-42 — a virada com posicao: o close flatten continua intacto (Ioc reduce-only) e a entrada
+* recusada ainda assim gera Ioc no tick seguinte.
+*/
+test("sigma FIX-42: virada com posicao — close intacto e entrada recusada nao morre em silencio", async () => {
+const now = Date.now();
+let newer = 0;
+let lado: "up" | "down" = "up";
+const market = new FakeMarket();
+market.candleBars1h = () => sigmaBars1h(now, newer, lado);
+market.candleBars5m = () => [];
+const ledger = new Ledger(`${DIR}/${++seq}`);
+const trader = sigmaTrader(market, ledger);
+const feed = new TradeFeed();
+trader.attachTradeFeed(feed);
+
+await trader.onBlock(1); // entrada ALO
+await Bun.sleep(30);
+feed.setTick(2);
+feed.pushPrint({ price: 99.9, size: 1, side: "sell" }); // o ALO enche: fica posicao
+await trader.onBlock(2);
+await Bun.sleep(60);
+
+// A H1 seguinte nasce com o `s` virado: e a virada. O close passa; as duas ALO da entrada nao.
+newer = 1;
+lado = "down";
+let recusas = 0;
+const real = market.send.bind(market);
+market.send = async (side, size, b, c, reduceOnly = false, taker = false) => {
+const q = await real(side, size, b, c, reduceOnly, taker);
+if (!taker && !reduceOnly && recusas < 2) {
+  recusas++;
+  return { ...q, price: 0, size: 0, status: "reverted" as const, orderId: null, reason: RECUSA_ALO };
+}
+return q;
+};
+market.sends = [];
+await trader.onBlock(3);
+await Bun.sleep(60);
+expect(market.sends[0]).toMatchObject({ side: "sell", reduceOnly: true, taker: true }); // o close
+expect(market.sends.slice(1).every((s) => !s.taker)).toBe(true); // as ALO recusadas
+
+market.sends = [];
+await trader.onBlock(4);
+await Bun.sleep(60);
+expect(market.sends.length).toBe(1); // a entrada vai a mercado: nunca zero
+expect(market.sends[0]).toMatchObject({ side: "sell", taker: true, reduceOnly: false });
+const linhas = ledger.read("BTC", today());
+expect(linhas.filter((l) => l.kind === "fill").length).toBeGreaterThanOrEqual(1); // o close deixou a sua
+expect(linhas.filter((l) => l.kind === "entry_rejected").length).toBe(0); // a entrada concretizou-se
 });

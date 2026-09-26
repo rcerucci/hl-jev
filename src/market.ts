@@ -273,10 +273,10 @@ export class Market {
         };
       }
       // An unfilled Ioc leaves nothing behind. Next tick decides again.
-      return { ...base, price: px, size, txHash: null, cancel, status: "reverted", orderId: null };
+      return { ...base, price: px, size, txHash: null, cancel, status: "reverted", orderId: null, reason: this.venueReason(st) };
     } catch (e) {
       this.warn("exit", e);
-      return { ...base, price: px, size, txHash: null, cancel, status: "reverted", orderId: null };
+      return { ...base, price: px, size, txHash: null, cancel, status: "reverted", orderId: null, reason: (e as Error).message };
     }
   }
 
@@ -322,10 +322,10 @@ export class Market {
         return { ...base, price: px, size, txHash: null, cancel: oids, status: "placed", orderId: st.filled.oid };
       }
       this.forgetResting();
-      return { ...base, price: px, size, txHash: null, cancel: oids, status: "reverted", orderId: null };
+      return { ...base, price: px, size, txHash: null, cancel: oids, status: "reverted", orderId: null, reason: this.venueReason(st) };
     } catch (e) {
       this.warn("quote", e);
-      return { ...base, price: px, size, txHash: null, cancel, status: "reverted", orderId: this.lastOid };
+      return { ...base, price: px, size, txHash: null, cancel, status: "reverted", orderId: this.lastOid, reason: (e as Error).message };
     }
   }
 
@@ -344,6 +344,17 @@ export class Market {
     this.lastPrice = 0;
     this.lastSize = 0;
     this.lastReduce = false;
+  }
+
+  /**
+   * FIX-42 — a razao que o venue deu quando recusou. O `statuses[0]` vem como string (o caso do
+   * post-only que cruzaria) ou como objecto com `error`; quando nao ha nada, o campo sai ausente e
+   * quem escreve a linha usa o `status`.
+   */
+  private venueReason(st: unknown): string | undefined {
+    if (typeof st === "string") return st;
+    if (st && typeof st === "object" && "error" in st) return String((st as { error: unknown }).error);
+    return undefined;
   }
 
   private warn(what: string, e: unknown) {

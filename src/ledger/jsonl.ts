@@ -87,7 +87,23 @@ export interface FillLine {
   fee_bps: number;
 }
 
-export type LedgerLine = DecisionLine | OutcomeLine | FillLine;
+/**
+ * FIX-42 — a entrada que nao se concretou: nao houve fill, mas tambem nao houve silencio.
+ * `kind` proprio de proposito: o relatorio conta `kind === "fill"`, e uma linha de fill sem fill
+ * nenhum contaria um episodio vazio.
+ */
+export interface EntryRejectedLine {
+  kind: "entry_rejected";
+  cycle_id: string;
+  ts: number;
+  sleeve: string;
+  side: "buy" | "sell";
+  size: number;
+  /** O motivo, do venue quando ele o deu. */
+  reason: string;
+}
+
+export type LedgerLine = DecisionLine | OutcomeLine | FillLine | EntryRejectedLine;
 
 const pad = (n: number, w = 2) => String(n).padStart(w, "0");
 
@@ -136,6 +152,11 @@ export class Ledger {
    * (maker/taker/mixed), a que preco, contra que mid, e o que ficou aberto aos 8 s.
    */
   writeFill(line: FillLine): string {
+    return this.append(line);
+  }
+
+  /** FIX-42 — a entrada que nao entrou, com a razao. Nunca silencio. */
+  writeEntryRejected(line: EntryRejectedLine): string {
     return this.append(line);
   }
 

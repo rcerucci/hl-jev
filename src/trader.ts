@@ -54,6 +54,13 @@ interface SigmaFillState {
   makerPx: number | null;
   midAtSend: number;
   deadline: number;
+  /**
+   * FIX-42 — quando o ALO nao entrou (recusado duas vezes), nao ha resting para medir: o que vai a
+   * mercado e este tamanho, o pedido inteiro, e sem esperar os 8 s.
+   */
+  takerSz?: number;
+  /** FIX-42 — o motivo da recusa do ALO, para a linha de entrada nao concretizada. */
+  rejected?: string;
 }
 
 export class Trader {
@@ -350,7 +357,24 @@ export class Trader {
       quote = await this.market.send(side, sizeSz, book, cancel, false, false, config.sigma.quoteInsideTicks - 1);
     }
     this.applyPosted(block, quote);
-    if (quote.status === "reverted" || !(quote.size > 0)) return;
+    if (quote.status === "reverted" || !(quote.size > 0)) {
+      // FIX-42 — o F5 ja mandava o resto a mercado quando o ALO nao entra; o que faltava era
+      // registar o estado. Sem ele: sem IOC, sem linha, e a entrada morria em silencio.
+      // O maker foi recusado duas vezes, logo nao se esperam os 8 s: o prazo nasce vencido e o
+      // `sigmaFillStep` do proximo tick manda o pedido inteiro a mercado, no mesmo ciclo.
+      this.sigmaFill.set(this.market.coin, {
+        cycleId: cid,
+        block,
+        side,
+        size: sizeSz,
+        makerPx: null,
+        midAtSend: mid,
+        deadline: Date.now(),
+        takerSz: sizeSz,
+        rejected: quote.reason ?? quote.status,
+      });
+      return;
+    }
     this.sigmaFill.set(this.market.coin, {
       cycleId: cid,
       block,
@@ -373,22 +397,42 @@ export class Trader {
     if (!st) return;
     const now = Date.now();
     if (now < st.deadline) return;
-    const aberto = this.restingSz(st.side);
+    // FIX-42 — `takerSz` vem do caminho em que o ALO foi recusado: nao ha resting para medir, e o
+    // que vai a mercado e o pedido inteiro, sem esperar os 8 s.
+    const aberto = st.takerSz ?? this.restingSz(st.side);
     const feitoMaker = Math.max(0, st.size - aberto);
     let takerFill = 0;
     let takerPx: number | null = null;
+    let semEntrada: string | null = null;
     if (aberto > 0) {
       const cancel = [...this.orders.keys()].filter((id) => id > 0);
       const quote = await this.market.send(st.side, aberto, book, cancel, false, true);
       this.applyPosted(block, quote);
-      if (quote.status !== "reverted") {
+      if (quote.status !== "reverted" && quote.size > 0) {
         takerFill = quote.size;
         takerPx = quote.price;
+      } else {
+        // Silencio proibido: a entrada nao se concretizou, e fica registada com a razao.
+        semEntrada = quote.reason ?? st.rejected ?? quote.status;
       }
     }
     this.sigmaFill.delete(this.market.coin);
     const role = feitoMaker <= 0 ? "taker" : aberto <= 0 ? "maker" : "mixed";
     const total = feitoMaker + takerFill;
+    // FIX-42 — nao entrou nada em lado nenhum: em vez de uma linha de fill sem fill nenhum (que
+    // contaria um episodio vazio no relatorio), fica a linha da entrada nao concretizada.
+    if (total <= 0) {
+      fusion.ledger.writeEntryRejected({
+        kind: "entry_rejected",
+        cycle_id: st.cycleId,
+        ts: now,
+        sleeve: this.market.coin,
+        side: st.side,
+        size: aberto,
+        reason: semEntrada ?? "sem fill",
+      });
+      return;
+    }
     const makerPx = st.makerPx ?? st.midAtSend;
     const fillPx = total > 0 ? (makerPx * feitoMaker + (takerPx ?? makerPx) * takerFill) / total : st.midAtSend;
     const feeBps =
