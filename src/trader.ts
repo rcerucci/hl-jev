@@ -282,7 +282,7 @@ export class Trader {
     if (querEntrar && !abre) verdict.clock_hold = true;
     const equity = snap.bankroll_usd;
     const notional = abre
-      ? entryNotional(equity, config.leverage, { dryRun: config.dryRun, capUsd: config.maxLiveEquityUsd })
+      ? entryNotional(equity, config.leverage, { dryRun: config.dryRun, capUsd: config.maxLiveEquityUsd, pairs: config.pairs })
       : null;
     // #49 — um so dono para o `s`/EMA que se regista e se mostra: a policy quando le uma H1 nova, e
     // o que ela leu nos ticks em que so o portao do relogio corre. Nunca uma segunda computacao.
