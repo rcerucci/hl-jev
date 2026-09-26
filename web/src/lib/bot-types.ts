@@ -31,6 +31,8 @@ export interface Quote {
   unchanged?: boolean;
   /** Ioc order that crossed the touch instead of resting on it. */
   taker?: boolean;
+  /** FIX-42 — o motivo que o venue deu quando a ordem nao entrou (“Post only order would have…”, etc.). */
+  reason?: string;
 }
 
 /** A taker hit one of our resting orders. */
