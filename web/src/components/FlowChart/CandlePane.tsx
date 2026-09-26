@@ -97,10 +97,6 @@ function toBars(rows: Candle[]): CandlestickData<Time>[] {
   }));
 }
 
-/**
- * Fills = setas vivas. `s` = circulo no tom calmo (nao se confunde com sell).
- * Veto = circulo ambar com x.
- */
 function toMarkers(
   rows: FillMark[],
   sigma: { sides: SigmaSide[]; vetoes: SigmaVeto[] } | undefined,
@@ -119,7 +115,7 @@ function toMarkers(
       position: m.side === "buy" ? "belowBar" : "aboveBar",
       shape: "circle",
       color: m.side === "buy" ? p.buy : p.sell,
-      size: 0.7,
+      size: 0.35,
     });
   }
   for (const v of sigma?.vetoes ?? []) {
@@ -128,7 +124,7 @@ function toMarkers(
       position: "aboveBar",
       shape: "circle",
       color: p.late,
-      size: 0.7,
+      size: 0.5,
       text: "x",
     });
   }
