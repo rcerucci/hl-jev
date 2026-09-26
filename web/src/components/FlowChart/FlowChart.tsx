@@ -18,7 +18,7 @@ const INTERVALS: { id: BarSize; label: string }[] = [
   { id: "1H", label: "1H" },
 ];
 
-const DEFAULT_INTERVAL: BarSize = "5m";
+const DEFAULT_INTERVAL: BarSize = "1H";
 const VISIBLE_BARS = 80;
 
 export default function FlowChart({

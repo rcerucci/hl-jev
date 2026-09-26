@@ -90,6 +90,7 @@ export default function Page() {
         balance={hasBooks ? balance : null}
         unrealized={hasBooks ? pnl.unrealized : null}
         realized={hasBooks ? pnl.realized : null}
+        dryRun={feed.meta?.dryRun ?? false}
       />
       <SleeveStrip
         sleeves={feed.meta?.sleeves ?? []}

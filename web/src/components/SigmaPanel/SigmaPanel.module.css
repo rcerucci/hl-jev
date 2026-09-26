@@ -112,6 +112,12 @@
   color: var(--muted);
 }
 
+/** Roda de um numero do motor: diz de onde ele veio, sem competir com ele. */
+.off {
+  font-weight: 500;
+  color: var(--muted);
+}
+
 @media (max-width: 899.98px) {
   .body {
     padding: 8px 12px 10px;

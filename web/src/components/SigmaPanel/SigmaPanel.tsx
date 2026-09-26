@@ -69,6 +69,11 @@ export default function SigmaPanel({
         : null;
   const pos = latest?.position ?? null;
   const lev = decision?.leverage ?? null;
+  // A CONTA e a da venue (o que a corretora diz que existe). O `equity` do fio e o saldo que o
+  // motor usou para dimensionar e que, sem conta legivel, e o BANKROLL_USD do config: sao coisas
+  // diferentes, e mostrar o do config como se fosse a conta foi exactamente a confusao do painel.
+  const venue = typeof latest?.accountValue === "number" ? latest.accountValue : null;
+  const free = typeof latest?.withdrawable === "number" ? latest.withdrawable : null;
   const equity = sigma.equity ?? null;
   const notional = sigma.notional ?? null;
   const act = (sigma.act ?? "hold").toUpperCase();
@@ -129,8 +134,28 @@ export default function SigmaPanel({
           <div className={styles.foot}>
             <span className={styles.gridLabel}>account</span>
             <span className={styles.gridValue}>
+              {venue != null ? (
+                <>
+                  {fmtUsd(venue, 2)}
+                  <span className={styles.off}> venue</span>
+                  {free != null && free !== venue ? (
+                    <span className={styles.off}>{` (${fmtUsd(free, 2)} free)`}</span>
+                  ) : null}
+                </>
+              ) : (
+                <span className={styles.off}>venue offline</span>
+              )}
+            </span>
+            <span
+              className={styles.gridLabel}
+              title="o que o motor usa para dimensionar: saldo x LEVERAGE. Sem conta legivel, o saldo e o BANKROLL_USD do config."
+            >
+              sizing
+            </span>
+            <span className={styles.gridValue}>
               {equity != null ? fmtUsd(equity, 2) : "-"} x {lev != null ? `${lev}x` : "-"}
               {notional != null ? ` = ${fmtUsd(notional, 2)}` : ""}
+              {venue == null ? <span className={styles.off}> config</span> : null}
             </span>
             <span className={styles.gridLabel}>position</span>
             <span className={styles.gridValue}>{positionLine}</span>
