@@ -1,0 +1,136 @@
+diff --git a/src/trader.ts b/src/trader.ts
+index 239d83e..9b54367 100644
+--- a/src/trader.ts
++++ b/src/trader.ts
+@@ -104,10 +104,13 @@ export class Trader {
+   private stancePrev = new Map<string, StanceRaw>();
+   /**
+    * #44 — o lado que a sigma já viu desde o arranque, por sleeve, e se já houve **inversão** desde
+-   * então. Num arranque a frio o motor não entra: a primeira ordem exige uma inversão (buy<->sell),
+-   * nunca o lado herdado de uma perna que já começou. Sem isto, o arranque entrava a meio da perna —
+-   * e, como o portão do relógio marca a H1 em memória, uma H1 fechada *antes* do arranque passava
+-   * por nova. Note-se: isto bloqueia a ENTRADA, nunca a saída — a gestão da posição aberta continua.
++   * então. Num arranque a frio o motor não **entra**: a primeira abertura exige uma inversão
++   * (buy<->sell), nunca o lado herdado de uma perna que já começou. Sem isto, o arranque entrava a
++   * meio da perna — e, como o portão do relógio marca a H1 em memória, uma H1 fechada *antes* do
++   * arranque passava por nova.
++   *
++   * A saída não espera essa inversão. Posição contra o `s` (reduce-only), `caixa` e `cb_chop`
++   * flatten na primeira leitura; só a perna nova fica contida.
+    */
+   private ladoVisto = new Map<string, StanceRaw>();
+   private liberadoParaEntrar = new Map<string, boolean>();
+@@ -270,8 +273,10 @@ export class Trader {
+     // o `cb_chop` nao abrem nada — so desmontam o que esta. Sem H1 nova nao ha entrada (F4).
+     const querEntrar =
+       config.policy === "sigma" && plan != null && intent.reason !== "caixa" && intent.reason !== "cb_chop";
+-    // #44 — a entrada só sai depois de uma inversão desde o arranque. `querEntrar` sem essa
+-    // inversão fica registado como `clock_hold`: bloqueado, com nome, nunca em silêncio.
++    // #44 — a ABERTURA só sai depois de uma inversão desde o arranque. Flatten contra o `s`
++    // (reduce-only) não espera: a posição aberta tem de poder desmontar-se na primeira leitura.
++    // `querEntrar` sem inversão e sem flatten fica `clock_hold`: bloqueado, com nome.
++    const flattenSo = Boolean(querEntrar && plan?.reduceOnly);
+     const abre = querEntrar && this.liberadoParaEntrar.get(this.market.coin) === true;
+     if (querEntrar && !abre) verdict.clock_hold = true;
+     const equity = snap.bankroll_usd;
+@@ -324,6 +329,9 @@ export class Trader {
+       if (intent.reason === "caixa" || intent.reason === "cb_chop") {
+         // Saída/flatten: nunca gageada pelo arranque — a posição aberta tem de poder desmontar-se.
+         if (plan) this.enqueueQuote(block, plan, book, config.leverage);
++      } else if (flattenSo && !abre && plan) {
++        // #44 — s contra a posição e ainda sem inversão desta sessão: fecha o que está, não abre.
++        this.enqueueQuote(block, plan, book, config.leverage);
+       } else if (plan && abre) {
+         // #44 — a entrada (e a virada inteira, fecho+abertura) só depois de uma inversão desde o
+         // arranque. Sem isto, o arranque a meio da perna abria o lado herdado — e, na virada,
+diff --git a/test/fused-tick.test.ts b/test/fused-tick.test.ts
+index ec1d1a2..980480e 100644
+--- a/test/fused-tick.test.ts
++++ b/test/fused-tick.test.ts
+@@ -39,7 +39,18 @@ class FakeMarket {
+   readonly label = "BTC";
+   readonly wallet = null;
+   /** O saldo da sleeve: o F6 dimensiona por aqui (`bankroll_usd` do snapshot). */
+-  account: { equityUsd: number; unrealizedUsd: number; leverage: number | null } | null = null;
++  account: {
++    equityUsd?: number;
++    accountValue?: number;
++    unrealizedUsd: number;
++    leverage: number | null;
++    positionSz?: number;
++    entryPrice?: number | null;
++    realizedUsd?: number;
++    feesUsd?: number;
++    withdrawable?: number;
++    liquidationPx?: number | null;
++  } | null = null;
+   readonly szDecimals = 5;
+   readonly maxLeverage = 40;
+   readonly fillPrints: [] = [];
+@@ -741,6 +752,66 @@ test("sigma #44: arranque a frio nao entra — zero ordens ate a inversao", asyn
+   expect(market.sends[0]).toMatchObject({ side: "sell", reduceOnly: false, taker: false });
+ });
+ 
++/**
++ * #44 — a abertura fica contida; a posição contra o `s` não. Restart com short e `s=buy`
++ * flatten na primeira leitura e não abre o long (ainda não houve inversão desta sessão).
++ */
++test("sigma #44: arranque a frio flatten posicao contra o s, sem abrir", async () => {
++  const now = Date.now();
++  const market = new FakeMarket();
++  market.candleBars1h = () => sigmaBars1h(now, 0, "up"); // s = buy
++  market.candleBars5m = () => sigmaBars5m(now);
++  market.account = {
++    positionSz: -1,
++    entryPrice: 100,
++    unrealizedUsd: 0,
++    realizedUsd: 0,
++    feesUsd: 0,
++    accountValue: 100,
++    withdrawable: 100,
++    leverage: 1,
++    liquidationPx: null,
++  };
++  const ledger = new Ledger(`${DIR}/${++seq}`);
++  const trader = sigmaTrader(market, ledger, false);
++
++  await trader.onBlock(1);
++  await Bun.sleep(60);
++  expect(market.sends.length).toBe(1);
++  expect(market.sends[0]).toMatchObject({ side: "buy", reduceOnly: true, taker: true, size: 1 });
++  const d = ledger.read("BTC", today())[0] as { clock_hold?: boolean; raw?: string; notional?: number };
++  expect(d.clock_hold).toBe(true);
++  expect(d.raw).toBe("buy");
++  expect(d.notional).toBeUndefined();
++});
++
++/** #44 — posição a favor do `s` no arranque a frio: não fecha e não adiciona. */
++test("sigma #44: arranque a frio com posicao a favor do s nao mexe", async () => {
++  const now = Date.now();
++  const market = new FakeMarket();
++  market.candleBars1h = () => sigmaBars1h(now, 0, "up"); // s = buy
++  market.candleBars5m = () => sigmaBars5m(now);
++  market.account = {
++    positionSz: 1,
++    entryPrice: 100,
++    unrealizedUsd: 0,
++    realizedUsd: 0,
++    feesUsd: 0,
++    accountValue: 100,
++    withdrawable: 100,
++    leverage: 1,
++    liquidationPx: null,
++  };
++  const ledger = new Ledger(`${DIR}/${++seq}`);
++  const trader = sigmaTrader(market, ledger, false);
++
++  await trader.onBlock(1);
++  await Bun.sleep(60);
++  expect(market.sends.length).toBe(0);
++  const d = ledger.read("BTC", today())[0] as { raw?: string };
++  expect(d.raw).toBe("buy");
++});
++
+ /**
+  * #45 — no mesmo ciclo, o `s` gravado, o `raw` gravado e o lado que o `send` executa tem de ser a
+  * MESMA verdade. O contrato do proprio sigma: `s > 0 -> buy`, `s < 0 -> sell`, `s == 0 -> caixa`.
