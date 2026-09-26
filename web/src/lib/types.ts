@@ -1,10 +1,12 @@
 export type {
   BlockEvent,
+  Decision,
   Fill,
   Meta,
   PricePoint,
   Quote,
   SleeveMeta,
+  Totals,
 } from "./bot-types";
 import type { BlockEvent, Meta, PricePoint } from "./bot-types";
 

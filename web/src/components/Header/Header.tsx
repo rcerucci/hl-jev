@@ -83,7 +83,7 @@ export default function Header({ connection, balance, unrealized, realized }: He
       <span className={styles.brandLockup}>
         <Logo size={20} />
         <h1 className={styles.brand}>Jev × Hyperliquid</h1>
-        <p className={styles.tagline}>fusao · testnet</p>
+        <p className={styles.tagline}>fusao, testnet</p>
         <span className={styles.links}>
           <a
             className={styles.link}
