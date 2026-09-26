@@ -1,0 +1,43 @@
+--- a/src/trader.ts
++++ b/src/trader.ts
+@@ -283,8 +283,8 @@
+     if (querEntrar && !abre) verdict.clock_hold = true;
+     const equity = snap.bankroll_usd;
+     const notional = abre
+-      ? entryNotional(equity, config.leverage, { dryRun: config.dryRun, capUsd: config.maxLiveEquityUsd })
++      ? entryNotional(equity, config.leverage, { dryRun: config.dryRun, capUsd: config.maxLiveEquityUsd, pairs: config.pairs })
+       : null;
+     // #49 — um so dono para o `s`/EMA que se regista e se mostra: a policy quando le uma H1 nova, e
+     // o que ela leu nos ticks em que so o portao do relogio corre. Nunca uma segunda computacao.
+     const sigma = this.sigmaViewOf(verdict, equity, notional);
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -12,6 +12,7 @@
+ 
+ const specs = loadSleeves();
+ if (!specs.length) throw new Error("no sleeves");
++config.pairs = specs.length;
+ 
+ /**
+  * H4 — o porteiro. Uma corrida que nao e a do alfa nao arranca: exit, nao warn. Corre por sleeve
+--- a/src/config.ts
++++ b/src/config.ts
+@@ -108,6 +108,8 @@
+   privateKey: env("PRIVATE_KEY"),
+   leverage: Number(env("LEVERAGE", "1")),
+   bankrollUsd: Number(env("BANKROLL_USD", "200")),
++  /** Pares deste processo. O start poe o length de HL_COINS; testes ficam em 1. */
++  pairs: 1,
+   maxLiveEquityUsd: 100,
+   sigma,
+   lab,
+--- a/src/gate.ts
++++ b/src/gate.ts
+@@ -82,6 +82,7 @@
+     `dry=${r.dryRun}`,
+     `lev=${r.leverage}`,
+     `cap=$${r.maxLiveEquityUsd}`,
++    `pares=${r.coins.length}`,
+     `cbFlips=${config.sigma.cbFlips} (${config.sigma.cbFlipsSource})`,
+     `quoteInside=${config.sigma.quoteInsideTicks}`,
+     `aloWait=${config.sigma.aloWaitMs}ms`,

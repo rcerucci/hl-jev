@@ -16,9 +16,61 @@ export interface SleeveConfig {
   privateKey?: string;
 }
 
+export interface ProcessKey {
+  key?: string;
+  account: number;
+  source: string;
+}
+
+export interface ListedAccount {
+  account: number;
+  source: string;
+  key: string;
+}
+
 type WalletFile = { sleeves?: { coin?: string; privateKey?: string }[] };
 
-/** Parse `.wallets.json` or `WALLETS_JSON`. Env overlays the file. */
+/** `ACCOUNT=2` escolhe a segunda carteira. Default 1. */
+export function accountIndex(e: Record<string, string | undefined> = process.env): number {
+  const raw = (e.ACCOUNT ?? "1").trim();
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1) throw new Error(`ACCOUNT=${raw}: usa 1, 2, 3…`);
+  return n;
+}
+
+/**
+ * Sem ACCOUNT (ou ACCOUNT=1): PRIVATE_KEY se existir, senão PRIVATE_KEY_1.
+ * ACCOUNT=2 → PRIVATE_KEY_2. .wallets.json por moeda continua a sobrepor-se.
+ */
+export function processPrivateKey(
+  e: Record<string, string | undefined> = process.env,
+): ProcessKey {
+  const account = accountIndex(e);
+  const numbered = e[`PRIVATE_KEY_${account}`]?.trim();
+  if (account === 1) {
+    const legacy = e.PRIVATE_KEY?.trim();
+    if (legacy) return { key: legacy, account, source: "PRIVATE_KEY" };
+    if (numbered) return { key: numbered, account, source: "PRIVATE_KEY_1" };
+    return { account, source: "none" };
+  }
+  if (numbered) return { key: numbered, account, source: `PRIVATE_KEY_${account}` };
+  return { account, source: `PRIVATE_KEY_${account}` };
+}
+
+/** Contas no env. A chave não se imprime aqui — o comando `contas` só mostra endereço. */
+export function listedAccounts(
+  e: Record<string, string | undefined> = process.env,
+): ListedAccount[] {
+  const out: ListedAccount[] = [];
+  const legacy = e.PRIVATE_KEY?.trim();
+  if (legacy) out.push({ account: 1, source: "PRIVATE_KEY", key: legacy });
+  for (let i = 1; i <= 9; i++) {
+    const key = e[`PRIVATE_KEY_${i}`]?.trim();
+    if (key) out.push({ account: i, source: `PRIVATE_KEY_${i}`, key });
+  }
+  return out;
+}
+
 export function parseWalletsJson(raw: string): Map<string, string> {
   const out = new Map<string, string>();
   try {
@@ -58,17 +110,16 @@ function loadWalletKeys(): Map<string, string> {
   return out;
 }
 
-/** First coin can use PRIVATE_KEY. Others use WALLETS_JSON or `.wallets.json`. */
 export function loadSleeves(): SleeveConfig[] {
   const listed = (process.env.HL_COINS ?? "BTC,ETH,SOL,DOGE,BNB")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
   const file = loadWalletKeys();
-  const source = process.env.PRIVATE_KEY;
-  return listed.map((coin, i) => {
+  const processKey = processPrivateKey().key;
+  return listed.map((coin) => {
     const fromFile = file.get(coin);
-    const privateKey = fromFile ?? (i === 0 ? source : undefined);
+    const privateKey = fromFile ?? processKey;
     return {
       coin,
       pair: coinPair(coin),

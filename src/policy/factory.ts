@@ -11,7 +11,7 @@ export function createFusionPolicy(): Policy | null {
   if (config.policy === "dumb") return new DumbPolicy();
   if (config.policy === "numeric") return new NumericPolicy();
   if (config.policy === "stance") return new StancePolicy();
-  if (config.policy === "sigma") return new SigmaPolicy();
+  if (config.policy === "sigma") return new SigmaPolicy(config.regimeDir);
   if (config.policy === "jev") {
     assertJevCredentials(
       "jev",

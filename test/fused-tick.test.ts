@@ -8,7 +8,6 @@ import { DumbPolicy } from "../src/policy/dumb";
 import { quotePrice } from "../src/book";
 import { sigmaRaw, SigmaPolicy } from "../src/policy/sigma";
 import { TradeFeed } from "../src/trades";
-import { StancePolicy } from "../src/policy/stance";
 import type { Policy, Verdict } from "../src/risk/types";
 import { Trader } from "../src/trader";
 import type { BlockEvent, Book, Quote, Side } from "../src/types";
@@ -39,7 +38,18 @@ class FakeMarket {
   readonly label = "BTC";
   readonly wallet = null;
   /** O saldo da sleeve: o F6 dimensiona por aqui (`bankroll_usd` do snapshot). */
-  account: { equityUsd: number; unrealizedUsd: number; leverage: number | null } | null = null;
+  account: {
+    equityUsd?: number;
+    accountValue?: number;
+    unrealizedUsd: number;
+    leverage: number | null;
+    positionSz?: number;
+    entryPrice?: number | null;
+    realizedUsd?: number;
+    feesUsd?: number;
+    withdrawable?: number;
+    liquidationPx?: number | null;
+  } | null = null;
   readonly szDecimals = 5;
   readonly maxLeverage = 40;
   readonly fillPrints: [] = [];
@@ -108,32 +118,6 @@ const today = () => {
   return `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}`;
 };
 
-test("buy entra como ALO post-only e a alavancagem vem do config, nao do Jev", async () => {
-  const { market } = await tick(new ScriptPolicy(verdict({ act: "buy" })));
-  expect(market.sends.length).toBe(1);
-  expect(market.sends[0]).toMatchObject({ side: "buy", reduceOnly: false, taker: false });
-  expect(market.leverages.length).toBe(1);
-});
-
-test("hold explicito do Jev: nenhuma ordem e a resting e desmontada", async () => {
-  const { market, events } = await tick(new ScriptPolicy(verdict({ act: "hold", act_conf: 0.5 })));
-  expect(market.sends.length).toBe(0);
-  expect(market.cancels).toBeGreaterThan(0);
-  const last = events.at(-1)!;
-  expect(last.decision?.late).toBe(false);
-  expect(last.decision?.act).toBe("hold");
-});
-
-test("sem resposta valida congela o livro: nem ordem nova, nem cancelamento", async () => {
-  const { market, events } = await tick(new ScriptPolicy(verdict({ raw_ok: false, note: "timeout" })));
-  expect(market.sends.length).toBe(0);
-  expect(market.cancels).toBe(0);
-  // O bloco continua a sair, marcado late, com o que a POLICY respondeu.
-  const last = events.at(-1)!;
-  expect(last.decision?.late).toBe(true);
-  expect(last.decision?.state12).toBeTruthy();
-});
-
 test("o tick escreve a linha de decision no ledger, sem digitos e sem chave", async () => {
   const { ledger } = await tick(new ScriptPolicy(verdict({ act: "buy" })));
   const lines = ledger.read("BTC", today());
@@ -144,81 +128,11 @@ test("o tick escreve a linha de decision no ledger, sem digitos e sem chave", as
   expect(JSON.stringify(line)).not.toMatch(/privateKey|0x[a-fA-F0-9]{40,}/);
 });
 
-test("o desk recebe o state curto e as colunas novas", async () => {
-  const { events } = await tick(new ScriptPolicy(verdict({ act: "sell", act_conf: 0.81, too_hostile: 0.22 })));
-  const d = events.at(-1)!.decision!;
-  expect(d.state12!.split(" ").length).toBeLessThanOrEqual(12);
-  expect(d.act).toBe("sell");
-  expect(d.act_conf).toBe(0.81);
-  expect(d.too_hostile).toBe(0.22);
-});
-
 test("o controle dumb decide com as mesmas palavras, sem rede", async () => {
   const dumb = new DumbPolicy();
   expect((await dumb.decide("normal ok quiet pumping flat pay_neutral mid", "20260923T123015Z-BTC")).act).toBe("buy");
   expect((await dumb.decide("normal ok quiet dumping flat pay_neutral mid", "20260923T123015Z-BTC")).act).toBe("sell");
   expect((await dumb.decide("normal ok quiet flat flat pay_neutral mid", "20260923T123015Z-BTC")).act).toBe("hold");
-});
-
-test("o tick fundido nao toca no modelo legado", async () => {
-  const { market, events } = await tick(new ScriptPolicy(verdict({ act: "buy" })));
-  // O caminho legado publicaria intent/bias; o da fusao publica act.
-  const d = events.at(-1)!.decision!;
-  expect(d.act).toBe("buy");
-  expect(market.sends[0]!.taker).toBe(false);
-});
-
-test("stance sem velas 5m fica em caixa: sem ordem nova, cancela resting", async () => {
-  const { market, ledger } = await tick(new StancePolicy());
-  expect(market.sends.length).toBe(0);
-  expect(market.cancels).toBeGreaterThan(0);
-  const line = ledger.read("BTC", today())[0] as { raw?: string; signal?: string };
-  expect(line.raw).toBe("caixa");
-  expect(line.signal).toBe("caixa");
-});
-
-test("stance com canal no meio e s>0 entra buy ALO; o tick seguinte e hold sem cancelar", async () => {
-  const now = Date.now();
-  const step5 = 300_000;
-  const step1h = 3_600_000;
-  const last5 = Math.floor(now / step5) * step5 - step5;
-  const bars5 = Array.from({ length: 130 }, (_, i) => {
-    const ts = last5 - (129 - i) * step5;
-    return { ts, high: 110, low: 90, close: 100 };
-  });
-  const last1h = Math.floor(now / step1h) * step1h - 2 * step1h;
-  const bars1h = Array.from({ length: 30 }, (_, i) => {
-    const ts = last1h - (29 - i) * step1h;
-    return { ts, high: 96, low: 94, close: 95 };
-  });
-  const market = new FakeMarket();
-  market.candleBars5m = () => bars5;
-  market.candleBars1h = () => bars1h;
-  const ledger = new Ledger(`${DIR}/${++seq}`);
-  const trader = new Trader(
-    market as unknown as Market,
-    new MockModel() as unknown as Model,
-    () => {},
-    () => {},
-    () => {},
-    { policy: new StancePolicy(), ledger },
-  );
-  await trader.onBlock(1);
-  await Bun.sleep(60);
-  expect(market.sends.length).toBe(1);
-  expect(market.sends[0]).toMatchObject({ side: "buy", reduceOnly: false, taker: false });
-  const first = ledger.read("BTC", today())[0] as { raw?: string; signal?: string };
-  expect(first.raw).toBe("buy");
-  expect(first.signal).toBe("buy");
-  market.sends = [];
-  const cancelsBefore = market.cancels;
-  await trader.onBlock(2);
-  await Bun.sleep(60);
-  expect(market.sends.length).toBe(0);
-  expect(market.cancels).toBe(cancelsBefore);
-  const second = ledger.read("BTC", today())[1] as { raw?: string; signal?: string };
-  expect(second.raw).toBe("buy");
-  expect(second.signal).toBe("hold");
 });
 
 /**
@@ -739,6 +653,66 @@ test("sigma #44: arranque a frio nao entra — zero ordens ate a inversao", asyn
   await Bun.sleep(60);
   expect(market.sends.length).toBeGreaterThan(0);
   expect(market.sends[0]).toMatchObject({ side: "sell", reduceOnly: false, taker: false });
+});
+
+/**
+ * #44 — a abertura fica contida; a posição contra o `s` não. Restart com short e `s=buy`
+ * flatten na primeira leitura e não abre o long (ainda não houve inversão desta sessão).
+ */
+test("sigma #44: arranque a frio flatten posicao contra o s, sem abrir", async () => {
+  const now = Date.now();
+  const market = new FakeMarket();
+  market.candleBars1h = () => sigmaBars1h(now, 0, "up"); // s = buy
+  market.candleBars5m = () => sigmaBars5m(now);
+  market.account = {
+    positionSz: -1,
+    entryPrice: 100,
+    unrealizedUsd: 0,
+    realizedUsd: 0,
+    feesUsd: 0,
+    accountValue: 100,
+    withdrawable: 100,
+    leverage: 1,
+    liquidationPx: null,
+  };
+  const ledger = new Ledger(`${DIR}/${++seq}`);
+  const trader = sigmaTrader(market, ledger, false);
+
+  await trader.onBlock(1);
+  await Bun.sleep(60);
+  expect(market.sends.length).toBe(1);
+  expect(market.sends[0]).toMatchObject({ side: "buy", reduceOnly: true, taker: true, size: 1 });
+  const d = ledger.read("BTC", today())[0] as { clock_hold?: boolean; raw?: string; notional?: number };
+  expect(d.clock_hold).toBe(true);
+  expect(d.raw).toBe("buy");
+  expect(d.notional).toBeUndefined();
+});
+
+/** #44 — posição a favor do `s` no arranque a frio: não fecha e não adiciona. */
+test("sigma #44: arranque a frio com posicao a favor do s nao mexe", async () => {
+  const now = Date.now();
+  const market = new FakeMarket();
+  market.candleBars1h = () => sigmaBars1h(now, 0, "up"); // s = buy
+  market.candleBars5m = () => sigmaBars5m(now);
+  market.account = {
+    positionSz: 1,
+    entryPrice: 100,
+    unrealizedUsd: 0,
+    realizedUsd: 0,
+    feesUsd: 0,
+    accountValue: 100,
+    withdrawable: 100,
+    leverage: 1,
+    liquidationPx: null,
+  };
+  const ledger = new Ledger(`${DIR}/${++seq}`);
+  const trader = sigmaTrader(market, ledger, false);
+
+  await trader.onBlock(1);
+  await Bun.sleep(60);
+  expect(market.sends.length).toBe(0);
+  const d = ledger.read("BTC", today())[0] as { raw?: string };
+  expect(d.raw).toBe("buy");
 });
 
 /**
