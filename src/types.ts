@@ -99,6 +99,31 @@ export interface Decision {
   too_hostile?: number;
   /** Porque o gate travou (hostile, low_conf, frozen_*, ...). So no caminho da fusao. */
   reason?: string;
+  /**
+   * Sigma (POLICY=sigma): o estado que a decisao leu, com os **nomes do ledger** - para o painel
+   * poder ser cruzado com a linha do ledger a olho. Ausente nas outras policies.
+   *
+   * `bar_t`/`hl2`/`bar_close` sao da **H1 fechada** que decidiu, e nao do preco vivo do grafico:
+   * sao objectos diferentes, e era essa a razao pela qual a leitura no TV divergia do motor.
+   */
+  s?: number;
+  ema_h1?: number | null;
+  bar_t?: number;
+  hl2?: number;
+  bar_close?: number;
+  /** `hl2 - ema_h1`: o que o `s` mede. */
+  delta?: number;
+  /** F2: a barra foi ignorada porque so o pavio cruzou a EMA (o `s` manteve-se). */
+  wick_veto?: boolean;
+  /** F4/#44: este tick nao liberta entrada (portao do relogio, ou arranque a frio). */
+  clock_hold?: boolean;
+  /** F3: a caixa do CB de chop esta armada. */
+  cb_active?: boolean;
+  cb_flips_12h?: number;
+  cb_until?: number;
+  /** F6: o saldo da sleeve e o notional da entrada em curso (`null` quando nao ha nenhuma). */
+  equity?: number;
+  notional?: number | null;
 }
 
 export interface Position {
