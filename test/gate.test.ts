@@ -70,17 +70,17 @@ test("a recusa levanta com a razao", () => {
   expect(() => assertAlphaRun({ ...base, policy: "dumb" })).toThrow(/porteiro do alfa: policy=dumb/);
 });
 
-test("a linha de arranque traz o objecto resolvido", () => {
+test("a linha de arranque traz o objecto resolvido e a origem do CB", () => {
   const l = bootLine(base, "BTC");
-  for (const t of ["policy=sigma", "coin=BTC", "net=testnet", "dry=true", "lev=1", "cap=$100", "cbFlips=3", "quoteInside=0", "aloWait=8000ms"]) {
+  for (const t of ["policy=sigma", "coin=BTC", "net=testnet", "dry=true", "lev=1", "cap=$100", "cbFlips=4 (config)", "cbWindow=12h (config)", "cbCaixa=6h (config)", "quoteInside=0", "aloWait=8000ms"]) {
     expect(l).toContain(t);
   }
 });
 
-test("nenhum valor mudou com a mudanca de fonte", () => {
+test("o config.sigma tem estes valores, e so estes", () => {
   expect(config.sigma).toEqual({
     emaN: 24,
-    cbFlips: 3,
+    cbFlips: 4,
     cbWindowMs: 12 * 3_600_000,
     cbCaixaMs: 6 * 3_600_000,
     aloWaitMs: 8000,

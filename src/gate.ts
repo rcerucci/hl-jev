@@ -6,7 +6,7 @@
  * vir de `QUOTE_USD` — nao e observavel em runtime: e estrutural, e vive num teste que le o
  * caminho do tamanho.
  */
-import { config } from "./config";
+import { cbKnobs, config } from "./config";
 
 export interface ResolvedRun {
   policy: string;
@@ -62,7 +62,13 @@ export function assertAlphaRun(r: ResolvedRun): void {
   if (why) throw new Error(`porteiro do alfa: ${why}`);
 }
 
-/** A linha de arranque com o objecto **resolvido**. Sem ela o arranque nao conta. */
+/**
+ * A linha de arranque com o objecto **resolvido**. Sem ela o arranque nao conta.
+ *
+ * Os tres botoes do CB saem com a **origem** entre parenteses (issue #37): `(config)` = o default do
+ * `src/config.ts`, `(env)` = veio do ambiente. Sem isso, uma VPS a correr `CB_FLIPS=4` e uma `main`
+ * com default 4 davam a mesma linha — a divergencia era invisivel.
+ */
 export function bootLine(r: ResolvedRun, coin: string): string {
   return [
     "sigma",
@@ -72,7 +78,9 @@ export function bootLine(r: ResolvedRun, coin: string): string {
     `dry=${r.dryRun}`,
     `lev=${r.leverage}`,
     `cap=$${r.maxLiveEquityUsd}`,
-    `cbFlips=${config.sigma.cbFlips}`,
+    `cbFlips=${config.sigma.cbFlips} (${cbKnobs.flips.source})`,
+    `cbWindow=${cbKnobs.windowH.value}h (${cbKnobs.windowH.source})`,
+    `cbCaixa=${cbKnobs.caixaH.value}h (${cbKnobs.caixaH.source})`,
     `quoteInside=${config.sigma.quoteInsideTicks}`,
     `aloWait=${config.sigma.aloWaitMs}ms`,
   ].join(" · ");

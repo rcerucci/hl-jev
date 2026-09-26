@@ -51,9 +51,80 @@ export function assertJevCredentials(
   }
 }
 
+/** A banda de tempo do CB: 1 hora ate um ano. Fora disto nao e valor, e erro de operacao. */
+export const CB_BAND_MAX_H = 24 * 365;
+
+/** De onde veio o valor que esta a correr: do ambiente (`CB_*`) ou do default daqui. */
+export type CbSource = "env" | "config";
+
+/** Um botao do CB: o numero que corre e a origem dele (a bootLine imprime as duas coisas). */
+export interface CbKnob {
+  readonly value: number;
+  readonly source: CbSource;
+}
+
+export interface CbKnobs {
+  readonly flips: CbKnob;
+  readonly windowH: CbKnob;
+  readonly caixaH: CbKnob;
+}
+
+/** Os defaults do motor. Vivem aqui, e so aqui: nao ha segunda fonte. */
+export const CB_DEFAULTS = { flips: 4, windowH: 12, caixaH: 6 } as const;
+
+function cbKnob(
+  name: string,
+  raw: string | undefined,
+  fallback: number,
+  min: number,
+  max: number,
+  why = "",
+): CbKnob {
+  if (raw === undefined) return { value: fallback, source: "config" };
+  // Inteiro decimal e so: `Number` aceita `0x4`, `1e3` e afins, e um limiar escrito assim e um
+  // engano, nao um valor. Espaco a volta tolera-se; vazio cai na banda (0) e e recusado.
+  const texto = raw.trim();
+  const n = Number(texto);
+  if (!/^-?\d+$/.test(texto) || !Number.isInteger(n) || n < min || n > max) {
+    throw new Error(`${name}="${raw}" fora de banda: inteiro entre ${min} e ${max}${why}`);
+  }
+  return { value: n, source: "env" };
+}
+
+/**
+ * Issue #37 — o limiar, a janela e a caixa do CB leem-se **aqui** (o `policy/sigma.ts` continua a
+ * ler `config.sigma`: fonte unica). `CB_FLIPS`, `CB_WINDOW_H` e `CB_CAIXA_H` sobrepoem-se ao
+ * default, e cada botao sabe de onde veio — a bootLine diz `cbFlips=4 (env)` ou `(config)`, para
+ * uma divergencia entre a VPS e a `main` nunca ser silenciosa.
+ *
+ * O porteiro recusa **no arranque** valor fora de banda, em vez de deixar correr um freio que nao
+ * trava: janela e caixa inteiras, de 1 h a um ano; o limiar inteiro de 1 ate as horas da janela —
+ * conta-se no maximo uma virada por H1 fechada, portanto mais viradas do que horas na janela nunca
+ * armam a caixa.
+ */
+export function resolveCbKnobs(e: {
+  CB_FLIPS?: string;
+  CB_WINDOW_H?: string;
+  CB_CAIXA_H?: string;
+}): CbKnobs {
+  const windowH = cbKnob("CB_WINDOW_H", e.CB_WINDOW_H, CB_DEFAULTS.windowH, 1, CB_BAND_MAX_H);
+  const caixaH = cbKnob("CB_CAIXA_H", e.CB_CAIXA_H, CB_DEFAULTS.caixaH, 1, CB_BAND_MAX_H);
+  const flips = cbKnob(
+    "CB_FLIPS",
+    e.CB_FLIPS,
+    CB_DEFAULTS.flips,
+    1,
+    windowH.value,
+    " (as horas de CB_WINDOW_H: acima disso o CB nunca arma)",
+  );
+  return { flips, windowH, caixaH };
+}
+
 const hlTestnet = env("HL_TESTNET", "true") !== "false";
 const jevProvider = resolveJevProvider(process.env);
 const jevModelId = resolveJevModelId(process.env, jevProvider);
+/** A origem de cada botao do CB, para a bootLine. O `config.sigma` fica so com numeros. */
+export const cbKnobs: CbKnobs = resolveCbKnobs(process.env);
 
 /**
  * H4 — o motor desta conta, numa fonte so. O `policy/sigma.ts`, o fill e o trader **nao** tem
@@ -62,10 +133,14 @@ const jevModelId = resolveJevModelId(process.env, jevProvider);
 const sigma = {
   /** Barras H1 da EMA do `s`. */
   emaN: 24,
-  /** Circuit breaker de chop: viradas na janela que armam a caixa, a janela, e a caixa. */
-  cbFlips: 3,
-  cbWindowMs: 12 * 3_600_000,
-  cbCaixaMs: 6 * 3_600_000,
+  /**
+   * Circuit breaker de chop: viradas na janela que armam a caixa, a janela, e a caixa. Os defaults
+   * vivem aqui (`CB_DEFAULTS`); `CB_FLIPS`, `CB_WINDOW_H` e `CB_CAIXA_H` sobrepoem-se a eles em
+   * `resolveCbKnobs`, e a bootLine diz qual dos dois mandou.
+   */
+  cbFlips: cbKnobs.flips.value,
+  cbWindowMs: cbKnobs.windowH.value * 3_600_000,
+  cbCaixaMs: cbKnobs.caixaH.value * 3_600_000,
   /** A espera do ALO no touch antes de o que sobra ir a mercado (F5). */
   aloWaitMs: 8000,
   /** Taxas assumidas no paper (tier 0) e a distancia ao touch: 0 = no touch. */

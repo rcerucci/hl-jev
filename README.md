@@ -9,7 +9,9 @@ Perp na **Hyperliquid**. Um modo de operação: `POLICY=sigma`.
   `s = sign(hl2 − EMA24)` da vela fechada, com a EMA calculada sobre as barras **anteriores** a essa.
   Entre fechos não há ordem nova nem re-cotação — o portão segura.
 - **Veto de pavio**: se o `s` quer virar e só o wick cruzou a EMA, a vela é ignorada e o `s` mantém-se.
-- **Circuit breaker de chop**: 3 viradas em 12 h armam 6 h de `caixa`; ao expirar, vale o `s` vigente.
+- **Circuit breaker de chop**: 4 viradas em 12 h armam 6 h de `caixa`; ao expirar, vale o `s` vigente.
+  O limiar, a janela e a caixa saem do `src/config.ts` e `CB_FLIPS`, `CB_WINDOW_H` e `CB_CAIXA_H`
+  sobrepõem-se a eles (ver *Actualizar o motor da VPS*: a bootLine diz a origem de cada um).
 - **Execução**: a entrada é um **ALO no touch** (compra no best bid, venda no best ask); o que não
   encher em **8 s** vai numa única Ioc a mercado. A saída (`caixa` / `cb_chop`) é Ioc taker
   reduce-only da posição inteira, sem espera.
@@ -113,8 +115,14 @@ git log -1 --format='%h %s'                                    # tem de ser o co
 Ao subir, a primeira linha do log tem de continuar a bater certo (é o `bootLine` do `src/gate.ts`):
 
 ```
-sigma · policy=sigma · coin=SOL · net=mainnet · dry=false · lev=1 · cap=$100 · cbFlips=4 · ...
+sigma · policy=sigma · coin=SOL · net=mainnet · dry=false · lev=1 · cap=$100 · cbFlips=4 (config) · cbWindow=12h (config) · cbCaixa=6h (config) · ...
 ```
+
+Os três `cb*` trazem a **origem** entre parênteses: `(config)` = o default do `src/config.ts`,
+`(env)` = veio do `CB_FLIPS` / `CB_WINDOW_H` / `CB_CAIXA_H`. É o que impede a divergência silenciosa
+entre a VPS e a `main`: `cbFlips=4 (env)` e `cbFlips=4 (config)` são a mesma conta a correr por
+regras diferentes, e a linha di-lo. Valor fora da banda (0, negativo, mais viradas do que horas na
+janela) não arranca: o processo morre no import com a razão.
 
 **Com posição aberta**: o motor não guarda posição em disco, lê-a do venue (`clearinghouseState`,
 subscrito no `feed` e aplicado no `market.init`), por isso não há nada a reconciliar: ele retoma a

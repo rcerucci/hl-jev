@@ -22,7 +22,9 @@ const cid = (ms: number, s = "BTC") =>
   `${new Date(ms).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "")}-${s}`;
 const ctxDe = (bars: ReturnType<typeof serie>) => ({ returns_bps: { last1: 0, last5: 0, last20: 0 }, h1: bars });
 
-/** Tres viradas de lado nas barras 30..33 (uma por hora). */
+/** Quatro viradas de lado nas barras 31..34 (uma por hora): e o que arma o CB de omissao (4). */
+const quatroViradas = [...plana(30), SOBE, DESCE, SOBE, DESCE, SOBE];
+/** Tres viradas: uma a menos que o limiar de omissao — a caixa nao arma. */
 const tresViradas = [...plana(30), SOBE, DESCE, SOBE, DESCE];
 /** Duas viradas: para no meio. */
 const duasViradas = [...plana(30), SOBE, DESCE, SOBE];
@@ -73,14 +75,17 @@ describe("sigma · virada de lado (o que conta para o CB)", () => {
 });
 
 describe("sigma · o passo do CB (unidade = H1 fechada)", () => {
-  test("3 viradas em 12 h armam 6 h de caixa", () => {
+  test("4 viradas em 12 h armam 6 h de caixa", () => {
     const st = newCbState();
     expect(cbStep(st, fecho(30), false).active).toBe(false);
     expect(cbStep(st, fecho(31), true).flips_12h).toBe(1);
     expect(cbStep(st, fecho(32), true).flips_12h).toBe(2);
-    const armado = cbStep(st, fecho(33), true);
+    expect(cbStep(st, fecho(33), true).flips_12h).toBe(3);
+    expect(cbStep(st, fecho(33), true).active).toBe(false); // 3 viradas ainda nao armam: o limiar e 4
+    const armado = cbStep(st, fecho(34), true);
+    expect(armado.flips_12h).toBe(4);
     expect(armado.active).toBe(true);
-    expect(armado.until).toBe(fecho(33) + config.sigma.cbCaixaMs);
+    expect(armado.until).toBe(fecho(34) + config.sigma.cbCaixaMs);
   });
 
   test("2 viradas nao disparam", () => {
@@ -90,6 +95,16 @@ describe("sigma · o passo do CB (unidade = H1 fechada)", () => {
     expect(dois.active).toBe(false);
     expect(dois.flips_12h).toBe(2);
     expect(dois.until).toBe(0);
+  });
+
+  test("3 viradas ainda nao disparam: o limiar de omissao e 4", () => {
+    const st = newCbState();
+    cbStep(st, fecho(31), true);
+    cbStep(st, fecho(32), true);
+    const tres = cbStep(st, fecho(33), true);
+    expect(tres.flips_12h).toBe(3);
+    expect(tres.active).toBe(false);
+    expect(tres.until).toBe(0);
   });
 
   test("a mesma H1 repetida nao conta duas vezes (o 5m nao vira inventario)", () => {
@@ -120,8 +135,10 @@ describe("sigma · o passo do CB (unidade = H1 fechada)", () => {
     const st = newCbState();
     cbStep(st, fecho(31), true);
     cbStep(st, fecho(32), true);
-    const armado = cbStep(st, fecho(33), true);
+    cbStep(st, fecho(33), true);
+    const armado = cbStep(st, fecho(34), true);
     expect(armado.active).toBe(true);
+    expect(armado.flips_12h).toBe(4);
     // Na barra que levanta a caixa, a lista ja foi limpa: so a virada dessa propria barra
     // entra — e na policy ela nem entra, porque o raw anterior e `caixa` (ver o teste da
     // serie, abaixo).
@@ -134,44 +151,53 @@ describe("sigma · o passo do CB (unidade = H1 fechada)", () => {
 });
 
 describe("sigma · o CB na policy", () => {
-  test("3 viradas em 12 h poe o capital fora do mercado: caixa", async () => {
+  test("4 viradas em 12 h poe o capital fora do mercado: caixa", async () => {
     const p = new SigmaPolicy();
-    const bars = serie(tresViradas);
+    const bars = serie(quatroViradas);
     const ctx = ctxDe(bars);
     await p.decide("s", cid(fecho(30)), ctx);
     await p.decide("s", cid(fecho(31)), ctx);
     await p.decide("s", cid(fecho(32)), ctx);
-    const v = await p.decide("s", cid(fecho(33)), ctx);
+    await p.decide("s", cid(fecho(33)), ctx);
+    const v = await p.decide("s", cid(fecho(34)), ctx);
     expect(v.cb_active).toBe(true);
-    expect(v.cb_flips_12h).toBe(3);
-    expect(v.cb_until).toBe(fecho(33) + config.sigma.cbCaixaMs);
+    expect(v.cb_flips_12h).toBe(4);
+    expect(v.cb_until).toBe(fecho(34) + config.sigma.cbCaixaMs);
     expect(v.raw).toBe("caixa");
     expect(v.signal).toBe("caixa");
     expect(v.act).toBe("hold");
   });
 
-  test("2 viradas: o s continua a valer", async () => {
-    const p = new SigmaPolicy();
-    const bars = serie(duasViradas);
-    const ctx = ctxDe(bars);
-    await p.decide("s", cid(fecho(30)), ctx);
-    await p.decide("s", cid(fecho(31)), ctx);
-    const v = await p.decide("s", cid(fecho(32)), ctx);
+  test("2 e 3 viradas: o s continua a valer (o limiar e 4)", async () => {
+    const duas = new SigmaPolicy();
+    const ctx2 = ctxDe(serie(duasViradas));
+    await duas.decide("s", cid(fecho(30)), ctx2);
+    await duas.decide("s", cid(fecho(31)), ctx2);
+    const v = await duas.decide("s", cid(fecho(32)), ctx2);
     expect(v.cb_active).toBe(false);
     expect(v.cb_flips_12h).toBe(2);
     expect(v.cb_until).toBe(0);
     expect(v.raw).toBe("buy");
+
+    const tres = new SigmaPolicy();
+    const ctx3 = ctxDe(serie(tresViradas));
+    for (const i of [30, 31, 32, 33]) await tres.decide("s", cid(fecho(i)), ctx3);
+    const v3 = await tres.decide("s", cid(fecho(33)), ctx3);
+    expect(v3.cb_active).toBe(false);
+    expect(v3.cb_flips_12h).toBe(3);
+    expect(v3.cb_until).toBe(0);
   });
 
   test("dentro da mesma H1, o tick de 5m nao reforca o CB", async () => {
     const p = new SigmaPolicy();
-    const bars = serie(tresViradas);
+    const bars = serie(quatroViradas);
     const ctx = ctxDe(bars);
     await p.decide("s", cid(fecho(30)), ctx);
     await p.decide("s", cid(fecho(31)), ctx);
     await p.decide("s", cid(fecho(32)), ctx);
-    const armado = await p.decide("s", cid(fecho(33)), ctx);
-    const tick = await p.decide("s", cid(fecho(33) + 240_000), ctx); // +4 min, mesma vela
+    await p.decide("s", cid(fecho(33)), ctx);
+    const armado = await p.decide("s", cid(fecho(34)), ctx);
+    const tick = await p.decide("s", cid(fecho(34) + 240_000), ctx); // +4 min, mesma vela
     expect(tick.cb_flips_12h).toBe(armado.cb_flips_12h);
     expect(tick.raw).toBe("caixa");
     expect(tick.wick_veto).toBe(false);
@@ -179,10 +205,10 @@ describe("sigma · o CB na policy", () => {
 
   test("depois das 6 h o s vigente volta a valer", async () => {
     const p = new SigmaPolicy();
-    const bars = serie([...tresViradas, ...plana(6)]); // chega ate a barra 39
+    const bars = serie([...quatroViradas, ...plana(6)]); // chega ate a barra 40
     const ctx = ctxDe(bars);
-    for (const i of [30, 31, 32, 33]) await p.decide("s", cid(fecho(i)), ctx);
-    const v = await p.decide("s", cid(fecho(39)), ctx); // 6 h depois da 3.a virada
+    for (const i of [30, 31, 32, 33, 34]) await p.decide("s", cid(fecho(i)), ctx);
+    const v = await p.decide("s", cid(fecho(40)), ctx); // 6 h depois da 4.a virada
     expect(v.cb_active).toBe(false);
     expect(v.cb_until).toBe(0);
     expect(v.cb_flips_12h).toBe(0);
@@ -238,7 +264,7 @@ describe("sigma · a caixa do CB usa o flatten que ja existe", () => {
   });
 
   test("as constantes do CB estao escritas, nao derivadas da tabela", () => {
-    expect(config.sigma.cbFlips).toBe(3);
+    expect(config.sigma.cbFlips).toBe(4);
     expect(config.sigma.cbWindowMs).toBe(12 * H);
     expect(config.sigma.cbCaixaMs).toBe(6 * H);
   });
