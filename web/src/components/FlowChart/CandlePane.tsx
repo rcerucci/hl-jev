@@ -54,6 +54,9 @@ function palette() {
     tinta: v("--ink", "#2b2b27"),
     /** As velas: no escuro um degrau abaixo da tinta do texto, para nao ofuscar. */
     vela: v("--candle", "#2b2b27"),
+    /** O fill (ordem que encheu): a cor mais viva do ecra. O `s` fica no tom calmo. */
+    fillBuy: v("--fill-buy", "#0b7a3b"),
+    fillSell: v("--fill-sell", "#bf2a22"),
     texto: v("--muted", "#69665b"),
     grelha: v("--grid", "#d9d2ba"),
     borda: v("--border", "#2f2f2b"),
@@ -123,19 +126,18 @@ function toMarkers(
     time: asTime(m.time),
     position: m.side === "buy" ? "belowBar" : "aboveBar",
     shape: m.side === "buy" ? "arrowUp" : "arrowDown",
-    color: m.side === "buy" ? p.buy : p.sell,
-    size: 0.8,
+    // O fill leva a cor viva e a seta maior: e a ordem que encheu, o unico marcador que e dinheiro.
+    color: m.side === "buy" ? p.fillBuy : p.fillSell,
+    size: 1.1,
   }));
   for (const m of sigma?.sides ?? []) {
-    // O `s` e uma SETA FORA da barra, como sempre foi: e a leitura da hora (compra para baixo,
-    // venda para cima). Fica maior que a seta do fill (1 contra 0,8) para, quando as duas caem na
-    // mesma barra, se perceber qual e qual.
+    // O `s` e uma SETA FORA da barra, no tom calmo e mais pequena: e a leitura da hora, nao dinheiro.
     out.push({
       time: asTime(m.time),
       position: m.side === "buy" ? "belowBar" : "aboveBar",
       shape: m.side === "buy" ? "arrowUp" : "arrowDown",
       color: m.side === "buy" ? p.buy : p.sell,
-      size: 1,
+      size: 0.7,
     });
   }
   for (const v of sigma?.vetoes ?? []) {

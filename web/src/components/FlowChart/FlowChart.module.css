@@ -82,16 +82,21 @@
   box-sizing: border-box;
 }
 
-/* O `s`: seta fora da barra, no lado que a regra quer. */
-.legBuy::before,
-.legS::before {
-  background: var(--buy);
+/* O FILL (ordem que encheu): a cor viva, para saltar a vista. */
+.legBuy::before {
+  background: var(--fill-buy);
   clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
 }
 
 .legSell::before {
-  background: var(--sell);
+  background: var(--fill-sell);
   clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+}
+
+/* O `s` (a leitura da hora): seta fora da barra, no tom calmo do desk. */
+.legS::before {
+  background: var(--buy);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
 }
 
 /* A linha da entrada em aberto. */
