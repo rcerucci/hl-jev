@@ -42,10 +42,10 @@ function palette() {
   const cs = getComputedStyle(document.documentElement);
   const v = (nome: string, alt: string) => cs.getPropertyValue(nome).trim() || alt;
   return {
-    fundo: v("--bg", "#f4f1e7"),
+    fundo: v("--bg", "#f1e9cf"),
     tinta: v("--ink", "#2b2b27"),
-    texto: v("--muted", "#6a6961"),
-    grelha: v("--grid", "#ded9cb"),
+    texto: v("--muted", "#69665b"),
+    grelha: v("--grid", "#d9d2ba"),
     borda: v("--border", "#2f2f2b"),
     buy: v("--buy", "#4d7150"),
     sell: v("--sell", "#9a4a3e"),
