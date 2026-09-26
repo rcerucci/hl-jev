@@ -141,7 +141,7 @@ export function sigmaStep(
   bars: SigmaBar[],
   atMs: number,
   sPrev: number,
-): { s: number; veto: boolean; hl2: number; close: number; ema: number; closedAt: number } | null {
+): { s: number; veto: boolean; hl2: number; close: number; ema: number; t: number; closedAt: number } | null {
   const idx = lastClosedH1(bars, atMs);
   if (idx < config.sigma.emaN) return null; // precisa de `emaN` barras ANTERIORES a vela lida
   const at = bars[idx]!;
@@ -153,7 +153,7 @@ export function sigmaStep(
   const sClose = at.close > ema ? 1 : at.close < ema ? -1 : 0;
   const querVirar = sPrev !== 0 && sRaw !== 0 && sRaw !== sPrev;
   const veto = querVirar && sClose === sPrev; // so o wick cruzou: o close ficou no lado velho
-  return { s: veto ? sPrev : sRaw, veto, hl2, close: at.close, ema, closedAt: at.t + 3_600_000 };
+  return { s: veto ? sPrev : sRaw, veto, hl2, close: at.close, ema, t: at.t, closedAt: at.t + 3_600_000 };
 }
 
 function actOf(signal: StanceSignal): Act {
@@ -208,6 +208,11 @@ export class SigmaPolicy implements Policy {
       // a ser o que executa, e nao uma segunda computacao do mesmo sinal.
       s: step?.s,
       ema_h1: step?.ema ?? null,
+      // #49 — a barra lida viaja com a decisao: o painel mostra a H1 que decidiu (e nao o preco
+      // vivo do grafico), e a barra e o `s` sao o mesmo objecto.
+      bar_t: step?.t,
+      hl2: step?.hl2,
+      bar_close: step?.close,
       wick_veto: step?.veto ?? false,
       cb_active: cbNow.active,
       cb_flips_12h: cbNow.flips_12h,

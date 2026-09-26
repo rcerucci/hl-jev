@@ -72,6 +72,14 @@ export interface Verdict {
    */
   s?: number;
   ema_h1?: number | null;
+  /**
+   * Sigma: a barra H1 que a decisao LEU - instante de abertura, `hl2` e `close` dela. E o que
+   * permite ao painel mostrar a barra que decidiu, e nao o preco vivo do grafico (que e outro
+   * objecto, e a razao pela qual a leitura no TV divergia do motor).
+   */
+  bar_t?: number;
+  hl2?: number;
+  bar_close?: number;
   /** Postura de inventário (POLICY=stance). Ausente nas outras policies. */
   raw?: StanceRaw;
   /** Evento publicado: hold sse raw == raw anterior. */

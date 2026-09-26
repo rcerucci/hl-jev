@@ -41,7 +41,32 @@ export interface Fusion {
  * no caminho da fusao o lado vive em `act`.
  */
 type Decidable = Pick<ModelDecision, "action" | "probabilities" | "upIn10" | "latencyMs"> &
-  Partial<Pick<ModelDecision, "intent" | "bias" | "leverage" | "inputTokens" | "state12" | "act" | "act_conf" | "too_hostile" | "reason">>;
+  Partial<Pick<ModelDecision, "intent" | "bias" | "leverage" | "inputTokens" | "state12" | "act" | "act_conf" | "too_hostile" | "reason">> &
+  SigmaView;
+
+/**
+ * #49 — o estado do sigma que a decisao leu, com os nomes do ledger.
+ *
+ * Vive num sitio so: quem o escreve e a policy, quando **le uma H1 nova**. Nos ticks dentro da
+ * mesma H1 (o portao do relogio) repete-se o que o ultimo decisor viu — uma H1, um `s`. Foi a
+ * ausencia desta cache que fez o registo e o painel terem, em tempos, dois `s` para o mesmo
+ * instante (um do motor e outro da policy).
+ */
+interface SigmaView {
+  s?: number;
+  ema_h1?: number | null;
+  bar_t?: number;
+  hl2?: number;
+  bar_close?: number;
+  delta?: number;
+  wick_veto?: boolean;
+  clock_hold?: boolean;
+  cb_active?: boolean;
+  cb_flips_12h?: number;
+  cb_until?: number;
+  equity?: number;
+  notional?: number | null;
+}
 
 /** F5 — a operacao de entrada do sigma em curso. */
 interface SigmaFillState {
@@ -90,6 +115,11 @@ export class Trader {
   private h1Decided = new Map<string, number>();
   /** F5 — a operacao de entrada do sigma em curso, por moeda (ALO no touch + espera + resto). */
   private sigmaFill = new Map<string, SigmaFillState>();
+  /**
+   * #49 — o estado do sigma da ULTIMA H1 lida, por moeda. E o que os ticks dentro da mesma hora
+   * repetem (em vez de recalcular): uma H1, um `s`.
+   */
+  private sigmaView = new Map<string, SigmaView>();
 
   constructor(
     private market: Market,
@@ -246,9 +276,12 @@ export class Trader {
     if (querEntrar && !abre) verdict.clock_hold = true;
     const equity = snap.bankroll_usd;
     const notional = abre ? equity * config.leverage : null;
+    // #49 — um so dono para o `s`/EMA que se regista e se mostra: a policy quando le uma H1 nova, e
+    // o que ela leu nos ticks em que so o portao do relogio corre. Nunca uma segunda computacao.
+    const sigma = this.sigmaViewOf(verdict, equity, notional);
     timing.loopMs = Math.round(performance.now() - t0);
     if (frozen) this.totals.lateBlocks++;
-    this.emit(block, book, fusedDecision(verdict, state, intent.reason), null, frozen, timing);
+    this.emit(block, book, fusedDecision(verdict, state, intent.reason, sigma), null, frozen, timing);
     fusion.ledger.writeDecision({
       kind: "decision",
       cycle_id: cid,
@@ -261,8 +294,10 @@ export class Trader {
       // #45 — um só dono do `s`: o que a policy usou (`verdict.s`), com o `ctx.s` apenas como
       // recurso quando ela não o devolve (portão do relógio, outras policies). Duas computações
       // do mesmo sinal no mesmo registo era o defeito: registava-se um e executava-se o outro.
-      s: verdict.s ?? ctx.s,
-      ema_h1: verdict.ema_h1 ?? ctx.ema_h1,
+      // #49 — e no portão do relógio o recurso deixou de ser o `ctx.s` (a outra computação): passa
+      // a ser o `sigma.s`, o que o ÚLTIMO decisor leu. Uma H1, um `s`, tantas linhas quantos ticks.
+      s: config.policy === "sigma" ? sigma.s : verdict.s ?? ctx.s,
+      ema_h1: config.policy === "sigma" ? sigma.ema_h1 : verdict.ema_h1 ?? ctx.ema_h1,
       raw: verdict.raw,
       signal: verdict.signal,
       wick_veto: verdict.wick_veto,
@@ -361,6 +396,40 @@ export class Trader {
       wick_veto: false,
       note: "sigma: sem H1 fechada nova (portao do relogio)",
     };
+  }
+
+  /**
+   * #49 — o estado do sigma que se regista e se mostra, num dono so.
+   *
+   * A policy escreve-o quando **le uma H1 nova**. Nos ticks dentro da mesma hora (o portao do
+   * relogio) o veredicto nao traz barra lida, e o que fica e o que o ULTIMO decisor viu - uma H1,
+   * um `s`, tantas linhas quantos ticks. Antes disto o portao caía no `ctx.s` (a computacao do
+   * stance): o registo e o painel podiam mostrar um `s` que o motor nunca executou.
+   *
+   * `clock_hold` e a excepcao: fala DESTE tick (foi o portao ou o arranque que conteve a entrada),
+   * nao da barra lida.
+   */
+  private sigmaViewOf(v: Verdict, equity: number, notional: number | null): SigmaView {
+    const ultimo = this.sigmaView.get(this.market.coin);
+    const leu = v.bar_t != null;
+    const view: SigmaView = leu
+      ? {
+        s: v.s,
+        ema_h1: v.ema_h1,
+        bar_t: v.bar_t,
+        hl2: v.hl2,
+        bar_close: v.bar_close,
+        delta: v.hl2 != null && v.ema_h1 != null ? v.hl2 - v.ema_h1 : undefined,
+        wick_veto: v.wick_veto,
+        cb_active: v.cb_active,
+        cb_flips_12h: v.cb_flips_12h,
+        cb_until: v.cb_until,
+      }
+      : (ultimo ?? {});
+    this.sigmaView.set(this.market.coin, view);
+    // A conta e sempre a deste tick (muda a cada fecho); o notional e o da entrada em curso, e
+    // `null` quando nao ha nenhuma - o painel nao tem de o adivinhar.
+    return { ...view, clock_hold: v.clock_hold ?? false, equity, notional };
   }
 
   /**
@@ -718,6 +787,7 @@ export class Trader {
           act_conf: decision?.act_conf,
           too_hostile: decision?.too_hostile,
           reason: decision?.reason,
+          ...sigmaOf(decision),
         }
         : decision && {
           action: decision.action,
@@ -733,6 +803,7 @@ export class Trader {
           act_conf: decision.act_conf,
           too_hostile: decision.too_hostile,
           reason: decision.reason,
+          ...sigmaOf(decision),
         },
       quote,
       fill: null,
@@ -758,8 +829,27 @@ export class Trader {
 const round = (x: number, d: number) => Math.round(x * 10 ** d) / 10 ** d;
 const rnull = (x: number | null, d: number) => (x == null || !Number.isFinite(x) ? null : round(x, d));
 
+/** O bloco do sigma que vai no fio (o painel le-o com os nomes do ledger, para cruzar a olho). */
+function sigmaOf(d?: Decidable | null): SigmaView {
+  return {
+    s: d?.s,
+    ema_h1: d?.ema_h1,
+    bar_t: d?.bar_t,
+    hl2: d?.hl2,
+    bar_close: d?.bar_close,
+    delta: d?.delta,
+    wick_veto: d?.wick_veto,
+    clock_hold: d?.clock_hold,
+    cb_active: d?.cb_active,
+    cb_flips_12h: d?.cb_flips_12h,
+    cb_until: d?.cb_until,
+    equity: d?.equity,
+    notional: d?.notional,
+  };
+}
+
 /** O `ModelDecision` do mundo da fusao: alimenta o desk e a linha do ledger. */
-function fusedDecision(v: Verdict, state: string, reason?: string): Decidable {
+function fusedDecision(v: Verdict, state: string, reason: string | undefined, sigma: SigmaView): Decidable {
   return {
     action: v.act,
     leverage: config.leverage,
@@ -780,6 +870,8 @@ function fusedDecision(v: Verdict, state: string, reason?: string): Decidable {
     act_conf: v.act_conf,
     too_hostile: v.too_hostile,
     reason,
+    // #49 — o estado do sigma viaja com a decisao (e, na mesma H1, repete-se: uma H1, um `s`).
+    ...sigma,
   };
 }
 

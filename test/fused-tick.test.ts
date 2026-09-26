@@ -260,12 +260,12 @@ function sigmaBars5m(now: number) {
  * arranque (#44), e os testes da mecanica (F4/F5/F6) precisam do cenario "motor ja a correr, com uma
  * inversao atras". O arranque a frio tem teste proprio — passe `armado = false` para o exercitar.
  */
-function sigmaTrader(market: FakeMarket, ledger: Ledger, armado = true) {
+function sigmaTrader(market: FakeMarket, ledger: Ledger, armado = true, onEvent?: (e: BlockEvent) => void) {
   (config as { policy: string }).policy = "sigma";
   const trader = new Trader(
     market as unknown as Market,
     new MockModel() as unknown as Model,
-    () => {},
+    onEvent ? (e) => onEvent(e) : () => {},
     () => {},
     () => {},
     { policy: new SigmaPolicy(), ledger },
@@ -762,4 +762,53 @@ test("sigma #45: o `s` gravado produz o `raw` gravado, e o lado enviado e esse",
   expect(linha.raw).toBe(sigmaRaw(linha.s ?? 0)); // o contrato, na propria linha
   expect(market.sends.length).toBe(1);
   expect(market.sends[0]!.side).toBe(linha.raw); // e o que sai e o que se gravou
+});
+
+/**
+ * #49 — o `s` e a barra lida viajam no FIO (e o painel passa a poder mostrá-los), e valem para a H1
+ * inteira: no resto da hora o portao do relogio repete o que o ULTIMO decisor viu, em vez de
+ * recalcular. Antes disto o `s` das linhas do portao vinha da outra computacao (o stance) e o
+ * painel nao tinha `s` nenhum para mostrar: os dois sintomas do mesmo defeito.
+ */
+test("sigma #49: o evento leva o `s` e a H1 lida; a mesma H1 repete o mesmo", async () => {
+  const now = Date.now();
+  const market = new FakeMarket();
+  market.candleBars1h = () => sigmaBars1h(now); // a ultima barra e a unica "de cima": hl2 105, close 108
+  market.candleBars5m = () => sigmaBars5m(now);
+  const ledger = new Ledger(`${DIR}/${++seq}`);
+  const eventos: BlockEvent[] = [];
+  const trader = sigmaTrader(market, ledger, false, (e) => eventos.push(e));
+
+  await trader.onBlock(1);
+  await Bun.sleep(60);
+  const decidiu = eventos.at(-1)!.decision!;
+  // a barra lida: hl2 105 e close 108 contra a EMA 95 das 29 barras planas anteriores
+  expect(decidiu.s).toBe(1);
+  expect(decidiu.hl2).toBe(105);
+  expect(decidiu.bar_close).toBe(108);
+  expect(decidiu.ema_h1).toBe(95);
+  expect(decidiu.delta).toBe(10);
+  expect(decidiu.bar_t).toBe(Math.floor(now / 3_600_000) * 3_600_000 - 2 * 3_600_000);
+  expect(decidiu.wick_veto).toBe(false);
+  expect(decidiu.clock_hold).toBe(true); // arranque a frio: a entrada fica contida (#44)
+
+  // o ledger diz o mesmo que o fio
+  const l1 = ledger.read("BTC", today())[0] as { s?: number; ema_h1?: number };
+  expect(l1.s).toBe(1);
+  expect(l1.ema_h1).toBe(95);
+
+  // bloco seguinte, MESMA H1 (o portao do relogio): nada muda no fio nem no registo
+  await trader.onBlock(2);
+  await Bun.sleep(60);
+  const portao = eventos.at(-1)!.decision!;
+  expect(portao.act).toBe("hold");
+  expect(portao.clock_hold).toBe(true);
+  expect(portao.s).toBe(1); // o mesmo `s` da H1
+  expect(portao.bar_t).toBe(decidiu.bar_t);
+  expect(portao.ema_h1).toBe(95);
+  expect(portao.delta).toBe(10);
+
+  const l2 = ledger.read("BTC", today())[1] as { s?: number; ema_h1?: number };
+  expect(l2.s).toBe(1); // antes do #49 esta linha nao tinha `s` nenhum (vinha do stance, que aqui e null)
+  expect(l2.ema_h1).toBe(95);
 });
