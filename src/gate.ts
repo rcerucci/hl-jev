@@ -53,6 +53,16 @@ export function alphaRefusal(r: ResolvedRun): string | null {
   if (config.sigma.quoteInsideTicks !== 0) {
     return `sigma.quoteInsideTicks=${config.sigma.quoteInsideTicks}: o alfa entra no touch (0)`;
   }
+  // #37 — o circuito de chop: valor fora de banda mata o arranque (0, negativo, absurdo). A banda
+  // tem razao de ser: uma virada por barra, logo no maximo tantas viradas quantas as H1 da janela.
+  const janelaH = config.sigma.cbWindowMs / 3_600_000;
+  const flips = config.sigma.cbFlips;
+  if (!Number.isInteger(flips) || flips < 1 || flips > janelaH) {
+    return `cbFlips=${flips}: fora de banda (1 a ${janelaH} viradas numa janela de ${janelaH}h)`;
+  }
+  if (!(config.sigma.cbWindowMs > 0) || !(config.sigma.cbCaixaMs > 0)) {
+    return `caixa do chop invalida: window=${config.sigma.cbWindowMs}ms caixa=${config.sigma.cbCaixaMs}ms`;
+  }
   return null;
 }
 
@@ -72,7 +82,7 @@ export function bootLine(r: ResolvedRun, coin: string): string {
     `dry=${r.dryRun}`,
     `lev=${r.leverage}`,
     `cap=$${r.maxLiveEquityUsd}`,
-    `cbFlips=${config.sigma.cbFlips}`,
+    `cbFlips=${config.sigma.cbFlips} (${config.sigma.cbFlipsSource})`,
     `quoteInside=${config.sigma.quoteInsideTicks}`,
     `aloWait=${config.sigma.aloWaitMs}ms`,
   ].join(" · ");

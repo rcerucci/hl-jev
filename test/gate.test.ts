@@ -72,15 +72,30 @@ test("a recusa levanta com a razao", () => {
 
 test("a linha de arranque traz o objecto resolvido", () => {
   const l = bootLine(base, "BTC");
-  for (const t of ["policy=sigma", "coin=BTC", "net=testnet", "dry=true", "lev=1", "cap=$100", "cbFlips=3", "quoteInside=0", "aloWait=8000ms"]) {
+  for (const t of ["policy=sigma", "coin=BTC", "net=testnet", "dry=true", "lev=1", "cap=$100", "cbFlips=4 (config)", "quoteInside=0", "aloWait=8000ms"]) {
     expect(l).toContain(t);
+  }
+});
+
+test("cbFlips fora de banda e recusado (#37)", () => {
+  const prev = config.sigma.cbFlips;
+  try {
+    config.sigma.cbFlips = 0;
+    expect(alphaRefusal(base)).toContain("banda");
+    config.sigma.cbFlips = 99;
+    expect(alphaRefusal(base)).toContain("banda");
+    config.sigma.cbFlips = 2.5;
+    expect(alphaRefusal(base)).toContain("banda");
+  } finally {
+    config.sigma.cbFlips = prev;
   }
 });
 
 test("nenhum valor mudou com a mudanca de fonte", () => {
   expect(config.sigma).toEqual({
     emaN: 24,
-    cbFlips: 3,
+    cbFlips: 4,
+    cbFlipsSource: "config",
     cbWindowMs: 12 * 3_600_000,
     cbCaixaMs: 6 * 3_600_000,
     aloWaitMs: 8000,

@@ -113,8 +113,13 @@ git log -1 --format='%h %s'                                    # tem de ser o co
 Ao subir, a primeira linha do log tem de continuar a bater certo (é o `bootLine` do `src/gate.ts`):
 
 ```
-sigma · policy=sigma · coin=SOL · net=mainnet · dry=false · lev=1 · cap=$100 · cbFlips=4 · ...
+sigma · policy=sigma · coin=SOL · net=mainnet · dry=false · lev=1 · cap=$100 · cbFlips=4 (config) · ...
 ```
+
+O `cbFlips` traz a **origem** entre parênteses: `(config)` quando é o default do `config.ts`, `(env)`
+quando o `CB_FLIPS` venceu. Assim a divergência entre o repo e o que corre nunca é silenciosa. O
+`CB_FLIPS`, o `CB_WINDOW_H` e o `CB_CAIXA_H` são os únicos ajustes por ambiente do circuito, e um
+valor fora de banda (0, negativo, absurdo) faz o porteiro recusar o arranque.
 
 **Com posição aberta**: o motor não guarda posição em disco, lê-a do venue (`clearinghouseState`,
 subscrito no `feed` e aplicado no `market.init`), por isso não há nada a reconciliar: ele retoma a

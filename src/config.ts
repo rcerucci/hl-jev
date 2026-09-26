@@ -59,13 +59,43 @@ const jevModelId = resolveJevModelId(process.env, jevProvider);
  * H4 — o motor desta conta, numa fonte so. O `policy/sigma.ts`, o fill e o trader **nao** tem
  * constantes proprias: leem daqui. (O stance fica com o L/chao/teto dele: e museu.)
  */
+/**
+ * #37 — o circuito de chop tem default **4** (decisao do dono; os estudos concluem 4) e o
+ * `CB_FLIPS` vence. A ORIGEM viaja junto porque a divergencia entre o repo e o que corre na VPS
+ * nao pode ser silenciosa: o `bootLine` imprime-a e o porteiro recusa valor fora de banda.
+ */
+export function resolveCbFlips(
+  e: Record<string, string | undefined>,
+): { value: number; source: "env" | "config" } {
+  const set = e.CB_FLIPS?.trim();
+  if (!set) return { value: 4, source: "config" };
+  return { value: Number(set), source: "env" };
+}
+
+/** A janela e a caixa, em horas (`CB_WINDOW_H`, `CB_CAIXA_H`), com a mesma forma do `cbFlips`. */
+export function resolveCbHours(
+  e: Record<string, string | undefined>,
+  key: string,
+  fallback: number,
+): { value: number; source: "env" | "config" } {
+  const set = (e[key] ?? "").trim();
+  if (!set) return { value: fallback, source: "config" };
+  return { value: Number(set), source: "env" };
+}
+
+const cbFlips = resolveCbFlips(process.env);
+const cbWindow = resolveCbHours(process.env, "CB_WINDOW_H", 12);
+const cbCaixa = resolveCbHours(process.env, "CB_CAIXA_H", 6);
+
 const sigma = {
   /** Barras H1 da EMA do `s`. */
   emaN: 24,
   /** Circuit breaker de chop: viradas na janela que armam a caixa, a janela, e a caixa. */
-  cbFlips: 3,
-  cbWindowMs: 12 * 3_600_000,
-  cbCaixaMs: 6 * 3_600_000,
+  cbFlips: cbFlips.value,
+  /** De onde veio o `cbFlips` (#37): "env" quando o `CB_FLIPS` venceu, "config" quando e o default. */
+  cbFlipsSource: cbFlips.source,
+  cbWindowMs: cbWindow.value * 3_600_000,
+  cbCaixaMs: cbCaixa.value * 3_600_000,
   /** A espera do ALO no touch antes de o que sobra ir a mercado (F5). */
   aloWaitMs: 8000,
   /** Taxas assumidas no paper (tier 0) e a distancia ao touch: 0 = no touch. */
