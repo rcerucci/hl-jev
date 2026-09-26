@@ -1,19 +1,17 @@
 /**
- * F6 — o nocional da entrada. Live: nunca acima do tecto do alfa
- * (`maxLiveEquityUsd × leverage`). Dry run: saldo × leverage, sem tecto
- * (o porteiro já isenta o BANKROLL de exemplo).
+ * F6 — nocional da entrada.
  *
- * Flatten / reduce-only não passam por aqui: o tamanho é a posição.
+ * `HL_COINS=BTC,SOL` → 2 pares → cada um usa saldo/2.
+ * Um par usa o saldo inteiro. Live: o saldo entra limitado a `maxLiveEquityUsd`.
+ * Flatten não passa por aqui.
  */
 export function entryNotional(
   equity: number,
   leverage: number,
-  opts: { dryRun: boolean; capUsd: number },
+  opts: { dryRun: boolean; capUsd: number; pairs?: number },
 ): number {
-  const raw = equity * leverage;
-  if (!(raw > 0)) return 0;
-  if (opts.dryRun) return raw;
-  const cap = opts.capUsd * leverage;
-  if (!(cap > 0)) return 0;
-  return Math.min(raw, cap);
+  const n = Math.max(1, Math.floor(opts.pairs ?? 1));
+  const base = opts.dryRun ? equity : Math.min(equity, opts.capUsd);
+  if (!(base > 0) || !(leverage > 0)) return 0;
+  return (base / n) * leverage;
 }
