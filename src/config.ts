@@ -146,6 +146,8 @@ export const config = {
   closeSlippageBps: Number(env("CLOSE_SLIPPAGE_BPS", "5")),
   horizonBlocks: Number(env("HORIZON_BLOCKS", "100")),
   ledgerDir: envStr("LEDGER_DIR", "./data/ledger"),
+  /** s / prevRaw / CB da sigma entre processos. */
+  regimeDir: envStr("REGIME_DIR", "./data/regime"),
   outcomeHorizonSecs: Number(env("OUTCOME_HORIZON_SECS", "900")),
   /** Livro mais velho que isto congela o livro em vez de decidir (spec 3.6). */
   bookStaleMs: Number(env("BOOK_STALE_MS", "5000")),
