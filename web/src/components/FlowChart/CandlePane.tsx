@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   CandlestickSeries,
   ColorType,
@@ -35,6 +35,11 @@ type Props = {
   visibleBars: number;
   secondsVisible: boolean;
   formatPrice: (n: number) => string;
+  /**
+   * As margens que o grafico ocupa com os seus proprios eixos (escala de preco a direita, eixo do
+   * tempo em baixo). A legenda vive DENTRO da area de vela, por isso tem de saber onde ela acaba.
+   */
+  onInsets?: (i: { right: number; bottom: number }) => void;
 };
 
 /**
@@ -122,12 +127,14 @@ function toMarkers(
     size: 0.8,
   }));
   for (const m of sigma?.sides ?? []) {
+    // O `s` vai DENTRO da vela (inBar): ele e a leitura da hora, nao uma ordem. Assim nao se
+    // confunde com as setas dos fills, que sao ordens que encheram e ficam acima/abaixo da barra.
     out.push({
       time: asTime(m.time),
-      position: m.side === "buy" ? "belowBar" : "aboveBar",
-      shape: m.side === "buy" ? "arrowUp" : "arrowDown",
+      position: "inBar",
+      shape: "square",
       color: m.side === "buy" ? p.buy : p.sell,
-      size: 1,
+      size: 0.7,
     });
   }
   for (const v of sigma?.vetoes ?? []) {
@@ -165,6 +172,7 @@ export default function CandlePane({
   visibleBars,
   secondsVisible,
   formatPrice,
+  onInsets,
 }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -175,6 +183,24 @@ export default function CandlePane({
   const rangeRef = useRef("");
   const formatRef = useRef(formatPrice);
   formatRef.current = formatPrice;
+  const onInsetsRef = useRef(onInsets);
+  onInsetsRef.current = onInsets;
+
+  /**
+   * A area que os eixos do grafico ocupam (escala de preco a direita e eixo do tempo em baixo).
+   * A legenda vive DENTRO da area das velas, por isso tem de saber onde ela acaba, em vez de ficar
+   * sobre o eixo no canto do painel. Medido no grafico, nao escrito a mao: a largura da escala de
+   * preco muda com os digitos dos precos.
+   */
+  const reportInsets = useCallback(() => {
+    requestAnimationFrame(() => {
+      const chart = chartRef.current;
+      if (!chart) return;
+      const right = Math.round(chart.priceScale("right").width()) + 10;
+      const bottom = Math.round(chart.timeScale().height()) + 10;
+      onInsetsRef.current?.({ right, bottom });
+    });
+  }, []);
   /** Gatilho: muda a cada troca de tema, para as cores do canvas serem relidas. */
   const [tema, setTema] = useState(0);
 
@@ -206,6 +232,7 @@ export default function CandlePane({
       const r = entries[0]?.contentRect;
       if (!r) return;
       chart.resize(Math.max(1, Math.round(r.width)), Math.max(1, Math.round(r.height)));
+      reportInsets();
     });
     ro.observe(el);
     chartRef.current = chart;
@@ -264,7 +291,9 @@ export default function CandlePane({
       rangeRef.current = rangeKey;
       showLatest(chartRef.current, bars.length, visibleBars);
     }
-  }, [candles, rangeKey, visibleBars]);
+    // Os digitos dos precos mudam a largura da escala a direita: a legenda tem de saber.
+    reportInsets();
+  }, [candles, rangeKey, visibleBars, reportInsets]);
 
   useEffect(() => {
     markersRef.current?.setMarkers(toMarkers(marks, sigma, palette()));

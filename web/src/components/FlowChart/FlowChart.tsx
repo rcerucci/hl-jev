@@ -36,6 +36,12 @@ export default function FlowChart({
   onNeedMoreTape?: () => void;
 }) {
   const [interval, setIntervalId] = useState<BarSize>(DEFAULT_INTERVAL);
+  /**
+   * Quanto o grafico ocupa com os seus eixos. A legenda tem de ficar DENTRO da area das velas, por
+   * isso as margens vem medidas do proprio grafico (ver `CandlePane.reportInsets`), e nao escritas
+   * a mao: a escala de preco alarga e estreita com os digitos.
+   */
+  const [insets, setInsets] = useState({ right: 84, bottom: 36 });
 
   useEffect(() => {
     setIntervalId(DEFAULT_INTERVAL);
@@ -114,6 +120,9 @@ export default function FlowChart({
               visibleBars={VISIBLE_BARS}
               secondsVisible={interval === "1s"}
               formatPrice={fmtPrice}
+              onInsets={(i) =>
+                setInsets((prev) => (prev.right === i.right && prev.bottom === i.bottom ? prev : i))
+              }
             />
             <div className={styles.tl}>
               <div className={styles.price}>{fmtPrice(lastPx)}</div>
@@ -130,7 +139,7 @@ export default function FlowChart({
                 {word}
               </div>
             </div>
-            <div className={styles.legend} aria-hidden="true">
+            <div className={styles.legend} style={{ right: insets.right, bottom: insets.bottom }} aria-hidden="true">
               <span className={styles.legUp}>up</span>
               <span className={styles.legDown}>down</span>
               <span className={styles.legBuy}>buy</span>
