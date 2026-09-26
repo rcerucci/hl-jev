@@ -9,7 +9,9 @@ Perp na **Hyperliquid**. Um modo de operação: `POLICY=sigma`.
   `s = sign(hl2 − EMA24)` da vela fechada, com a EMA calculada sobre as barras **anteriores** a essa.
   Entre fechos não há ordem nova nem re-cotação — o portão segura.
 - **Veto de pavio**: se o `s` quer virar e só o wick cruzou a EMA, a vela é ignorada e o `s` mantém-se.
-- **Circuit breaker de chop**: 3 viradas em 12 h armam 6 h de `caixa`; ao expirar, vale o `s` vigente.
+- **Circuit breaker de chop**: 4 viradas em 12 h armam 6 h de `caixa`; ao expirar, vale o `s` vigente.
+  O limiar, a janela e a caixa saem do `src/config.ts` e `CB_FLIPS`, `CB_WINDOW_H` e `CB_CAIXA_H`
+  sobrepõem-se a eles (ver *Actualizar o motor da VPS*: a bootLine diz a origem de cada um).
 - **Execução**: a entrada é um **ALO no touch** (compra no best bid, venda no best ask); o que não
   encher em **8 s** vai numa única Ioc a mercado. A saída (`caixa` / `cb_chop`) é Ioc taker
   reduce-only da posição inteira, sem espera.

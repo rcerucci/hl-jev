@@ -13,11 +13,12 @@
  * raw    ∈ {buy, sell, caixa}        (caixa sse s == 0: preco exactamente na EMA)
  * signal ∈ {buy, sell, hold, caixa}  — hold sse raw == raw anterior
  *
- * F3 — circuit breaker de chop: 3 viradas em 12 h armam 6 h de caixa. A unidade e a **H1
- * fechada**: o relogio do CB sao os timestamps das velas fechadas, e repetir a decisao dentro
- * da mesma hora (tick de 5m) nao conta duas vezes. Virada = `signal` buy ou sell que muda de
- * lado: `hold` e veto de pavio nao contam. Ao expirar, o `s` (+ veto) vigente volta a valer e o
- * contador recomeca — o CB nao se alimenta das viradas que ele proprio provocou.
+ * F3 — circuit breaker de chop: as viradas na janela (default 4 em 12 h) armam a caixa (6 h). Os
+ * numeros vivem no `config.ts` e podem vir do ambiente (`CB_FLIPS`, `CB_WINDOW_H`, `CB_CAIXA_H`).
+ * A unidade e a **H1 fechada**: o relogio do CB sao os timestamps das velas fechadas, e repetir a
+ * decisao dentro da mesma hora (tick de 5m) nao conta duas vezes. Virada = `signal` buy ou sell que
+ * muda de lado: `hold` e veto de pavio nao contam. Ao expirar, o `s` (+ veto) vigente volta a valer
+ * e o contador recomeca — o CB nao se alimenta das viradas que ele proprio provocou.
  */
 import { config } from "../config";
 import type { Act, Policy, PolicyCtx, SigmaBar, StanceRaw, StanceSignal, Verdict } from "../risk/types";
