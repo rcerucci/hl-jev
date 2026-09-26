@@ -104,10 +104,13 @@ export class Trader {
   private stancePrev = new Map<string, StanceRaw>();
   /**
    * #44 — o lado que a sigma já viu desde o arranque, por sleeve, e se já houve **inversão** desde
-   * então. Num arranque a frio o motor não entra: a primeira ordem exige uma inversão (buy<->sell),
-   * nunca o lado herdado de uma perna que já começou. Sem isto, o arranque entrava a meio da perna —
-   * e, como o portão do relógio marca a H1 em memória, uma H1 fechada *antes* do arranque passava
-   * por nova. Note-se: isto bloqueia a ENTRADA, nunca a saída — a gestão da posição aberta continua.
+   * então. Num arranque a frio o motor não **entra**: a primeira abertura exige uma inversão
+   * (buy<->sell), nunca o lado herdado de uma perna que já começou. Sem isto, o arranque entrava a
+   * meio da perna — e, como o portão do relógio marca a H1 em memória, uma H1 fechada *antes* do
+   * arranque passava por nova.
+   *
+   * A saída não espera essa inversão. Posição contra o `s` (reduce-only), `caixa` e `cb_chop`
+   * flatten na primeira leitura; só a perna nova fica contida.
    */
   private ladoVisto = new Map<string, StanceRaw>();
   private liberadoParaEntrar = new Map<string, boolean>();
@@ -270,8 +273,10 @@ export class Trader {
     // o `cb_chop` nao abrem nada — so desmontam o que esta. Sem H1 nova nao ha entrada (F4).
     const querEntrar =
       config.policy === "sigma" && plan != null && intent.reason !== "caixa" && intent.reason !== "cb_chop";
-    // #44 — a entrada só sai depois de uma inversão desde o arranque. `querEntrar` sem essa
-    // inversão fica registado como `clock_hold`: bloqueado, com nome, nunca em silêncio.
+    // #44 — a ABERTURA só sai depois de uma inversão desde o arranque. Flatten contra o `s`
+    // (reduce-only) não espera: a posição aberta tem de poder desmontar-se na primeira leitura.
+    // `querEntrar` sem inversão e sem flatten fica `clock_hold`: bloqueado, com nome.
+    const flattenSo = Boolean(querEntrar && plan?.reduceOnly);
     const abre = querEntrar && this.liberadoParaEntrar.get(this.market.coin) === true;
     if (querEntrar && !abre) verdict.clock_hold = true;
     const equity = snap.bankroll_usd;
@@ -324,6 +329,9 @@ export class Trader {
       if (intent.reason === "caixa" || intent.reason === "cb_chop") {
         // Saída/flatten: nunca gageada pelo arranque — a posição aberta tem de poder desmontar-se.
         if (plan) this.enqueueQuote(block, plan, book, config.leverage);
+      } else if (flattenSo && !abre && plan) {
+        // #44 — s contra a posição e ainda sem inversão desta sessão: fecha o que está, não abre.
+        this.enqueueQuote(block, plan, book, config.leverage);
       } else if (plan && abre) {
         // #44 — a entrada (e a virada inteira, fecho+abertura) só depois de uma inversão desde o
         // arranque. Sem isto, o arranque a meio da perna abria o lado herdado — e, na virada,

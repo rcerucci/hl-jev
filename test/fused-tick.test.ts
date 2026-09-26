@@ -39,7 +39,18 @@ class FakeMarket {
   readonly label = "BTC";
   readonly wallet = null;
   /** O saldo da sleeve: o F6 dimensiona por aqui (`bankroll_usd` do snapshot). */
-  account: { equityUsd: number; unrealizedUsd: number; leverage: number | null } | null = null;
+  account: {
+    equityUsd?: number;
+    accountValue?: number;
+    unrealizedUsd: number;
+    leverage: number | null;
+    positionSz?: number;
+    entryPrice?: number | null;
+    realizedUsd?: number;
+    feesUsd?: number;
+    withdrawable?: number;
+    liquidationPx?: number | null;
+  } | null = null;
   readonly szDecimals = 5;
   readonly maxLeverage = 40;
   readonly fillPrints: [] = [];
@@ -739,6 +750,66 @@ test("sigma #44: arranque a frio nao entra — zero ordens ate a inversao", asyn
   await Bun.sleep(60);
   expect(market.sends.length).toBeGreaterThan(0);
   expect(market.sends[0]).toMatchObject({ side: "sell", reduceOnly: false, taker: false });
+});
+
+/**
+ * #44 — a abertura fica contida; a posição contra o `s` não. Restart com short e `s=buy`
+ * flatten na primeira leitura e não abre o long (ainda não houve inversão desta sessão).
+ */
+test("sigma #44: arranque a frio flatten posicao contra o s, sem abrir", async () => {
+  const now = Date.now();
+  const market = new FakeMarket();
+  market.candleBars1h = () => sigmaBars1h(now, 0, "up"); // s = buy
+  market.candleBars5m = () => sigmaBars5m(now);
+  market.account = {
+    positionSz: -1,
+    entryPrice: 100,
+    unrealizedUsd: 0,
+    realizedUsd: 0,
+    feesUsd: 0,
+    accountValue: 100,
+    withdrawable: 100,
+    leverage: 1,
+    liquidationPx: null,
+  };
+  const ledger = new Ledger(`${DIR}/${++seq}`);
+  const trader = sigmaTrader(market, ledger, false);
+
+  await trader.onBlock(1);
+  await Bun.sleep(60);
+  expect(market.sends.length).toBe(1);
+  expect(market.sends[0]).toMatchObject({ side: "buy", reduceOnly: true, taker: true, size: 1 });
+  const d = ledger.read("BTC", today())[0] as { clock_hold?: boolean; raw?: string; notional?: number };
+  expect(d.clock_hold).toBe(true);
+  expect(d.raw).toBe("buy");
+  expect(d.notional).toBeUndefined();
+});
+
+/** #44 — posição a favor do `s` no arranque a frio: não fecha e não adiciona. */
+test("sigma #44: arranque a frio com posicao a favor do s nao mexe", async () => {
+  const now = Date.now();
+  const market = new FakeMarket();
+  market.candleBars1h = () => sigmaBars1h(now, 0, "up"); // s = buy
+  market.candleBars5m = () => sigmaBars5m(now);
+  market.account = {
+    positionSz: 1,
+    entryPrice: 100,
+    unrealizedUsd: 0,
+    realizedUsd: 0,
+    feesUsd: 0,
+    accountValue: 100,
+    withdrawable: 100,
+    leverage: 1,
+    liquidationPx: null,
+  };
+  const ledger = new Ledger(`${DIR}/${++seq}`);
+  const trader = sigmaTrader(market, ledger, false);
+
+  await trader.onBlock(1);
+  await Bun.sleep(60);
+  expect(market.sends.length).toBe(0);
+  const d = ledger.read("BTC", today())[0] as { raw?: string };
+  expect(d.raw).toBe("buy");
 });
 
 /**
