@@ -14,10 +14,6 @@ const specs = loadSleeves();
 if (!specs.length) throw new Error("no sleeves");
 config.pairs = specs.length;
 
-/**
- * H4 — o porteiro. Uma corrida que nao e a do alfa nao arranca: exit, nao warn. Corre por sleeve
- * (a moeda e a chave sao dela) e a primeira recusa mata o processo.
- */
 const resolved = (spec: (typeof specs)[number]): ResolvedRun => ({
   policy: config.policy,
   coins: specs.map((s) => s.coin),
@@ -30,8 +26,6 @@ const resolved = (spec: (typeof specs)[number]): ResolvedRun => ({
 });
 for (const spec of specs) assertAlphaRun(resolved(spec));
 
-// Sem POLICY o repo corre como sempre correu. Com POLICY, o tick passa a ser
-// snapshot -> state -> POLICY -> RISK -> planFromRisk -> o mesmo submit.
 const policy = createFusionPolicy();
 const fusion: Fusion | null = policy ? { policy, ledger: new Ledger(config.ledgerDir) } : null;
 
@@ -48,6 +42,15 @@ const meta: Meta = {
   pair: first.pair,
   explorerTx: config.explorerTx,
   tickMs: config.tickMs,
+  bootLine: [
+    config.hlTestnet ? "testnet" : "mainnet",
+    config.dryRun || specs.every((s) => !s.privateKey) ? "dry" : "live",
+    first.coin,
+    `${config.leverage}x`,
+    `cap $${config.maxLiveEquityUsd}`,
+    `pares ${specs.length}`,
+    `cb ${config.sigma.cbFlips}`,
+  ].join(" · "),
   sleeves: [],
 };
 
@@ -68,7 +71,6 @@ for (const spec of specs) {
           spreadBps: book.spreadBps,
         });
       };
-      // O objecto resolvido, numa linha, antes de tocar na rede. Sem ela o arranque nao conta.
       console.log(bootLine(resolved(spec), spec.coin));
       await feed.connect();
       const market = new Market(feed, spec);
@@ -126,7 +128,6 @@ function onEvent(coin: string) {
     if (e.decision && !e.decision.late) {
       const d = e.decision;
       const q = e.quote;
-      // A hold applies neither bias nor leverage, and an exit skips the leverage write.
       const lev = d.intent === "open" && d.leverage != null ? ` ${d.leverage}x` : "";
       const call = d.act ?? (d.intent === "hold" ? "hold" : d.intent && d.bias ? `${d.intent} ${d.bias}${lev}` : d.action);
       const order = q && ` ${q.side.toUpperCase()} ${q.size} @ ${q.price}${q.taker ? " cross" : ""}${q.reduceOnly ? " reduce" : ""}${q.unchanged ? " unchanged" : q.status === "sim" ? " (sim)" : ` ${q.status}`}`;

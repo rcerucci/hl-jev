@@ -6,20 +6,14 @@ import { fmtH1Closed, fmtLevel, fmtS, fmtSigned, isSigmaDecision, sideInk, sideW
 import { Bone } from "@/components/Skeleton/Skeleton";
 import styles from "./SigmaPanel.module.css";
 
-/**
- * O estado do sigma da H1 lida, do que o motor escreveu no evento.
- *
- * Nada aqui e re-derivado: o `s`, a EMA24, o `hl2`/`close` da barra e as bandeiras vem todos do
- * fio. O desk nao calcula a EMA nem o `s` no browser, porque a barra do painel e agregada dos
- * prints de 1 s e nao e a mesma coisa que a H1 que o motor leu (foi assim que o painel e o motor
- * discordaram antes).
- */
 export default function SigmaPanel({
   latest,
   waiting = false,
+  bootLine,
 }: {
   latest: BlockEvent | null;
   waiting?: boolean;
+  bootLine?: string | null;
 }) {
   const decision = latest?.decision ?? null;
   const sigma = isSigmaDecision(decision) ? decision : null;
@@ -30,7 +24,7 @@ export default function SigmaPanel({
         <section className={styles.section}>
           <div className={styles.railHead}>
             <span>SIGMA H1</span>
-            <span className={styles.railNote}>s = sign(hl2 - EMA24)</span>
+            <span className={styles.railNote}>{bootLine || "—"}</span>
           </div>
           <div className={styles.body}>
             {waiting ? (
@@ -69,9 +63,6 @@ export default function SigmaPanel({
         : null;
   const pos = latest?.position ?? null;
   const lev = decision?.leverage ?? null;
-  // A CONTA e a da venue (o que a corretora diz que existe). O `equity` do fio e o saldo que o
-  // motor usou para dimensionar e que, sem conta legivel, e o BANKROLL_USD do config: sao coisas
-  // diferentes, e mostrar o do config como se fosse a conta foi exactamente a confusao do painel.
   const venue = typeof latest?.accountValue === "number" ? latest.accountValue : null;
   const free = typeof latest?.withdrawable === "number" ? latest.withdrawable : null;
   const equity = sigma.equity ?? null;
@@ -90,14 +81,14 @@ export default function SigmaPanel({
       <section className={styles.section}>
         <div className={styles.railHead}>
           <span>SIGMA H1</span>
-          <span className={styles.railNote}>s = sign(hl2 - EMA24)</span>
+          <span className={styles.railNote}>{bootLine || "—"}</span>
         </div>
         <div className={styles.body}>
           <div className={styles.headline}>
             <span className={styles.headlineWord} style={{ color: sideInk(s) }}>
               {sideWord(s)}
             </span>
-            <span className={styles.metaLine} title="a H1 FECHADA que decidiu, em UTC. O preco vivo do grafico e outro objecto.">
+            <span className={styles.metaLine} title="a H1 FECHADA que decidiu, em UTC.">
               H1 {fmtH1Closed(sigma.bar_t)}
             </span>
           </div>
@@ -120,13 +111,13 @@ export default function SigmaPanel({
           </div>
 
           <div className={styles.flags}>
-            <span className={`${styles.flag} ${sigma.wick_veto ? styles.flagOn : ""}`} title="F2: so o pavio cruzou a EMA e o close ficou no lado velho, por isso o s nao virou">
+            <span className={`${styles.flag} ${sigma.wick_veto ? styles.flagOn : ""}`}>
               {sigma.wick_veto ? "wick veto" : "wick clear"}
             </span>
-            <span className={`${styles.flag} ${sigma.clock_hold ? styles.flagOn : ""}`} title="#44: este tick nao liberta entrada (portao do relogio da H1, ou arranque a frio sem inversao desde o inicio)">
+            <span className={`${styles.flag} ${sigma.clock_hold ? styles.flagOn : ""}`}>
               {sigma.clock_hold ? "clock hold" : "clock free"}
             </span>
-            <span className={`${styles.flag} ${sigma.cb_active ? styles.flagOn : ""}`} title="F3: caixa do circuit breaker de chop armada (viradas na janela acima do limite)">
+            <span className={`${styles.flag} ${sigma.cb_active ? styles.flagOn : ""}`}>
               {sigma.cb_active ? `cb armed ${sigma.cb_flips_12h ?? 0}/12h` : "cb off"}
             </span>
           </div>
@@ -146,12 +137,7 @@ export default function SigmaPanel({
                 <span className={styles.off}>venue offline</span>
               )}
             </span>
-            <span
-              className={styles.gridLabel}
-              title="o que o motor usa para dimensionar: saldo x LEVERAGE. Sem conta legivel, o saldo e o BANKROLL_USD do config."
-            >
-              sizing
-            </span>
+            <span className={styles.gridLabel}>sizing</span>
             <span className={styles.gridValue}>
               {equity != null ? fmtUsd(equity, 2) : "-"} x {lev != null ? `${lev}x` : "-"}
               {notional != null ? ` = ${fmtUsd(notional, 2)}` : ""}
