@@ -2,6 +2,7 @@ import { config } from "./config";
 import { bpsBetween, snapshotIndicators, venueFeatures } from "./indicators";
 import type { Market } from "./market";
 import type { Model, ModelDecision, TradeState } from "./model";
+import { entryNotional } from "./size";
 import { planFromRisk, planQuote, type QuotePlan } from "./plan";
 import { toSnapshot, toState } from "./risk/buckets";
 import { isFrozen, riskIntent, standsDown } from "./risk/intent";
@@ -280,7 +281,9 @@ export class Trader {
     const abre = querEntrar && this.liberadoParaEntrar.get(this.market.coin) === true;
     if (querEntrar && !abre) verdict.clock_hold = true;
     const equity = snap.bankroll_usd;
-    const notional = abre ? equity * config.leverage : null;
+    const notional = abre
+      ? entryNotional(equity, config.leverage, { dryRun: config.dryRun, capUsd: config.maxLiveEquityUsd })
+      : null;
     // #49 — um so dono para o `s`/EMA que se regista e se mostra: a policy quando le uma H1 nova, e
     // o que ela leu nos ticks em que so o portao do relogio corre. Nunca uma segunda computacao.
     const sigma = this.sigmaViewOf(verdict, equity, notional);
