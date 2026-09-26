@@ -108,7 +108,7 @@ export function sigmaMarks(events: BlockEvent[], limit = 200): { sides: SigmaSid
   const vetoes: SigmaVeto[] = [];
   for (const ep of groupEpisodes(events, limit)) {
     const d = ep.read.decision;
-    const time = Math.round((ep.barT + H1_MS) / 1000);
+    const time = Math.round(ep.barT / 1000);
     const s = d?.s;
     if (typeof s === "number" && s !== 0) sides.push({ time, side: s > 0 ? "buy" : "sell" });
     if (d?.wick_veto && typeof d.hl2 === "number") vetoes.push({ time, price: d.hl2 });
@@ -132,10 +132,7 @@ function emaLast(xs: number[], n: number): number | null {
   return e;
 }
 
-/**
- * Historico de `s` sobre velas H1 do tape (`time` = abertura em segundos Unix).
- * Mesma regra do `sigmaStep`: EMA das barras anteriores, veto se so o pavio virou.
- */
+/** Historico de `s` sobre velas H1 do tape (`time` = abertura em segundos Unix). */
 export function sigmaHistoryFromH1(
   candles: H1Bar[],
   nowMs = Date.now(),
@@ -154,7 +151,7 @@ export function sigmaHistoryFromH1(
     const querVirar = sPrev !== 0 && sRaw !== 0 && sRaw !== sPrev;
     const veto = querVirar && sClose === sPrev;
     const s = veto ? sPrev : sRaw;
-    const time = at.time + H1_MS / 1000;
+    const time = at.time;
     if (s !== 0) sides.push({ time, side: s > 0 ? "buy" : "sell" });
     if (veto) vetoes.push({ time, price: hl2 });
     sPrev = s;
