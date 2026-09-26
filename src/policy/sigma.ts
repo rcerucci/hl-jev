@@ -20,6 +20,7 @@
  * contador recomeca — o CB nao se alimenta das viradas que ele proprio provocou.
  */
 import { config } from "../config";
+import { loadRegime, saveRegime } from "../regime";
 import type { Act, Policy, PolicyCtx, SigmaBar, StanceRaw, StanceSignal, Verdict } from "../risk/types";
 
 /**
@@ -143,7 +144,7 @@ export function sigmaStep(
   sPrev: number,
 ): { s: number; veto: boolean; hl2: number; close: number; ema: number; t: number; closedAt: number } | null {
   const idx = lastClosedH1(bars, atMs);
-  if (idx < config.sigma.emaN) return null; // precisa de `emaN` barras ANTERIORES a vela lida
+  if (idx < config.sigma.emaN) return null;
   const at = bars[idx]!;
   const emas = emaSigma(bars.slice(0, idx).map(hl2Of));
   const ema = emas[emas.length - 1] ?? null;
@@ -152,7 +153,7 @@ export function sigmaStep(
   const sRaw = hl2 > ema ? 1 : hl2 < ema ? -1 : 0;
   const sClose = at.close > ema ? 1 : at.close < ema ? -1 : 0;
   const querVirar = sPrev !== 0 && sRaw !== 0 && sRaw !== sPrev;
-  const veto = querVirar && sClose === sPrev; // so o wick cruzou: o close ficou no lado velho
+  const veto = querVirar && sClose === sPrev;
   return { s: veto ? sPrev : sRaw, veto, hl2, close: at.close, ema, t: at.t, closedAt: at.t + 3_600_000 };
 }
 
@@ -166,9 +167,36 @@ export class SigmaPolicy implements Policy {
   private prevRaw = new Map<string, StanceRaw>();
   private sState = new Map<string, number>();
   private cbState = new Map<string, CbState>();
+  private hydrated = new Set<string>();
+
+  /**
+   * `regimeDir` grava `s` / prevRaw / CB entre processos. Ausente (testes, `new SigmaPolicy()`)
+   * o estado continua so em memoria.
+   */
+  constructor(private regimeDir?: string) {}
+
+  private hydrate(sleeve: string) {
+    if (!this.regimeDir || this.hydrated.has(sleeve)) return;
+    this.hydrated.add(sleeve);
+    const got = loadRegime(this.regimeDir, sleeve);
+    if (!got) return;
+    this.sState.set(sleeve, got.s);
+    if (got.prevRaw) this.prevRaw.set(sleeve, got.prevRaw);
+    this.cbState.set(sleeve, { flips: [...got.cb.flips], until: got.cb.until, lastClosedAt: got.cb.lastClosedAt });
+  }
+
+  private persist(sleeve: string) {
+    if (!this.regimeDir) return;
+    saveRegime(this.regimeDir, sleeve, {
+      s: this.sState.get(sleeve) ?? 0,
+      prevRaw: this.prevRaw.get(sleeve),
+      cb: this.cbState.get(sleeve) ?? newCbState(),
+    });
+  }
 
   async decide(_state: string, cycleId: string, ctx?: PolicyCtx): Promise<Verdict> {
     const sleeve = cycleId.includes("-") ? cycleId.slice(cycleId.indexOf("-") + 1) : cycleId;
+    this.hydrate(sleeve);
     const prev = ctx?.raw_prev ?? this.prevRaw.get(sleeve);
     const step = ctx?.h1 ? sigmaStep(ctx.h1, cycleTsMs(cycleId), this.sState.get(sleeve) ?? 0) : null;
     const cb = this.cbState.get(sleeve) ?? newCbState();
@@ -176,16 +204,17 @@ export class SigmaPolicy implements Policy {
     let raw: StanceRaw;
     let cbNow: CbDecision;
     if (!step) {
-      raw = "caixa"; // sem features nao inventa lado
+      raw = "caixa";
       cbNow = cbView(cb);
     } else {
-      const lado = sigmaRaw(step.s); // o s (+ veto) vigente, antes do CB
+      const lado = sigmaRaw(step.s);
       cbNow = cbStep(cb, step.closedAt, isFlip(prev, lado));
       raw = cbNow.active ? "caixa" : lado;
       this.sState.set(sleeve, step.s);
     }
     const signal = signalFrom(raw, prev);
     this.prevRaw.set(sleeve, raw);
+    this.persist(sleeve);
     const act = actOf(signal);
     const side = act === "hold" ? SIGMA.CONF_ON_HOLD : SIGMA.CONF_ON_SIDE;
     const rest = (1 - side) / 2;
@@ -204,12 +233,8 @@ export class SigmaPolicy implements Policy {
       raw_ok: true,
       raw,
       signal,
-      // #45 — o `s` e a EMA que ESTA decisao usou. O ledger grava estes: o que se regista passa
-      // a ser o que executa, e nao uma segunda computacao do mesmo sinal.
       s: step?.s,
       ema_h1: step?.ema ?? null,
-      // #49 — a barra lida viaja com a decisao: o painel mostra a H1 que decidiu (e nao o preco
-      // vivo do grafico), e a barra e o `s` sao o mesmo objecto.
       bar_t: step?.t,
       hl2: step?.hl2,
       bar_close: step?.close,
