@@ -48,6 +48,31 @@
   pointer-events: none;
 }
 
+.legS::before,
+.legVeto::before {
+  content: "";
+  display: inline-block;
+  margin-right: 4px;
+  vertical-align: 1px;
+}
+
+/* O `s`: seta no lado que a regra quer. */
+.legS::before {
+  width: 0;
+  height: 0;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-bottom: 5px solid var(--buy);
+}
+
+/* O veto de pavio: disco ambar (a cor do "bloqueado" no tema). */
+.legVeto::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--late);
+}
+
 .legUp::before,
 .legDown::before,
 .legBuy::before,

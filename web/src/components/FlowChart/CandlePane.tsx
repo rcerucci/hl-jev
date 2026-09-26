@@ -18,6 +18,7 @@ import {
   type UTCTimestamp,
 } from "lightweight-charts";
 import type { Candle, FillMark } from "@/lib/ohlc";
+import type { SigmaSide, SigmaVeto } from "@/lib/sigma";
 
 export type EntryLine = {
   price: number;
@@ -27,6 +28,8 @@ export type EntryLine = {
 type Props = {
   candles: Candle[];
   marks: FillMark[];
+  /** As marcas do sigma (o `s` e os vetos de pavio). Sai dos eventos, nao das velas. */
+  sigma?: { sides: SigmaSide[]; vetoes: SigmaVeto[] };
   entry: EntryLine | null;
   rangeKey: string;
   visibleBars: number;
@@ -49,6 +52,7 @@ function palette() {
     borda: v("--border", "#2f2f2b"),
     buy: v("--buy", "#4d7150"),
     sell: v("--sell", "#9a4a3e"),
+    late: v("--late", "#8a6a24"),
   };
 }
 
@@ -93,14 +97,46 @@ function toBars(rows: Candle[]): CandlestickData<Time>[] {
   }));
 }
 
-function toMarkers(rows: FillMark[], p: Palette): SeriesMarker<Time>[] {
-  return rows.map((m) => ({
+/**
+ * As marcas do grafico: os fills (setas), o `s` de cada H1 fechada (setas) e os vetos de pavio
+ * (disco com `x`). O `lightweight-charts` v5 nao tem forma de cruz, por isso o veto e um disco
+ * ambar com o `x` escrito ao lado: a cor `--late` e a que o tema ja usa para "bloqueado".
+ *
+ * A ordem TEM de ser crescente no tempo, senao a biblioteca recusa a lista.
+ */
+function toMarkers(
+  rows: FillMark[],
+  sigma: { sides: SigmaSide[]; vetoes: SigmaVeto[] } | undefined,
+  p: Palette,
+): SeriesMarker<Time>[] {
+  const out: SeriesMarker<Time>[] = rows.map((m) => ({
     time: asTime(m.time),
     position: m.side === "buy" ? "belowBar" : "aboveBar",
     shape: m.side === "buy" ? "arrowUp" : "arrowDown",
     color: m.side === "buy" ? p.buy : p.sell,
     size: 0.8,
   }));
+  for (const m of sigma?.sides ?? []) {
+    out.push({
+      time: asTime(m.time),
+      position: m.side === "buy" ? "belowBar" : "aboveBar",
+      shape: m.side === "buy" ? "arrowUp" : "arrowDown",
+      color: m.side === "buy" ? p.buy : p.sell,
+      size: 1,
+    });
+  }
+  for (const v of sigma?.vetoes ?? []) {
+    out.push({
+      time: asTime(v.time),
+      position: "aboveBar",
+      shape: "circle",
+      color: p.late,
+      size: 0.7,
+      text: "x",
+    });
+  }
+  out.sort((a, b) => Number(a.time) - Number(b.time));
+  return out;
 }
 
 function stemOf(rows: Candle[]): string {
@@ -118,6 +154,7 @@ function showLatest(chart: IChartApi | null, count: number, visibleBars: number)
 export default function CandlePane({
   candles,
   marks,
+  sigma,
   entry,
   rangeKey,
   visibleBars,
@@ -225,8 +262,8 @@ export default function CandlePane({
   }, [candles, rangeKey, visibleBars]);
 
   useEffect(() => {
-    markersRef.current?.setMarkers(toMarkers(marks, palette()));
-  }, [marks, tema]);
+    markersRef.current?.setMarkers(toMarkers(marks, sigma, palette()));
+  }, [marks, sigma, tema]);
 
   useEffect(() => {
     const series = seriesRef.current;

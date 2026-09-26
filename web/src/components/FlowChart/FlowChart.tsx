@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { BlockEvent, Meta, PricePoint } from "@/lib/types";
 import { fmtCall, fmtPrice } from "@/lib/format";
 import { barsForView, fillMarks, type BarSize } from "@/lib/ohlc";
+import { sigmaMarks } from "@/lib/sigma";
 import { Bone } from "@/components/Skeleton/Skeleton";
 import CandlePane from "./CandlePane";
 import styles from "./FlowChart.module.css";
@@ -54,6 +55,10 @@ export default function FlowChart({
     };
   }, [tape, interval]);
 
+  // As marcas do sigma saem dos EVENTOS (uma por H1 fechada) e nao das velas: a vela do grafico e
+  // agregada dos prints de 1 s e nao e a H1 que o motor leu.
+  const sm = useMemo(() => sigmaMarks(events), [events]);
+
   const shown = latest ?? events[events.length - 1] ?? null;
   const d = shown?.decision ?? null;
   const late = d?.late === true;
@@ -103,6 +108,7 @@ export default function FlowChart({
               key={coin}
               candles={model.candles}
               marks={model.marks}
+              sigma={sm}
               entry={entry}
               rangeKey={`${coin}:${interval}`}
               visibleBars={VISIBLE_BARS}
@@ -130,6 +136,8 @@ export default function FlowChart({
               <span className={styles.legBuy}>buy</span>
               <span className={styles.legSell}>sell</span>
               <span className={styles.legEntry}>entry</span>
+              <span className={styles.legS}>s</span>
+              <span className={styles.legVeto}>veto</span>
             </div>
           </>
         )}

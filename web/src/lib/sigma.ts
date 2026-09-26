@@ -121,3 +121,40 @@ export function groupEpisodes(events: BlockEvent[], limit = 40): Episode[] {
   }
   return [...byBar.values()].sort((a, b) => b.barT - a.barT).slice(0, limit);
 }
+
+/** Uma marca do `s` no grafico, no FECHO da H1 que decidiu (nunca a cada tick). */
+export interface SigmaSide {
+  /** Segundo Unix do fecho da H1, que e o instante da decisao. */
+  time: number;
+  side: "buy" | "sell";
+}
+
+/** Um veto de pavio (F2): a barra em que so o pavio cruzou a EMA e o close ficou no lado velho. */
+export interface SigmaVeto {
+  time: number;
+  /** O `hl2` da barra lida, que e o valor que a regra mediu. */
+  price: number;
+}
+
+/**
+ * As marcas do sigma no grafico: uma seta por fecho de H1 com lado, e um x por veto de pavio.
+ *
+ * Sai tudo dos eventos do fio, e nada disto e calculado no browser a partir das velas: a barra do
+ * grafico e agregada dos prints de 1 s e nao e a H1 que o motor leu. Uma H1, uma marca.
+ */
+export function sigmaMarks(events: BlockEvent[], limit = 200): { sides: SigmaSide[]; vetoes: SigmaVeto[] } {
+  const sides: SigmaSide[] = [];
+  const vetoes: SigmaVeto[] = [];
+  for (const ep of groupEpisodes(events, limit)) {
+    const d = ep.read.decision;
+    const time = Math.round((ep.barT + H1_MS) / 1000);
+    const s = d?.s;
+    // `s = 0` e CAIXA: a regra nao quer lado nenhum, e nao ha seta para desenhar.
+    if (typeof s === "number" && s !== 0) sides.push({ time, side: s > 0 ? "buy" : "sell" });
+    if (d?.wick_veto && typeof d.hl2 === "number") vetoes.push({ time, price: d.hl2 });
+  }
+  // O grafico exige marcas em ordem crescente de tempo.
+  sides.sort((a, b) => a.time - b.time);
+  vetoes.sort((a, b) => a.time - b.time);
+  return { sides, vetoes };
+}
