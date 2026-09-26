@@ -31,6 +31,11 @@ export interface DecisionLine {
   signal?: string;
   /** Sigma (F2): a barra H1 foi ignorada por so o wick ter cruzado a EMA. */
   wick_veto?: boolean;
+  /**
+   * #44 — houve **intencao de entrar** que o arranque conteve: nenhuma inversao (buy<->sell) desde
+   * o inicio da sessao. Nao e caixa nem hold de sinal — e a primeira ordem que ainda nao pode sair.
+   */
+  clock_hold?: boolean;
   /** Sigma (F3): circuit breaker de chop — activo, viradas nas 12 h e fim da caixa. */
   cb_active?: boolean;
   cb_flips_12h?: number;

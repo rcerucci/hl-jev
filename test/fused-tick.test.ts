@@ -6,7 +6,7 @@ import type { Market } from "../src/market";
 import { MockModel, type Model } from "../src/model";
 import { DumbPolicy } from "../src/policy/dumb";
 import { quotePrice } from "../src/book";
-import { SigmaPolicy } from "../src/policy/sigma";
+import { sigmaRaw, SigmaPolicy } from "../src/policy/sigma";
 import { TradeFeed } from "../src/trades";
 import { StancePolicy } from "../src/policy/stance";
 import type { Policy, Verdict } from "../src/risk/types";
@@ -255,9 +255,14 @@ function sigmaBars5m(now: number) {
  * O `.env` do clone traz `POLICY=jev`, e o portao do F4 e a mecanica do F5 so correm com o
  * sigma ligado. Os testes deste bloco ligam-no aqui — e o `afterAll` no fim do ficheiro repoe.
  */
-function sigmaTrader(market: FakeMarket, ledger: Ledger) {
+/**
+ * Trader com sigma ligado. Por omissao **armado**: o motor so entra depois de uma inversao desde o
+ * arranque (#44), e os testes da mecanica (F4/F5/F6) precisam do cenario "motor ja a correr, com uma
+ * inversao atras". O arranque a frio tem teste proprio — passe `armado = false` para o exercitar.
+ */
+function sigmaTrader(market: FakeMarket, ledger: Ledger, armado = true) {
   (config as { policy: string }).policy = "sigma";
-  return new Trader(
+  const trader = new Trader(
     market as unknown as Market,
     new MockModel() as unknown as Model,
     () => {},
@@ -265,6 +270,11 @@ function sigmaTrader(market: FakeMarket, ledger: Ledger) {
     () => {},
     { policy: new SigmaPolicy(), ledger },
   );
+  if (armado) {
+    const internos = trader as unknown as { liberadoParaEntrar: Map<string, boolean> };
+    internos.liberadoParaEntrar.set("BTC", true);
+  }
+  return trader;
 }
 
 test("sigma F6: equity 100 e lev 1 -> entrada de 1.0; com 110 o episodio seguinte abre 1.1", async () => {
@@ -698,4 +708,58 @@ expect(market.sends[0]).toMatchObject({ side: "sell", taker: true, reduceOnly: f
 const linhas = ledger.read("BTC", today());
 expect(linhas.filter((l) => l.kind === "fill").length).toBeGreaterThanOrEqual(1); // o close deixou a sua
 expect(linhas.filter((l) => l.kind === "entry_rejected").length).toBe(0); // a entrada concretizou-se
+});
+
+/**
+ * #44 — arranque a frio: o motor NAO entra com o lado herdado. A primeira ordem exige uma inversao
+ * (buy<->sell) desde o arranque; ate la o ledger diz `clock_hold`, nunca silencio. Foi este o
+ * defeito que abriu, a 10:21Z, um short a meio de uma perna que ja tinha comecado.
+ */
+test("sigma #44: arranque a frio nao entra — zero ordens ate a inversao", async () => {
+  const now = Date.now();
+  let newer = 0;
+  let lado: "up" | "down" = "up";
+  const market = new FakeMarket();
+  market.candleBars1h = () => sigmaBars1h(now, newer, lado);
+  market.candleBars5m = () => sigmaBars5m(now);
+  const ledger = new Ledger(`${DIR}/${++seq}`);
+  const trader = sigmaTrader(market, ledger, false); // ARRANQUE A FRIO
+
+  await trader.onBlock(1);
+  await Bun.sleep(60);
+  expect(market.sends.length).toBe(0); // o arranque nao abre nada: nem ALO nem Ioc
+  const d = ledger.read("BTC", today())[0] as { clock_hold?: boolean; raw?: string };
+  expect(d.clock_hold).toBe(true); // bloqueado, com nome
+  expect(["buy", "sell", "caixa"]).toContain(d.raw);
+
+  // A H1 seguinte nasce com o lado invertido: e a inversao que liberta a primeira ordem.
+  newer = 1;
+  lado = "down";
+  await trader.onBlock(2);
+  await Bun.sleep(60);
+  expect(market.sends.length).toBeGreaterThan(0);
+  expect(market.sends[0]).toMatchObject({ side: "sell", reduceOnly: false, taker: false });
+});
+
+/**
+ * #45 — no mesmo ciclo, o `s` gravado, o `raw` gravado e o lado que o `send` executa tem de ser a
+ * MESMA verdade. O contrato do proprio sigma: `s > 0 -> buy`, `s < 0 -> sell`, `s == 0 -> caixa`.
+ * Antes deste fix o ledger gravava um `s` (do motor) que nao produzia o `raw` (da policy) da
+ * mesma linha — e era a policy que executava.
+ */
+test("sigma #45: o `s` gravado produz o `raw` gravado, e o lado enviado e esse", async () => {
+  const now = Date.now();
+  const market = new FakeMarket();
+  market.candleBars1h = () => sigmaBars1h(now);
+  market.candleBars5m = () => sigmaBars5m(now);
+  const ledger = new Ledger(`${DIR}/${++seq}`);
+  const trader = sigmaTrader(market, ledger);
+
+  await trader.onBlock(1);
+  await Bun.sleep(60);
+  const linha = ledger.read("BTC", today())[0] as { s?: number; raw?: string; signal?: string };
+  expect(linha.s).toBeDefined();
+  expect(linha.raw).toBe(sigmaRaw(linha.s ?? 0)); // o contrato, na propria linha
+  expect(market.sends.length).toBe(1);
+  expect(market.sends[0]!.side).toBe(linha.raw); // e o que sai e o que se gravou
 });

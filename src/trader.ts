@@ -77,6 +77,15 @@ export class Trader {
   private totals: Totals = emptyTotals();
   private jevPauseUntil = 0;
   private stancePrev = new Map<string, StanceRaw>();
+  /**
+   * #44 — o lado que a sigma já viu desde o arranque, por sleeve, e se já houve **inversão** desde
+   * então. Num arranque a frio o motor não entra: a primeira ordem exige uma inversão (buy<->sell),
+   * nunca o lado herdado de uma perna que já começou. Sem isto, o arranque entrava a meio da perna —
+   * e, como o portão do relógio marca a H1 em memória, uma H1 fechada *antes* do arranque passava
+   * por nova. Note-se: isto bloqueia a ENTRADA, nunca a saída — a gestão da posição aberta continua.
+   */
+  private ladoVisto = new Map<string, StanceRaw>();
+  private liberadoParaEntrar = new Map<string, boolean>();
   /** F4 — a H1 fechada que ja foi decidida, por moeda. O portao do relogio le e escreve aqui. */
   private h1Decided = new Map<string, number>();
   /** F5 — a operacao de entrada do sigma em curso, por moeda (ALO no touch + espera + resto). */
@@ -211,6 +220,15 @@ export class Trader {
       ? this.gateHold(cid)
       : await fusion.policy.decide(state, cid, ctx);
     if (verdict.raw) this.stancePrev.set(this.market.coin, verdict.raw);
+    // #44 — inversão ou lado herdado? O lado só liberta entrada quando MUDA (buy<->sell). Passar
+    // por caixa não conta: sair de caixa não é uma inversão, e o arranque a meio da perna dava
+    // exactamente isso — um lado herdado que nunca mudou dentro desta sessão.
+    const lado = verdict.raw;
+    if (lado === "buy" || lado === "sell") {
+      const visto = this.ladoVisto.get(this.market.coin);
+      if (visto !== undefined && visto !== lado) this.liberadoParaEntrar.set(this.market.coin, true);
+      this.ladoVisto.set(this.market.coin, lado);
+    }
     this.totals.decisions++;
     this.totals.jevUsd += ((verdict.input_tokens ?? 0) / 1e6) * config.lab.jevUsdPerMTok;
     const intent = riskIntent({ cycleId: cid, sleeve: this.market.coin, verdict, snap });
@@ -220,7 +238,12 @@ export class Trader {
     // `saldo x LEVERAGE`, com o saldo a ser a equity da sleeve como o `toSnapshot` ja a calcula
     // (`bankroll_usd`: equity do venue quando existe, senao o BANKROLL_USD do config). A caixa e
     // o `cb_chop` nao abrem nada — so desmontam o que esta. Sem H1 nova nao ha entrada (F4).
-    const abre = config.policy === "sigma" && plan != null && intent.reason !== "caixa" && intent.reason !== "cb_chop";
+    const querEntrar =
+      config.policy === "sigma" && plan != null && intent.reason !== "caixa" && intent.reason !== "cb_chop";
+    // #44 — a entrada só sai depois de uma inversão desde o arranque. `querEntrar` sem essa
+    // inversão fica registado como `clock_hold`: bloqueado, com nome, nunca em silêncio.
+    const abre = querEntrar && this.liberadoParaEntrar.get(this.market.coin) === true;
+    if (querEntrar && !abre) verdict.clock_hold = true;
     const equity = snap.bankroll_usd;
     const notional = abre ? equity * config.leverage : null;
     timing.loopMs = Math.round(performance.now() - t0);
@@ -235,11 +258,17 @@ export class Trader {
       returns_bps: snap.returns_bps,
       mid_5m: ctx.mid_5m,
       u: ctx.u,
-      s: ctx.s,
-      ema_h1: ctx.ema_h1,
+      // #45 — um só dono do `s`: o que a policy usou (`verdict.s`), com o `ctx.s` apenas como
+      // recurso quando ela não o devolve (portão do relógio, outras policies). Duas computações
+      // do mesmo sinal no mesmo registo era o defeito: registava-se um e executava-se o outro.
+      s: verdict.s ?? ctx.s,
+      ema_h1: verdict.ema_h1 ?? ctx.ema_h1,
       raw: verdict.raw,
       signal: verdict.signal,
       wick_veto: verdict.wick_veto,
+      // #44 — a entrada bloqueada pelo arranque tem nome proprio, ao lado dos outros flags do
+      // veredicto: quem lê o ledger tem de poder ver que houve intencao de entrar e ela foi contida.
+      clock_hold: verdict.clock_hold,
       cb_active: verdict.cb_active,
       cb_flips_12h: verdict.cb_flips_12h,
       cb_until: verdict.cb_until,
@@ -258,8 +287,12 @@ export class Trader {
     // plano, ja Ioc reduce-only), depois abre o novo. Nao se fundem num so Ioc "atraves".
     if (config.policy === "sigma") {
       if (intent.reason === "caixa" || intent.reason === "cb_chop") {
+        // Saída/flatten: nunca gageada pelo arranque — a posição aberta tem de poder desmontar-se.
         if (plan) this.enqueueQuote(block, plan, book, config.leverage);
-      } else if (plan) {
+      } else if (plan && abre) {
+        // #44 — a entrada (e a virada inteira, fecho+abertura) só depois de uma inversão desde o
+        // arranque. Sem isto, o arranque a meio da perna abria o lado herdado — e, na virada,
+        // fechava o lado velho para abrir um novo que nenhuma inversão pediu.
         // O tamanho da entrada nova e o notional do F6, nao o `QUOTE_USD` do caminho legado.
         const size = this.market.quoteSize(book.mid, notional ?? equity * config.leverage);
         if (plan.reduceOnly) {
