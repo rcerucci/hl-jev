@@ -82,16 +82,11 @@
   box-sizing: border-box;
 }
 
-/* O fill de compra: seta acima/abaixo da barra (e uma ordem que encheu). */
-.legBuy::before {
-  background: var(--buy);
-  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-}
-
-/* O `s`: quadrado DENTRO da barra (e a leitura da hora, nao uma ordem). */
+/* O `s`: seta fora da barra, no lado que a regra quer. */
+.legBuy::before,
 .legS::before {
   background: var(--buy);
-  clip-path: inset(1px);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
 }
 
 .legSell::before {

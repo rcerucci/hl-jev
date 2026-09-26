@@ -127,14 +127,15 @@ function toMarkers(
     size: 0.8,
   }));
   for (const m of sigma?.sides ?? []) {
-    // O `s` vai DENTRO da vela (inBar): ele e a leitura da hora, nao uma ordem. Assim nao se
-    // confunde com as setas dos fills, que sao ordens que encheram e ficam acima/abaixo da barra.
+    // O `s` e uma SETA FORA da barra, como sempre foi: e a leitura da hora (compra para baixo,
+    // venda para cima). Fica maior que a seta do fill (1 contra 0,8) para, quando as duas caem na
+    // mesma barra, se perceber qual e qual.
     out.push({
       time: asTime(m.time),
-      position: "inBar",
-      shape: "square",
+      position: m.side === "buy" ? "belowBar" : "aboveBar",
+      shape: m.side === "buy" ? "arrowUp" : "arrowDown",
       color: m.side === "buy" ? p.buy : p.sell,
-      size: 0.7,
+      size: 1,
     });
   }
   for (const v of sigma?.vetoes ?? []) {
