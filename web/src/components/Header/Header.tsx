@@ -11,14 +11,9 @@ export interface HeaderProps {
   balance: number | null;
   unrealized: number | null;
   realized: number | null;
-  /** Sem conta para ler (dry run), o balanco nao existe: diz-se, em vez de carregar para sempre. */
   dryRun?: boolean;
 }
 
-/**
- * Conta: `balance` e a conta da venue quando ela responde. Em dry run nao ha conta para ler, e
- * entao diz-se isso em texto, em vez de deixar um esqueleto eterno a fingir que esta a carregar.
- */
 function Score({
   label,
   value,
@@ -62,10 +57,6 @@ function GitHubMark() {
   );
 }
 
-/**
- * Claro/escuro. O tema vive em `data-theme` no <html> (o guiao do <head> ja o
- * resolveu antes da pintura); aqui so se troca e se grava a escolha.
- */
 function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
@@ -101,7 +92,6 @@ export default function Header({ connection, balance, unrealized, realized, dryR
       <span className={styles.brandLockup}>
         <Logo size={20} />
         <h1 className={styles.brand}>Sigma × Hyperliquid</h1>
-        <p className={styles.tagline}>s = sign(hl2 - EMA24) na H1</p>
         <span className={styles.links}>
           <a
             className={styles.link}
